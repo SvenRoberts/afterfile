@@ -145,12 +145,8 @@ const PRELAUNCH_MODE = true;
 let partnerRef = '';
 
 // Zodat de eigenaar zelf, ondanks PRELAUNCH_MODE, gewoon kan blijven doorbouwen en testen:
-// als dit e-mailadres wordt ingevuld op het wachtlijst-formulier, wordt er i.p.v. een
-// wachtlijst-aanmelding een normaal account aangemaakt en zie je de site zoals na lancering.
-const OWNER_EMAILS = ['blinq@protonmail.com', 'barrytuip@hotmail.com'];
-
-// Partners bypass de wachtlijst maar zien geen Beheer-tab.
-const PARTNER_EMAILS = ['zorgeloosnalaten@ziggo.nl', 'roel@watalsikernietmeerben.nl'];
+// Bypass-check via Supabase: owners en partners staan in de profiles tabel (role kolom).
+// Geen emailadressen meer hardcoded in de frontend.
 
 const PLANS = [
   {
@@ -262,7 +258,7 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     await new Promise(r => setTimeout(r, 600));
     return loadAccountFromSupabase(userId, email, attempt + 1);
   }
-  state.account = { id: userId, name: profile.name || email.split('@')[0], email: profile.email || email, plan: profile.plan, createdAt: profile.created_at };
+  state.account = { id: userId, name: profile.name || email.split('@')[0], email: profile.email || email, plan: profile.plan, createdAt: profile.created_at, role: profile.role || 'user' };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
     city: profile.city || '', birthDate: profile.birth_date || '', phone: profile.phone || '',
@@ -1330,7 +1326,7 @@ function renderAccountMenu(activeView) {
           ${menuLink('gegevens', 'Mijn gegevens')}
           ${menuLink('instructions', 'Instructies')}
           ${menuLink('report', 'Rapport')}
-          ${state.account && !PARTNER_EMAILS.includes((state.account.email || '').toLowerCase()) ? menuLink('admin', 'Beheer') : ''}
+          ${state.account && state.account.role === 'owner' ? menuLink('admin', 'Beheer') : ''}
           <div class="account-menu-divider"></div>
           <button type="button" class="account-menu-link account-menu-logout" data-action="logout">Uitloggen</button>
         </div>
@@ -2477,8 +2473,9 @@ function wireEvents() {
     ui.waitlistEmailError = '';
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ui.waitlistEmailError = 'Vul een geldig e-mailadres in.'; render(); return; }
 
-    if (OWNER_EMAILS.includes(email.toLowerCase()) || PARTNER_EMAILS.includes(email.toLowerCase())) {
-      if (!supabase) { flashToast('Supabase niet beschikbaar.'); return; }
+    if (!supabase) { flashToast('Supabase niet beschikbaar.'); return; }
+    const { data: isBypass } = await supabase.rpc('is_bypass_email', { check_email: email });
+    if (isBypass) {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { name: name || email.split('@')[0] } },
