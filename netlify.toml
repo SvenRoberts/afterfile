@@ -1,0 +1,12 @@
+[build]
+  publish = "."
+  ignore = "exit 1"
+
+[context.production]
+  publish = "."
+
+[context.branch-deploy]
+  publish = "."
+
+[context.deploy-preview]
+  publish = "."
