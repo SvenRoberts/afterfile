@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="afShieldGrad" x1="280" y1="120" x2="760" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3D63E6"/>
+      <stop offset="100%" stop-color="#2747C2"/>
+    </linearGradient>
+    <filter id="afShieldShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="14" stdDeviation="22" flood-color="#16224A" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="#FFFFFF"/>
+  <g transform="translate(192,182) scale(20)">
+    <path filter="url(#afShieldShadow)" d="M16 2.5L27 7.1V15.3C27 22.9 22 28.1 16 30.2C10 28.1 5 22.9 5 15.3V7.1L16 2.5Z" fill="url(#afShieldGrad)"/>
+    <path d="M9.2 10.6C11.2 9.3 13.5 8.6 16 8.6C18.5 8.6 20.8 9.3 22.8 10.6" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="16" cy="15.6" r="2.9" fill="none" stroke="#ffffff" stroke-width="2.2"/>
+    <rect x="14.7" y="18.5" width="2.6" height="6.8" fill="#ffffff"/>
+    <rect x="17.3" y="21.5" width="2.2" height="1.5" fill="#ffffff"/>
+    <rect x="17.3" y="23.9" width="2.8" height="1.5" fill="#ffffff"/>
+  </g>
+</svg>

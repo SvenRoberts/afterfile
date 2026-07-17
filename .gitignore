@@ -1,0 +1,5 @@
+node_modules/
+backups/
+.verify_scratch/
+check.js
+push_to_github.bat

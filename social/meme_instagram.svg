@@ -1,0 +1,108 @@
+<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3D63E6"/><stop offset="100%" stop-color="#2747C2"/></linearGradient>
+    <linearGradient id="darkbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0d0d0d"/><stop offset="100%" stop-color="#1a1a1a"/></linearGradient>
+    <linearGradient id="phonegrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e1e1e"/><stop offset="100%" stop-color="#111"/></linearGradient>
+    <linearGradient id="iggrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#405de6"/>
+      <stop offset="30%" stop-color="#833ab4"/>
+      <stop offset="60%" stop-color="#e1306c"/>
+      <stop offset="100%" stop-color="#f77737"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ghostblur">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="1080" height="1080" fill="url(#darkbg)"/>
+
+  <!-- Subtle grid lines for depth -->
+  <line x1="0" y1="540" x2="1080" y2="540" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+  <line x1="540" y1="0" x2="540" y2="1080" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+
+  <!-- Phone mockup (right side, slightly tilted) -->
+  <g transform="translate(660, 140) rotate(6)">
+    <rect x="0" y="0" width="300" height="580" rx="36" fill="#111" stroke="#333" stroke-width="2"/>
+    <rect x="10" y="10" width="280" height="560" rx="28" fill="url(#phonegrad)"/>
+    <!-- Notch -->
+    <rect x="110" y="14" width="80" height="18" rx="9" fill="#000"/>
+    <!-- Instagram header -->
+    <rect x="10" y="10" width="280" height="56" rx="0" fill="#000"/>
+    <rect x="10" y="10" width="280" height="56" rx="28" fill="#000"/>
+    <rect x="10" y="38" width="280" height="28" fill="#000"/>
+    <!-- IG logo small -->
+    <text x="30" y="46" font-family="Arial" font-size="18" font-weight="700" fill="white">Instagram</text>
+    <!-- Ghost profile circle -->
+    <circle cx="150" cy="140" r="52" fill="#2a2a2a" stroke="#444" stroke-width="1.5"/>
+    <!-- Ghost icon in circle -->
+    <text x="150" y="154" font-family="Arial" font-size="44" fill="#555" text-anchor="middle">👤</text>
+    <!-- Lock overlay on profile -->
+    <circle cx="190" cy="175" r="18" fill="#1a1a1a" stroke="#444" stroke-width="1.5"/>
+    <text x="190" y="181" font-family="Arial" font-size="14" fill="#888" text-anchor="middle">🔒</text>
+    <!-- Username -->
+    <rect x="80" y="206" width="140" height="14" rx="7" fill="#2a2a2a"/>
+    <!-- Stats row -->
+    <rect x="30" y="240" width="60" height="10" rx="5" fill="#222"/>
+    <rect x="120" y="240" width="60" height="10" rx="5" fill="#222"/>
+    <rect x="210" y="240" width="60" height="10" rx="5" fill="#222"/>
+    <!-- Bio lines -->
+    <rect x="40" y="270" width="220" height="8" rx="4" fill="#222"/>
+    <rect x="60" y="286" width="180" height="8" rx="4" fill="#222"/>
+    <!-- Grid photos (blurred/ghost) -->
+    <rect x="10" y="320" width="86" height="86" rx="2" fill="#1e1e1e"/>
+    <rect x="107" y="320" width="86" height="86" rx="2" fill="#1e1e1e"/>
+    <rect x="204" y="320" width="86" height="86" rx="2" fill="#1e1e1e"/>
+    <rect x="10" y="412" width="86" height="86" rx="2" fill="#1e1e1e"/>
+    <rect x="107" y="412" width="86" height="86" rx="2" fill="#1e1e1e"/>
+    <rect x="204" y="412" width="86" height="86" rx="2" fill="#1e1e1e"/>
+    <!-- Ghost photo content -->
+    <rect x="12" y="322" width="82" height="82" rx="2" fill="#252525"/>
+    <rect x="109" y="322" width="82" height="82" rx="2" fill="#252525"/>
+    <rect x="206" y="322" width="82" height="82" rx="2" fill="#252525"/>
+    <!-- "Account not accessible" overlay -->
+    <rect x="10" y="310" width="280" height="196" rx="4" fill="#000" fill-opacity="0.7"/>
+    <text x="150" y="398" font-family="Arial" font-size="12" fill="#666" text-anchor="middle">This account is no longer</text>
+    <text x="150" y="414" font-family="Arial" font-size="12" fill="#666" text-anchor="middle">accessible.</text>
+    <!-- Forever badge -->
+    <rect x="60" y="490" width="180" height="36" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+    <text x="150" y="512" font-family="Arial" font-size="13" fill="#666" text-anchor="middle">Staat er. Voor altijd. 👻</text>
+  </g>
+
+  <!-- Main text (left side) -->
+  <text x="80" y="260" font-family="Arial" font-size="54" font-weight="900" fill="white" letter-spacing="-1">Jouw Instagram</text>
+  <text x="80" y="326" font-family="Arial" font-size="54" font-weight="900" fill="white" letter-spacing="-1">verdwijnt niet</text>
+  <text x="80" y="392" font-family="Arial" font-size="54" font-weight="900" fill="white" letter-spacing="-1">als jij doodgaat.</text>
+
+  <text x="80" y="474" font-family="Arial" font-size="32" fill="#aaaaaa" letter-spacing="-0.5">Hij staat er gewoon.</text>
+  <text x="80" y="518" font-family="Arial" font-size="32" fill="#aaaaaa" letter-spacing="-0.5">Voor altijd.</text>
+
+  <text x="80" y="590" font-family="Arial" font-size="32" fill="#666" letter-spacing="-0.5">Terwijl niemand</text>
+  <text x="80" y="634" font-family="Arial" font-size="32" fill="#666" letter-spacing="-0.5">erbij kan.</text>
+
+  <!-- Divider -->
+  <line x1="80" y1="680" x2="560" y2="680" stroke="#333" stroke-width="1.5"/>
+
+  <text x="80" y="726" font-family="Arial" font-size="22" fill="#555">Regel je digitale nalatenschap.</text>
+
+  <!-- AfterFile logo bottom left -->
+  <svg x="80" y="780" width="52" height="52" viewBox="0 0 1024 1024">
+    <g transform="translate(192,182) scale(20)">
+      <path d="M16 2.5L27 7.1V15.3C27 22.9 22 28.1 16 30.2C10 28.1 5 22.9 5 15.3V7.1L16 2.5Z" fill="url(#sg)"/>
+      <path d="M9.2 10.6C11.2 9.3 13.5 8.6 16 8.6C18.5 8.6 20.8 9.3 22.8 10.6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+      <circle cx="16" cy="15.6" r="2.9" fill="none" stroke="#fff" stroke-width="2.2"/>
+      <rect x="14.7" y="18.5" width="2.6" height="6.8" fill="#fff"/>
+      <rect x="17.3" y="21.5" width="2.2" height="1.5" fill="#fff"/>
+      <rect x="17.3" y="23.9" width="2.8" height="1.5" fill="#fff"/>
+    </g>
+  </svg>
+  <text x="142" y="812" font-family="Arial" font-size="28" font-weight="800" fill="white">AfterFile</text>
+  <text x="142" y="838" font-family="Arial" font-size="16" fill="#555">afterfile.nl</text>
+
+  <!-- Bottom right: Instagram gradient dot as accent -->
+  <circle cx="980" cy="980" r="120" fill="url(#iggrad)" fill-opacity="0.12"/>
+</svg>

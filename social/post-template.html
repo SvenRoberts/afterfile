@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Founder post – AfterFile</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f1117;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 40px 20px;
+    }
+
+    .card {
+      width: 680px;
+      background: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.5);
+    }
+
+    /* Top brand bar */
+    .brand-bar {
+      background: linear-gradient(135deg, #1e2d6e 0%, #2747C2 60%, #3D63E6 100%);
+      padding: 28px 40px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-bar svg {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    }
+
+    .brand-name {
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-tagline {
+      color: rgba(255,255,255,0.65);
+      font-size: 13px;
+      margin-top: 1px;
+      letter-spacing: 0.1px;
+    }
+
+    /* Post body */
+    .post-body {
+      padding: 40px 48px 36px;
+      background: #fff;
+    }
+
+    .label {
+      display: inline-block;
+      background: #eef1fb;
+      color: #2747C2;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    .post-text {
+      color: #1a1a2e;
+      font-size: 16.5px;
+      line-height: 1.75;
+    }
+
+    .post-text p {
+      margin-bottom: 16px;
+    }
+
+    .post-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .post-text .highlight {
+      font-weight: 600;
+      color: #2747C2;
+    }
+
+    .post-text .opening {
+      font-size: 19px;
+      font-weight: 600;
+      color: #0f1117;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e8eaf0;
+      margin: 28px 0;
+    }
+
+    /* Footer */
+    .footer {
+      background: #f7f8fc;
+      padding: 24px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #e8eaf0;
+    }
+
+    .founder-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .founder-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2747C2, #3D63E6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+
+    .founder-name {
+      font-weight: 700;
+      color: #1a1a2e;
+      font-size: 14px;
+    }
+
+    .founder-role {
+      color: #6b7280;
+      font-size: 12.5px;
+      margin-top: 1px;
+    }
+
+    .website-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      background: linear-gradient(135deg, #2747C2, #3D63E6);
+      color: white;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 24px;
+      letter-spacing: 0.1px;
+      transition: opacity 0.15s;
+    }
+
+    .website-link:hover {
+      opacity: 0.9;
+    }
+
+    .website-link svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <!-- Brand bar -->
+    <div class="brand-bar">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+        <defs>
+          <linearGradient id="g1" x1="280" y1="120" x2="760" y2="900" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(192,182) scale(20)">
+          <path d="M16 2.5L27 7.1V15.3C27 22.9 22 28.1 16 30.2C10 28.1 5 22.9 5 15.3V7.1L16 2.5Z" fill="url(#g1)" stroke="rgba(255,255,255,0.6)" stroke-width="0.5"/>
+          <path d="M16 2.5L27 7.1V15.3C27 22.9 22 28.1 16 30.2C10 28.1 5 22.9 5 15.3V7.1L16 2.5Z" fill="rgba(255,255,255,0.15)"/>
+          <path d="M9.2 10.6C11.2 9.3 13.5 8.6 16 8.6C18.5 8.6 20.8 9.3 22.8 10.6" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round"/>
+          <circle cx="16" cy="15.6" r="2.9" fill="none" stroke="#ffffff" stroke-width="2.2"/>
+          <rect x="14.7" y="18.5" width="2.6" height="6.8" fill="#ffffff"/>
+          <rect x="17.3" y="21.5" width="2.2" height="1.5" fill="#ffffff"/>
+          <rect x="17.3" y="23.9" width="2.8" height="1.5" fill="#ffffff"/>
+        </g>
+      </svg>
+      <div>
+        <div class="brand-name">AfterFile</div>
+        <div class="brand-tagline">Digitale nalatenschap geregeld</div>
+      </div>
+    </div>
+
+    <!-- Post body -->
+    <div class="post-body">
+      <!-- LABEL: kort onderwerp, bijv. "Founder · Waarom ik dit bouwde" of "Tip · Digitale veiligheid" -->
+      <span class="label">LABEL HIER</span>
+
+      <div class="post-text">
+        <!-- OPENING: sterke eerste zin, groot en vet -->
+        <p class="opening">OPENING ZIN HIER</p>
+
+        <!-- BODY: gebruik losse korte alinea's, geen lange streepjes -->
+        <!-- Gebruik <span class="highlight">tekst</span> voor nadruk -->
+
+        <p>Alinea 1.</p>
+
+        <p>Alinea 2.</p>
+
+        <p>Alinea 3.</p>
+
+        <hr class="divider">
+
+        <!-- AFSLUITING: conclusie of call to action -->
+        <p>Afsluitende alinea.</p>
+
+        <p>CTA regel.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="founder-info">
+        <div class="founder-avatar">SR</div>
+        <div>
+          <div class="founder-name">Sven Roberts</div>
+          <div class="founder-role">Founder, AfterFile</div>
+        </div>
+      </div>
+      <a class="website-link" href="https://afterfile.nl" target="_blank">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        afterfile.nl
+      </a>
+    </div>
+
+  </div>
+</body>
+</html>

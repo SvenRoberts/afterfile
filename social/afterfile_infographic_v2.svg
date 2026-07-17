@@ -1,0 +1,86 @@
+<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5b6ef5"/>
+      <stop offset="100%" stop-color="#3a4de4"/>
+    </linearGradient>
+    <linearGradient id="btnGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4f6ef7"/>
+      <stop offset="100%" stop-color="#3a4de4"/>
+    </linearGradient>
+    <linearGradient id="cardTop1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4f6ef7"/>
+      <stop offset="100%" stop-color="#3a4de4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="#ffffff"/>
+  <rect x="0" y="0" width="1080" height="8" fill="url(#btnGrad)"/>
+  <rect x="0" y="8" width="1080" height="180" fill="#f0f4ff"/>
+  <g transform="translate(60, 28) scale(0.088)">
+    <path d="M512 60 L900 220 L900 520 C900 740 720 920 512 1000 C304 920 124 740 124 520 L124 220 Z" fill="url(#shieldGrad)"/>
+    <path d="M362 370 Q512 280 662 370" fill="none" stroke="white" stroke-width="52" stroke-linecap="round"/>
+    <circle cx="512" cy="530" r="80" fill="none" stroke="white" stroke-width="52"/>
+    <circle cx="512" cy="530" r="28" fill="white"/>
+    <rect x="486" y="600" width="52" height="160" rx="10" fill="white"/>
+    <rect x="538" y="680" width="52" height="36" rx="8" fill="white"/>
+    <rect x="538" y="726" width="38" height="36" rx="8" fill="white"/>
+  </g>
+  <text x="175" y="96" font-family="Arial" font-size="54" font-weight="800" fill="#1a1f6e" letter-spacing="-1">AfterFile</text>
+  <text x="176" y="122" font-family="Arial" font-size="16" fill="#6b7280" letter-spacing="0.5">afterfile.nl — jouw digitale nalatenschap</text>
+  <line x1="60" y1="196" x2="1020" y2="196" stroke="#dde3f8" stroke-width="1.5"/>
+  <text x="540" y="270" font-family="Arial" font-size="48" font-weight="800" fill="#1a1f6e" text-anchor="middle" letter-spacing="-1">Wat gebeurt er met jouw</text>
+  <text x="540" y="326" font-family="Arial" font-size="48" font-weight="800" fill="#4f6ef7" text-anchor="middle" letter-spacing="-1">digitale leven na jouw overlijden?</text>
+  <text x="540" y="372" font-family="Arial" font-size="20" fill="#6b7280" text-anchor="middle">De meeste mensen regelen het niet. AfterFile doet het voor je.</text>
+  <rect x="60" y="406" width="290" height="210" rx="16" fill="#f0f4ff" stroke="#dde3f8" stroke-width="1.5"/>
+  <rect x="60" y="406" width="290" height="6" rx="3" fill="url(#cardTop1)"/>
+  <text x="205" y="480" font-family="Arial" font-size="66" font-weight="800" fill="#4f6ef7" text-anchor="middle">93%</text>
+  <text x="205" y="518" font-family="Arial" font-size="16" fill="#374151" text-anchor="middle">van de Nederlanders heeft</text>
+  <text x="205" y="538" font-family="Arial" font-size="16" fill="#374151" text-anchor="middle">geen digitaal testament</text>
+  <text x="205" y="596" font-family="Arial" font-size="13" fill="#9ca3af" text-anchor="middle">Nibud 2023</text>
+  <rect x="395" y="406" width="290" height="210" rx="16" fill="#f0f4ff" stroke="#dde3f8" stroke-width="1.5"/>
+  <rect x="395" y="406" width="290" height="6" rx="3" fill="url(#cardTop1)"/>
+  <text x="540" y="480" font-family="Arial" font-size="66" font-weight="800" fill="#4f6ef7" text-anchor="middle">150+</text>
+  <text x="540" y="518" font-family="Arial" font-size="16" fill="#374151" text-anchor="middle">online accounts per persoon</text>
+  <text x="540" y="538" font-family="Arial" font-size="16" fill="#374151" text-anchor="middle">gemiddeld</text>
+  <text x="540" y="596" font-family="Arial" font-size="13" fill="#9ca3af" text-anchor="middle">NordPass 2024</text>
+  <rect x="730" y="406" width="290" height="210" rx="16" fill="#f0f4ff" stroke="#dde3f8" stroke-width="1.5"/>
+  <rect x="730" y="406" width="290" height="6" rx="3" fill="url(#cardTop1)"/>
+  <text x="875" y="480" font-family="Arial" font-size="66" font-weight="800" fill="#4f6ef7" text-anchor="middle">€0</text>
+  <text x="875" y="518" font-family="Arial" font-size="16" fill="#374151" text-anchor="middle">Naasten bereiken zonder</text>
+  <text x="875" y="538" font-family="Arial" font-size="16" fill="#374151" text-anchor="middle">wachtwoorden</text>
+  <text x="875" y="596" font-family="Arial" font-size="13" fill="#9ca3af" text-anchor="middle">bankrekening · foto's · data</text>
+  <rect x="60" y="648" width="960" height="280" rx="20" fill="#f8f9ff" stroke="#dde3f8" stroke-width="1.5"/>
+  <text x="540" y="696" font-family="Arial" font-size="24" font-weight="700" fill="#1a1f6e" text-anchor="middle">AfterFile regelt het in 3 stappen</text>
+  <circle cx="195" cy="778" r="36" fill="url(#btnGrad)"/>
+  <text x="195" y="786" font-family="Arial" font-size="30" font-weight="800" fill="white" text-anchor="middle">1</text>
+  <text x="195" y="836" font-family="Arial" font-size="17" font-weight="700" fill="#1a1f6e" text-anchor="middle">Leg alles vast</text>
+  <text x="195" y="858" font-family="Arial" font-size="14" fill="#6b7280" text-anchor="middle">Bezittingen, accounts</text>
+  <text x="195" y="876" font-family="Arial" font-size="14" fill="#6b7280" text-anchor="middle">&amp; wensen</text>
+  <line x1="246" y1="778" x2="394" y2="778" stroke="#c7d2fe" stroke-width="2" stroke-dasharray="6,4"/>
+  <polygon points="392,772 406,778 392,784" fill="#c7d2fe"/>
+  <circle cx="452" cy="778" r="36" fill="url(#btnGrad)"/>
+  <text x="452" y="786" font-family="Arial" font-size="30" font-weight="800" fill="white" text-anchor="middle">2</text>
+  <text x="452" y="836" font-family="Arial" font-size="17" font-weight="700" fill="#1a1f6e" text-anchor="middle">Stel contacten in</text>
+  <text x="452" y="858" font-family="Arial" font-size="14" fill="#6b7280" text-anchor="middle">Partner, kinderen</text>
+  <text x="452" y="876" font-family="Arial" font-size="14" fill="#6b7280" text-anchor="middle">of vertrouwde vriend</text>
+  <line x1="503" y1="778" x2="651" y2="778" stroke="#c7d2fe" stroke-width="2" stroke-dasharray="6,4"/>
+  <polygon points="649,772 663,778 649,784" fill="#c7d2fe"/>
+  <circle cx="720" cy="778" r="36" fill="url(#btnGrad)"/>
+  <text x="720" y="786" font-family="Arial" font-size="30" font-weight="800" fill="white" text-anchor="middle">3</text>
+  <text x="720" y="836" font-family="Arial" font-size="17" font-weight="700" fill="#1a1f6e" text-anchor="middle">Naasten krijgen toegang</text>
+  <text x="720" y="858" font-family="Arial" font-size="14" fill="#6b7280" text-anchor="middle">Automatisch vrijgegeven</text>
+  <text x="720" y="876" font-family="Arial" font-size="14" fill="#6b7280" text-anchor="middle">op het juiste moment</text>
+  <g transform="translate(896, 754)">
+    <rect x="0" y="16" width="48" height="38" rx="6" fill="none" stroke="#4f6ef7" stroke-width="2.5"/>
+    <path d="M8 16 v-10 a16 16 0 0 1 32 0 v10" fill="none" stroke="#4f6ef7" stroke-width="2.5"/>
+    <circle cx="24" cy="35" r="5" fill="#4f6ef7"/>
+    <line x1="24" y1="40" x2="24" y2="46" stroke="#4f6ef7" stroke-width="2.5"/>
+  </g>
+  <text x="920" y="812" font-family="Arial" font-size="12" fill="#4f6ef7" text-anchor="middle">beveiligd</text>
+  <rect x="60" y="958" width="960" height="90" rx="16" fill="url(#btnGrad)"/>
+  <text x="400" y="1002" font-family="Arial" font-size="26" font-weight="700" fill="white" text-anchor="middle">3 maanden gratis proberen</text>
+  <text x="400" y="1030" font-family="Arial" font-size="16" fill="white" fill-opacity="0.75" text-anchor="middle">Geen betaling nodig om te starten · afterfile.nl</text>
+  <rect x="740" y="972" width="256" height="62" rx="12" fill="white" fill-opacity="0.15"/>
+  <rect x="740" y="972" width="256" height="62" rx="12" fill="none" stroke="white" stroke-opacity="0.4" stroke-width="1.5"/>
+  <text x="868" y="1009" font-family="Arial" font-size="20" font-weight="700" fill="white" text-anchor="middle">Probeer gratis →</text>
+</svg>

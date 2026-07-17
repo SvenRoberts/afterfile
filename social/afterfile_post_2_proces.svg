@@ -1,0 +1,47 @@
+<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3D63E6"/><stop offset="100%" stop-color="#2747C2"/></linearGradient>
+    <linearGradient id="btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4f6ef7"/><stop offset="100%" stop-color="#3a4de4"/></linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="#ffffff"/>
+  <rect x="0" y="0" width="1080" height="8" fill="url(#btn)"/>
+  <!-- Logo -->
+  <svg x="40" y="30" width="72" height="72" viewBox="0 0 1024 1024">
+    <g transform="translate(192,182) scale(20)">
+      <path d="M16 2.5L27 7.1V15.3C27 22.9 22 28.1 16 30.2C10 28.1 5 22.9 5 15.3V7.1L16 2.5Z" fill="url(#sg)"/>
+      <path d="M9.2 10.6C11.2 9.3 13.5 8.6 16 8.6C18.5 8.6 20.8 9.3 22.8 10.6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+      <circle cx="16" cy="15.6" r="2.9" fill="none" stroke="#fff" stroke-width="2.2"/>
+      <rect x="14.7" y="18.5" width="2.6" height="6.8" fill="#fff"/>
+      <rect x="17.3" y="21.5" width="2.2" height="1.5" fill="#fff"/>
+      <rect x="17.3" y="23.9" width="2.8" height="1.5" fill="#fff"/>
+    </g>
+  </svg>
+  <text x="122" y="72" font-family="Arial" font-size="36" font-weight="800" fill="#1a2575">AfterFile</text>
+  <!-- Headline -->
+  <text x="540" y="180" font-family="Arial" font-size="44" font-weight="800" fill="#1a2575" text-anchor="middle">Jouw digitale nalatenschap</text>
+  <text x="540" y="234" font-family="Arial" font-size="44" font-weight="800" fill="#4f6ef7" text-anchor="middle">geregeld in 3 stappen</text>
+  <!-- Step 1 -->
+  <rect x="80" y="300" width="920" height="180" rx="20" fill="#f0f4ff" stroke="#dde3f8" stroke-width="1.5"/>
+  <circle cx="160" cy="390" r="46" fill="url(#btn)"/>
+  <text x="160" y="402" font-family="Arial" font-size="40" font-weight="800" fill="white" text-anchor="middle">1</text>
+  <text x="240" y="370" font-family="Arial" font-size="28" font-weight="700" fill="#1a2575">Leg alles vast</text>
+  <text x="240" y="408" font-family="Arial" font-size="20" fill="#6b7280">Bezittingen, bankrekeningen, digitale accounts,</text>
+  <text x="240" y="434" font-family="Arial" font-size="20" fill="#6b7280">wachtwoorden en persoonlijke wensen.</text>
+  <!-- Step 2 -->
+  <rect x="80" y="510" width="920" height="180" rx="20" fill="#f0f4ff" stroke="#dde3f8" stroke-width="1.5"/>
+  <circle cx="160" cy="600" r="46" fill="url(#btn)"/>
+  <text x="160" y="612" font-family="Arial" font-size="40" font-weight="800" fill="white" text-anchor="middle">2</text>
+  <text x="240" y="580" font-family="Arial" font-size="28" font-weight="700" fill="#1a2575">Stel vertrouwde contacten in</text>
+  <text x="240" y="618" font-family="Arial" font-size="20" fill="#6b7280">Je partner, kinderen of vriend krijgen toegang</text>
+  <text x="240" y="644" font-family="Arial" font-size="20" fill="#6b7280">zodra zij jouw overlijden melden.</text>
+  <!-- Step 3 -->
+  <rect x="80" y="720" width="920" height="180" rx="20" fill="#f0f4ff" stroke="#dde3f8" stroke-width="1.5"/>
+  <circle cx="160" cy="810" r="46" fill="url(#btn)"/>
+  <text x="160" y="822" font-family="Arial" font-size="40" font-weight="800" fill="white" text-anchor="middle">3</text>
+  <text x="240" y="790" font-family="Arial" font-size="28" font-weight="700" fill="#1a2575">Naasten krijgen alles netjes overdragen</text>
+  <text x="240" y="828" font-family="Arial" font-size="20" fill="#6b7280">Automatisch, beveiligd, precies zoals jij</text>
+  <text x="240" y="854" font-family="Arial" font-size="20" fill="#6b7280">het gewild hebt.</text>
+  <!-- CTA -->
+  <rect x="240" y="940" width="600" height="76" rx="14" fill="url(#btn)"/>
+  <text x="540" y="987" font-family="Arial" font-size="26" font-weight="700" fill="white" text-anchor="middle">Probeer gratis · afterfile.nl</text>
+</svg>

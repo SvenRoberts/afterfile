@@ -1,0 +1,34 @@
+<svg viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3D63E6"/><stop offset="100%" stop-color="#2747C2"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0f4ff"/><stop offset="100%" stop-color="#ffffff"/></linearGradient>
+    <linearGradient id="btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4f6ef7"/><stop offset="100%" stop-color="#3a4de4"/></linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1080" height="8" fill="url(#btn)"/>
+  <!-- Logo -->
+  <svg x="40" y="30" width="72" height="72" viewBox="0 0 1024 1024">
+    <g transform="translate(192,182) scale(20)">
+      <path d="M16 2.5L27 7.1V15.3C27 22.9 22 28.1 16 30.2C10 28.1 5 22.9 5 15.3V7.1L16 2.5Z" fill="url(#sg)"/>
+      <path d="M9.2 10.6C11.2 9.3 13.5 8.6 16 8.6C18.5 8.6 20.8 9.3 22.8 10.6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+      <circle cx="16" cy="15.6" r="2.9" fill="none" stroke="#fff" stroke-width="2.2"/>
+      <rect x="14.7" y="18.5" width="2.6" height="6.8" fill="#fff"/>
+      <rect x="17.3" y="21.5" width="2.2" height="1.5" fill="#fff"/>
+      <rect x="17.3" y="23.9" width="2.8" height="1.5" fill="#fff"/>
+    </g>
+  </svg>
+  <text x="122" y="72" font-family="Arial" font-size="36" font-weight="800" fill="#1a2575">AfterFile</text>
+  <!-- Big stat -->
+  <text x="540" y="380" font-family="Arial" font-size="280" font-weight="900" fill="#3a4de4" text-anchor="middle" opacity="0.12">93</text>
+  <text x="540" y="420" font-family="Arial" font-size="220" font-weight="900" fill="#3a4de4" text-anchor="middle">93%</text>
+  <text x="540" y="490" font-family="Arial" font-size="36" font-weight="700" fill="#1a2575" text-anchor="middle">van de Nederlanders heeft</text>
+  <text x="540" y="540" font-family="Arial" font-size="36" font-weight="700" fill="#1a2575" text-anchor="middle">geen digitaal testament.</text>
+  <line x1="200" y1="590" x2="880" y2="590" stroke="#dde3f8" stroke-width="2"/>
+  <text x="540" y="660" font-family="Arial" font-size="28" fill="#6b7280" text-anchor="middle">Wat gebeurt er met jouw accounts,</text>
+  <text x="540" y="700" font-family="Arial" font-size="28" fill="#6b7280" text-anchor="middle">wachtwoorden en bezittingen</text>
+  <text x="540" y="740" font-family="Arial" font-size="28" fill="#6b7280" text-anchor="middle">als jij er niet meer bent?</text>
+  <text x="540" y="820" font-family="Arial" font-size="22" fill="#9ca3af" text-anchor="middle">Bron: Nibud 2023</text>
+  <!-- CTA -->
+  <rect x="240" y="900" width="600" height="76" rx="14" fill="url(#btn)"/>
+  <text x="540" y="947" font-family="Arial" font-size="26" font-weight="700" fill="white" text-anchor="middle">Regel het nu · afterfile.nl</text>
+</svg>
