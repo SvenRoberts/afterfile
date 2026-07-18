@@ -1231,3 +1231,49 @@ footer.site-footer a:hover { color: var(--color-primary); }
   color: var(--color-text-muted);
   padding: 6px 0 6px 18px;
   po
+/* ================================================================
+   MOBIELE STIJLEN  (max-width: 640px)
+   ================================================================ */
+@media (max-width: 640px) {
+
+  /* --- Algemeen --- */
+  .container { padding: 0 16px; }
+
+  /* --- Header nav --- */
+  .pub-nav-inner,
+  .app-nav-inner { padding: 12px 16px; }
+  .nav-links .nav-link:not(.btn) { display: none; }
+
+  /* --- Hero: foto boven tekst, kleinere fonts --- */
+  .hero-split {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 16px 0 40px;
+  }
+  .hero-photo {
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-sm);
+    order: -1;
+  }
+  .hero-content h1 { font-size: 26px; line-height: 1.22; }
+  .hero-sub { font-size: 15px; }
+  .check-list { grid-template-columns: 1fr; gap: 10px; }
+  .hero-cta-row { flex-direction: column; align-items: stretch; }
+  .hero-cta-row .btn { text-align: center; justify-content: center; }
+  .hero-cta-note { text-align: center; }
+
+  /* --- Secties --- */
+  .section { padding: 40px 0; }
+  .section-heading { font-size: 22px; }
+  .pricing-grid { grid-template-columns: 1fr; gap: 16px; }
+
+  /* --- Checkout --- */
+  .checkout-grid { grid-template-columns: 1fr; }
+
+  /* --- App (ingelogd) --- */
+  .page-header h1 { font-size: 22px; }
+  .dash-grid { grid-template-columns: 1fr; }
+  .asset-type-grid { grid-template-columns: repeat(2, 1fr); }
+  .role-options { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; gap: 0; }
+}
