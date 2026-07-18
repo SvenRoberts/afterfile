@@ -18,45 +18,45 @@ const LOCAL_DEMO_KEY = 'afterfile_demo_extra_v1';
 // te vinden, nooit een wachtwoord, code of andere inloggegevens.
 const ASSET_CATEGORIES = [
   { key: 'financial', label: 'Financieel', types: [
-      { key: 'bank', label: 'Bankrekening', icon: 'bank', extraFields: [
+      { key: 'bank', label: 'Bankrekening', icon: 'bank', namePlaceholder: 'bijv. Betaalrekening ING', extraFields: [
           { key: 'bankName', label: 'Bank', placeholder: 'bijv. ING, Rabobank, ABN AMRO' },
       ]},
-      { key: 'crypto', label: 'Crypto', icon: 'diamond', extraFields: [
-          { key: 'walletType', label: 'Soort wallet of platform', placeholder: 'bijv. hardware wallet (Ledger), Binance-account' },
+      { key: 'crypto', label: 'Crypto', icon: 'diamond', namePlaceholder: 'bijv. Bitcoin wallet Ledger', extraFields: [
+          { key: 'walletType', label: 'Soort wallet of platform', placeholder: 'bijv. hardware wallet (Ledger), Coinbase-account' },
       ]},
-      { key: 'broker', label: 'Broker', icon: 'trending-up', extraFields: [
-          { key: 'platform', label: 'Naam broker of platform', placeholder: 'bijv. DEGIRO, Binck' },
+      { key: 'broker', label: 'Broker', icon: 'trending-up', namePlaceholder: 'bijv. Beleggingsrekening DEGIRO', extraFields: [
+          { key: 'platform', label: 'Naam broker of platform', placeholder: 'bijv. DEGIRO, Saxo Bank, eToro' },
       ]},
-      { key: 'pension', label: 'Pensioen', icon: 'umbrella', extraFields: [
+      { key: 'pension', label: 'Pensioen', icon: 'umbrella', namePlaceholder: 'bijv. Pensioen via werkgever', extraFields: [
           { key: 'provider', label: 'Pensioenuitvoerder', placeholder: 'bijv. ABP, ASR, BrightPensioen' },
       ]},
   ]},
   { key: 'digital', label: 'Digitaal', types: [
-      { key: 'website', label: 'Website', icon: 'globe', extraFields: [
+      { key: 'website', label: 'Website', icon: 'globe', namePlaceholder: 'bijv. Facebook account', extraFields: [
           { key: 'username', label: 'Gebruikersnaam', placeholder: 'bijv. jouwgebruikersnaam' },
       ]},
-      { key: 'domain', label: 'Domeinnaam', icon: 'link', extraFields: [
+      { key: 'domain', label: 'Domeinnaam', icon: 'link', namePlaceholder: 'bijv. mijnwebsite.nl', extraFields: [
           { key: 'registrar', label: 'Registrar', placeholder: 'bijv. TransIP, Vimexx' },
       ]},
-      { key: 'cloud', label: 'Cloudopslag', icon: 'cloud', extraFields: [
+      { key: 'cloud', label: 'Cloudopslag', icon: 'cloud', namePlaceholder: 'bijv. Google Drive opslag', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Google Drive, Dropbox, iCloud' },
       ]},
-      { key: 'email', label: 'E-mailaccount', icon: 'mail', extraFields: [
+      { key: 'email', label: 'E-mailaccount', icon: 'mail', namePlaceholder: 'bijv. Gmail prive', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
       ]},
   ]},
   { key: 'other', label: 'Overig', types: [
-      { key: 'safe', label: 'Kluis', icon: 'safe', extraFields: [
+      { key: 'safe', label: 'Kluis', icon: 'safe', namePlaceholder: 'bijv. Brandkast slaapkamer', extraFields: [
           { key: 'keyHolder', label: 'Wie heeft toegang of de sleutel', placeholder: 'bijv. ligt bij de buren, in de meterkast' },
       ]},
-      { key: 'documents', label: 'Fysieke documenten', icon: 'document', extraFields: [
+      { key: 'documents', label: 'Fysieke documenten', icon: 'document', namePlaceholder: 'bijv. Testament bij notaris', extraFields: [
           { key: 'documentType', label: 'Type document', placeholder: 'bijv. testament, paspoort, eigendomsbewijs' },
       ]},
-      { key: 'password-manager', label: 'Wachtwoordmanager', icon: 'key', extraFields: [
+      { key: 'password-manager', label: 'Wachtwoordmanager', icon: 'key', namePlaceholder: 'bijv. Mijn wachtwoordkluis', extraFields: [
           { key: 'app', label: 'Welke app', placeholder: 'bijv. 1Password, Bitwarden, LastPass' },
           { key: 'keyLocation', label: 'Waar staat de masterkey / emergency kit', placeholder: 'bijv. in een envelop bij de notaris, in de kluis thuis' },
       ]},
-      { key: 'other', label: 'Overige belangrijke informatie', icon: 'folder' },
+      { key: 'other', label: 'Overige belangrijke informatie', icon: 'folder', namePlaceholder: 'bijv. Lidmaatschap sportclub' },
   ]},
 ];
 
@@ -1526,7 +1526,7 @@ function renderAssets() {
         <form id="asset-form">
           <div class="field">
             <label for="as-name">Naam</label>
-            <input id="as-name" name="name" type="text" placeholder="bijv. Betaalrekening ING" value="${esc(ui.draftAsset.name || '')}" required autofocus>
+            <input id="as-name" name="name" type="text" placeholder="${esc(type.namePlaceholder || 'bijv. naam van deze bezitting')}" value="${esc(ui.draftAsset.name || '')}" required autofocus>
           </div>
           ${extraFieldsHtml}
           <div class="field">
