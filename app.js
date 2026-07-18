@@ -219,9 +219,6 @@ function saveLocalDemoState() {
 function saveState() {
   syncCurrentSignupRecord();
   saveLocalDemoState();
-  if (!state.personalInfo?.fullName && !localStorage.getItem('af_onboarding_done')) {
-    ui.onboardingStep = 1;
-  }
 }
 
 // Zet ruwe Supabase-rijen (snake_case) om naar de camelCase-vorm die de render-functies al
@@ -287,6 +284,9 @@ async function loadAccountFromSupabase(userId, email, attempt) {
 
   syncCurrentSignupRecord();
   saveLocalDemoState();
+  if (!state.personalInfo?.fullName && !localStorage.getItem('af_onboarding_done')) {
+    ui.onboardingStep = 1;
+  }
 }
 
 // Eén centrale plek die reageert op elke sessiewijziging: eerste laden, magic-link-redirect
