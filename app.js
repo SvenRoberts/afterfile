@@ -284,9 +284,6 @@ async function loadAccountFromSupabase(userId, email, attempt) {
 
   syncCurrentSignupRecord();
   saveLocalDemoState();
-  if (!state.personalInfo?.fullName && !localStorage.getItem('af_onboarding_done')) {
-    ui.onboardingStep = 1;
-  }
 }
 
 // Eén centrale plek die reageert op elke sessiewijziging: eerste laden, magic-link-redirect
@@ -369,7 +366,7 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
-let ui = { onboardingStep: 0, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -640,12 +637,6 @@ function render() {
     else if (state.view === 'death-report') html = renderDeathReport();
     else html = renderLanding();
   } else {
-    if (ui.onboardingStep > 0) {
-      html = renderShell(renderOnboarding());
-      root.innerHTML = html;
-      wireEvents();
-      return;
-    }
     if (state.view === 'assets' && !personalInfoComplete()) {
       state.view = 'gegevens';
       saveState();
@@ -666,70 +657,6 @@ function render() {
   wireEvents();
 }
 
-function finishOnboarding() {
-  ui.onboardingStep = 0;
-  localStorage.setItem('af_onboarding_done', '1');
-  render();
-}
-
-function renderOnboarding() {
-  const step = ui.onboardingStep;
-  const STEPS = ['Jouw naam', 'Bezittingen', 'Contacten', 'Klaar'];
-  const dots = STEPS.map((_, i) => {
-    const cls = i + 1 === step ? 'ob-dot ob-dot--active' : i + 1 < step ? 'ob-dot ob-dot--done' : 'ob-dot';
-    return '<span class="' + cls + '"></span>';
-  }).join('');
-
-  let body = '';
-  if (step === 1) {
-    body = `
-      <div class="ob-icon">${iconSvg('shield-check', 36)}</div>
-      <h2 class="ob-title">Welkom bij AfterFile</h2>
-      <p class="ob-sub">We beginnen met je naam, zodat je dossier op de juiste persoon staat.</p>
-      <form id="ob-form-1" class="ob-form">
-        <div class="field">
-          <label for="ob-fullname">Volledige naam</label>
-          <input id="ob-fullname" type="text" name="fullName" placeholder="bijv. Jan de Vries" value="${esc(state.personalInfo?.fullName || '')}" required autofocus>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg">Opslaan en verder &rarr;</button>
-      </form>
-      <button class="ob-skip" data-action="ob-skip">Sla over en ga naar dashboard</button>
-    `;
-  } else if (step === 2) {
-    body = `
-      <div class="ob-icon">${iconSvg('folder', 36)}</div>
-      <h2 class="ob-title">Jouw bezittingen</h2>
-      <p class="ob-sub">Leg vast wat je hebt: bankrekeningen, crypto, e-mailaccounts en meer. Je naasten weten dan precies wat er is en waar het staat.</p>
-      <button class="btn btn-primary btn-block btn-lg" data-action="ob-goto-assets">Ga naar Bezittingen &rarr;</button>
-      <button class="ob-skip" data-action="ob-next">Nu overslaan</button>
-    `;
-  } else if (step === 3) {
-    body = `
-      <div class="ob-icon">${iconSvg('users', 36)}</div>
-      <h2 class="ob-title">Vertrouwde contacten</h2>
-      <p class="ob-sub">Wie neemt de regie over na jouw overlijden? Voeg minimaal één persoon toe die toegang krijgt tot jouw dossier.</p>
-      <button class="btn btn-primary btn-block btn-lg" data-action="ob-goto-contacts">Ga naar Contacten &rarr;</button>
-      <button class="ob-skip" data-action="ob-next">Nu overslaan</button>
-    `;
-  } else {
-    body = `
-      <div class="ob-icon ob-icon--success">${iconSvg('check', 36)}</div>
-      <h2 class="ob-title">Je bent er klaar voor</h2>
-      <p class="ob-sub">Je dossier staat klaar. Vul je bezittingen en contacten aan wanneer het jou uitkomt. Alles kun je later aanpassen.</p>
-      <button class="btn btn-primary btn-block btn-lg" data-action="ob-finish">Naar mijn dashboard</button>
-    `;
-  }
-
-  return `
-    <div class="ob-wrap">
-      <div class="ob-card">
-        <div class="ob-dots">${dots}</div>
-        <p class="ob-step-label">Stap ${step} van ${STEPS.length}</p>
-        ${body}
-      </div>
-    </div>
-  `;
-}
 
 function renderSiteFooter() {
   return `<footer class="site-footer">
@@ -2120,42 +2047,6 @@ function renderAdmin() {
 
 // ---------- events ----------
 function wireEvents() {
-  // --- Onboarding wizard ---
-  if (ui.onboardingStep > 0) {
-    const obForm1 = document.getElementById('ob-form-1');
-    if (obForm1) {
-      obForm1.addEventListener('submit', async e => {
-        e.preventDefault();
-        const fullName = (document.getElementById('ob-fullname').value || '').trim();
-        if (!fullName) return;
-        state.personalInfo = Object.assign({}, state.personalInfo, { fullName });
-        if (supabase && state.account) {
-          await supabase.from('profiles').update({ full_name: fullName }).eq('id', state.account.id);
-        }
-        ui.onboardingStep = 2;
-        render();
-      });
-    }
-    document.querySelectorAll('[data-action="ob-next"]').forEach(btn => btn.addEventListener('click', () => {
-      ui.onboardingStep = Math.min(ui.onboardingStep + 1, 4);
-      render();
-    }));
-    document.querySelectorAll('[data-action="ob-skip"]').forEach(btn => btn.addEventListener('click', () => finishOnboarding()));
-    document.querySelectorAll('[data-action="ob-finish"]').forEach(btn => btn.addEventListener('click', () => finishOnboarding()));
-    document.querySelectorAll('[data-action="ob-goto-assets"]').forEach(btn => btn.addEventListener('click', () => {
-      finishOnboarding();
-      state.view = personalInfoComplete() ? 'assets' : 'gegevens';
-      saveState();
-      render();
-    }));
-    document.querySelectorAll('[data-action="ob-goto-contacts"]').forEach(btn => btn.addEventListener('click', () => {
-      finishOnboarding();
-      state.view = 'contacts';
-      saveState();
-      render();
-    }));
-    return;
-  }
   // --- Normale events ---
   document.querySelectorAll('[data-nav]').forEach(el => {
     el.addEventListener('click', (e) => {
