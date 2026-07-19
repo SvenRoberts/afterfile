@@ -1278,3 +1278,45 @@ footer.site-footer a:hover { color: var(--color-primary); }
   .form-row { flex-direction: column; gap: 0; }
 }
 
+
+/* ---------- Wachtwoordveld show/hide ---------- */
+.pw-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.pw-wrap input {
+  flex: 1;
+  padding-right: 40px;
+}
+.pw-toggle {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+.pw-toggle:hover { color: var(--color-text); }
+
+.pw-dots {
+  font-family: monospace;
+  letter-spacing: 2px;
+  color: var(--color-text-faint);
+  margin-right: 6px;
+}
+.pw-reveal {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  padding: 0 2px;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+}
+.pw-reveal:hover { color: var(--color-text); }

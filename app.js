@@ -20,12 +20,15 @@ const ASSET_CATEGORIES = [
   { key: 'financial', label: 'Financieel', types: [
       { key: 'bank', label: 'Bankrekening', icon: 'bank', namePlaceholder: 'bijv. Betaalrekening ING', extraFields: [
           { key: 'bankName', label: 'Bank', placeholder: 'bijv. ING, Rabobank, ABN AMRO' },
+          { key: 'pincode', label: 'Pincode', placeholder: 'Bijv. je bankpas-pincode', inputType: 'password', encrypted: true },
       ]},
       { key: 'crypto', label: 'Crypto', icon: 'diamond', namePlaceholder: 'bijv. Bitcoin wallet Ledger', extraFields: [
           { key: 'walletType', label: 'Soort wallet of platform', placeholder: 'bijv. hardware wallet (Ledger), Coinbase-account' },
+          { key: 'seedphrase', label: 'Seed phrase / herstelwoorden', placeholder: 'De 12 of 24 woorden, gescheiden door spaties', inputType: 'password', encrypted: true },
       ]},
       { key: 'broker', label: 'Broker', icon: 'trending-up', namePlaceholder: 'bijv. Beleggingsrekening DEGIRO', extraFields: [
           { key: 'platform', label: 'Naam broker of platform', placeholder: 'bijv. DEGIRO, Saxo Bank, eToro' },
+          { key: 'wachtwoord', label: 'Wachtwoord', placeholder: 'Je inlogwachtwoord', inputType: 'password', encrypted: true },
       ]},
       { key: 'pension', label: 'Pensioen', icon: 'umbrella', namePlaceholder: 'bijv. Pensioen via werkgever', extraFields: [
           { key: 'provider', label: 'Pensioenuitvoerder', placeholder: 'bijv. ABP, ASR, BrightPensioen' },
@@ -34,15 +37,19 @@ const ASSET_CATEGORIES = [
   { key: 'digital', label: 'Digitaal', types: [
       { key: 'website', label: 'Website', icon: 'globe', namePlaceholder: 'bijv. Facebook account', extraFields: [
           { key: 'username', label: 'Gebruikersnaam', placeholder: 'bijv. jouwgebruikersnaam' },
+          { key: 'wachtwoord', label: 'Wachtwoord', placeholder: 'Je inlogwachtwoord', inputType: 'password', encrypted: true },
       ]},
       { key: 'domain', label: 'Domeinnaam', icon: 'link', namePlaceholder: 'bijv. mijnwebsite.nl', extraFields: [
           { key: 'registrar', label: 'Registrar', placeholder: 'bijv. TransIP, Vimexx' },
+          { key: 'wachtwoord', label: 'Wachtwoord beheerderpanel', placeholder: 'Je wachtwoord bij de registrar', inputType: 'password', encrypted: true },
       ]},
       { key: 'cloud', label: 'Cloudopslag', icon: 'cloud', namePlaceholder: 'bijv. Google Drive opslag', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Google Drive, Dropbox, iCloud' },
+          { key: 'wachtwoord', label: 'Wachtwoord', placeholder: 'Je inlogwachtwoord', inputType: 'password', encrypted: true },
       ]},
       { key: 'email', label: 'E-mailaccount', icon: 'mail', namePlaceholder: 'bijv. Gmail prive', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
+          { key: 'wachtwoord', label: 'Wachtwoord', placeholder: 'Je inlogwachtwoord', inputType: 'password', encrypted: true },
       ]},
   ]},
   { key: 'other', label: 'Overig', types: [
@@ -55,6 +62,7 @@ const ASSET_CATEGORIES = [
       { key: 'password-manager', label: 'Wachtwoordmanager', icon: 'key', namePlaceholder: 'bijv. Mijn wachtwoordkluis', extraFields: [
           { key: 'app', label: 'Welke app', placeholder: 'bijv. 1Password, Bitwarden, LastPass' },
           { key: 'keyLocation', label: 'Waar staat de masterkey / emergency kit', placeholder: 'bijv. in een envelop bij de notaris, in de kluis thuis' },
+          { key: 'masterpassword', label: 'Masterpassword', placeholder: 'Het masterpassword voor de kluis', inputType: 'password', encrypted: true },
       ]},
       { key: 'other', label: 'Overige belangrijke informatie', icon: 'folder', namePlaceholder: 'bijv. Lidmaatschap sportclub' },
   ]},
@@ -67,6 +75,7 @@ const ICON_PATHS = {
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path>',
   'shield-check': '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path>',
   'eye-off': '<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="M4 4l16 16"></path>',
+  eye: '<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path><circle cx="12" cy="12" r="2.5"></circle>',
   'key-off': '<circle cx="8" cy="14.5" r="3.2"></circle><path d="M10.3 12.2 19 3.5"></path><path d="M15.5 7 18 9.5M13 9.5l2 2"></path><path d="M4 4l16 16"></path>',
   key: '<circle cx="8" cy="14.5" r="3.2"></circle><path d="M10.3 12.2 19 3.5"></path><path d="M15.5 7 18 9.5M13 9.5l2 2"></path>',
   ban: '<circle cx="12" cy="12" r="8.5"></circle><path d="M6.5 6.5l11 11"></path>',
@@ -185,6 +194,7 @@ function defaultState() {
 const SUPABASE_URL = 'https://prkwfuiadjfpdmcorfas.supabase.co';
 // Vaultwarden URL — leeg laten totdat de server draait; zet hier bijv. 'https://kluis.afterfile.nl'
 const VAULT_URL = '';
+let fieldKey = null; // AES-GCM sleutel — opgehaald via get-field-key, nooit opgeslagen
 const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 
 // Als het Supabase-client aanmaken faalt, mag dat de rest van de site nooit blokkeren:
@@ -225,6 +235,49 @@ function saveState() {
 
 // Zet ruwe Supabase-rijen (snake_case) om naar de camelCase-vorm die de render-functies al
 // gebruiken, zodat de rest van de app ongewijzigd kan blijven.
+// ---------- veldversleuteling (AES-GCM via Web Crypto API) ----------
+function hexToBytes(hex) {
+  const b = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) b[i / 2] = parseInt(hex.substr(i, 2), 16);
+  return b;
+}
+async function loadFieldKey() {
+  if (fieldKey || !supabase) return;
+  try {
+    const { data } = await supabase.functions.invoke('get-field-key');
+    if (data && data.key) fieldKey = data.key;
+  } catch { /* stille fallback */ }
+}
+async function encryptField(plaintext) {
+  if (!fieldKey || !plaintext) return plaintext;
+  try {
+    const k = await crypto.subtle.importKey('raw', hexToBytes(fieldKey), 'AES-GCM', false, ['encrypt']);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(plaintext));
+    const combined = new Uint8Array(12 + enc.byteLength);
+    combined.set(iv); combined.set(new Uint8Array(enc), 12);
+    return 'enc:' + btoa(String.fromCharCode(...combined));
+  } catch { return plaintext; }
+}
+async function decryptField(ciphertext) {
+  if (!fieldKey || !ciphertext || !ciphertext.startsWith('enc:')) return ciphertext;
+  try {
+    const k = await crypto.subtle.importKey('raw', hexToBytes(fieldKey), 'AES-GCM', false, ['decrypt']);
+    const bytes = Uint8Array.from(atob(ciphertext.slice(4)), c => c.charCodeAt(0));
+    const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(0, 12) }, k, bytes.slice(12));
+    return new TextDecoder().decode(dec);
+  } catch { return '••••••'; }
+}
+async function decryptAssets(assets) {
+  for (const a of assets) {
+    for (const key of Object.keys(a.extra || {})) {
+      if (typeof a.extra[key] === 'string' && a.extra[key].startsWith('enc:')) {
+        a.extra[key] = await decryptField(a.extra[key]);
+      }
+    }
+  }
+}
+
 function rowToAsset(row) {
   return {
     id: row.id, categoryKey: row.category_key, typeKey: row.type_key, typeLabel: row.type_label,
@@ -269,6 +322,8 @@ async function loadAccountFromSupabase(userId, email, attempt) {
   state.checkins = { status: profile.checkin_status || 'active', waitingStartedAt: profile.waiting_started_at };
   state.completedAt = profile.completed_at ? new Date(profile.completed_at).getTime() : null;
   state.assets = (assets || []).map(rowToAsset);
+  await loadFieldKey();
+  await decryptAssets(state.assets);
   state.contacts = (contacts || []).map(rowToContact);
 
   // Veiligheidsmechanisme: gewoon opnieuw inloggen is de manier om een onterechte
@@ -1536,11 +1591,22 @@ function renderAssets() {
   if (adding) {
     const cat = ASSET_CATEGORIES.find(c => c.key === adding.categoryKey);
     const type = findType(adding.categoryKey, adding.typeKey);
-    const extraFieldsHtml = (type.extraFields || []).map(ef => `
+    const extraFieldsHtml = (type.extraFields || []).map(ef => {
+      const efVal = esc(ui.draftAsset[ef.key] || '');
+      if (ef.inputType === 'password') return `
           <div class="field">
             <label for="as-${ef.key}">${esc(ef.label)} <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-            <input id="as-${ef.key}" name="${ef.key}" type="text" placeholder="${esc(ef.placeholder || '')}" value="${esc((ui.draftAsset[ef.key] || ''))}">
-          </div>`).join('');
+            <div class="pw-wrap">
+              <input id="as-${ef.key}" name="${ef.key}" type="password" placeholder="${esc(ef.placeholder || '')}" value="${efVal}" autocomplete="new-password">
+              <button type="button" class="pw-toggle" data-target="as-${ef.key}">${iconSvg('eye-off', 16)}</button>
+            </div>
+          </div>`;
+      return `
+          <div class="field">
+            <label for="as-${ef.key}">${esc(ef.label)} <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
+            <input id="as-${ef.key}" name="${ef.key}" type="text" placeholder="${esc(ef.placeholder || '')}" value="${efVal}">
+          </div>`;
+    }).join('');
     formHtml = `
       <div class="inline-form-card">
         <div class="form-title"><span class="badge-pill">${esc(cat.label)}</span> ${iconSvg(type.icon, 16)} ${esc(type.label)}</div>
@@ -1601,7 +1667,12 @@ function renderAssets() {
                 <button class="btn-danger-ghost" data-action="delete-asset" data-id="${a.id}">Verwijderen</button>
               </div>
               <h4>${esc(a.name)}</h4>
-              ${(findType(a.categoryKey, a.typeKey)?.extraFields || []).map(ef => (a.extra || {})[ef.key] ? `<p class="meta-row"><strong>${esc(ef.label)}:</strong> ${esc(a.extra[ef.key])}</p>` : '').join('')}
+              ${(findType(a.categoryKey, a.typeKey)?.extraFields || []).map(ef => {
+                const v = (a.extra || {})[ef.key];
+                if (!v) return '';
+                if (ef.inputType === 'password') return `<p class="meta-row"><strong>${esc(ef.label)}:</strong> <span class="pw-dots">••••••</span><button type="button" class="pw-reveal" data-id="${esc(a.id)}" data-key="${esc(ef.key)}" title="Toon/verberg">${iconSvg('eye-off', 13)}</button></p>`;
+                return `<p class="meta-row"><strong>${esc(ef.label)}:</strong> ${esc(v)}</p>`;
+              }).join('')}
               ${a.description ? `<p class="meta-row">${esc(a.description)}</p>` : ''}
               ${a.location ? `<p class="meta-row"><strong>Locatie:</strong> ${esc(a.location)}</p>` : ''}
               ${a.notes ? `<p class="meta-row"><strong>Notities:</strong> ${esc(a.notes)}</p>` : ''}
@@ -2224,10 +2295,10 @@ function wireEvents() {
     const { categoryKey, typeKey } = ui.addingAssetType;
     const type = findType(categoryKey, typeKey);
     const extra = {};
-    (type.extraFields || []).forEach(ef => {
+    for (const ef of (type.extraFields || [])) {
       const val = (fd.get(ef.key) || '').trim();
-      if (val) extra[ef.key] = val;
-    });
+      if (val) extra[ef.key] = ef.encrypted ? await encryptField(val) : val;
+    }
     const { data, error } = await supabase.from('assets').insert({
       account_id: state.account.id,
       category_key: categoryKey, type_key: typeKey, type_label: type.label,
@@ -2258,6 +2329,28 @@ function wireEvents() {
       syncCurrentSignupRecord();
       saveLocalDemoState();
       render();
+    });
+  });
+
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.innerHTML = input.type === 'password' ? iconSvg('eye-off', 16) : iconSvg('eye', 16);
+    });
+  });
+
+  document.querySelectorAll('.pw-reveal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const asset = state.assets.find(a => a.id === btn.dataset.id);
+      if (!asset) return;
+      const val = (asset.extra || {})[btn.dataset.key] || '';
+      const span = btn.previousElementSibling;
+      if (!span) return;
+      const hidden = span.textContent === '••••••';
+      span.textContent = hidden ? val : '••••••';
+      btn.innerHTML = hidden ? iconSvg('eye', 13) : iconSvg('eye-off', 13);
     });
   });
 
