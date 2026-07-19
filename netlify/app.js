@@ -183,6 +183,8 @@ function defaultState() {
 // Project URL en publishable key zijn geen geheimen (RLS beperkt sowieso wat elke gebruiker
 // kan zien/doen), dus veilig om hier in de clientcode te zetten.
 const SUPABASE_URL = 'https://prkwfuiadjfpdmcorfas.supabase.co';
+// Vaultwarden URL — leeg laten totdat de server draait; zet hier bijv. 'https://kluis.afterfile.nl'
+const VAULT_URL = '';
 const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 
 // Als het Supabase-client aanmaken faalt, mag dat de rest van de site nooit blokkeren:
@@ -258,7 +260,7 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     await new Promise(r => setTimeout(r, 600));
     return loadAccountFromSupabase(userId, email, attempt + 1);
   }
-  state.account = { id: userId, name: profile.name || email.split('@')[0], email: profile.email || email, plan: profile.plan, createdAt: profile.created_at, role: profile.role || 'user' };
+  state.account = { id: userId, name: profile.name || email.split('@')[0], email: profile.email || email, plan: profile.plan, createdAt: profile.created_at, role: profile.role || 'user', vaultInvitedAt: profile.vault_invited_at || null };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
     city: profile.city || '', birthDate: profile.birth_date || '', phone: profile.phone || '',
@@ -284,6 +286,12 @@ async function loadAccountFromSupabase(userId, email, attempt) {
 
   syncCurrentSignupRecord();
   saveLocalDemoState();
+  // Kluis: stille, niet-blokkerende uitnodiging bij eerste login
+  if (VAULT_URL && supabase && !state.account.vaultInvitedAt) {
+    supabase.functions.invoke('vault-invite', { body: { email: state.account.email, account_id: state.account.id } })
+      .then(({ data }) => { if (data && data.ok && !data.skipped) { state.account.vaultInvitedAt = new Date().toISOString(); render(); } })
+      .catch(() => {});
+  }
 }
 
 // Eén centrale plek die reageert op elke sessiewijziging: eerste laden, magic-link-redirect
@@ -1461,6 +1469,18 @@ function renderDashboard() {
         <div class="count" style="font-size:18px;">${hasInstr ? 'Geschreven' : 'Nog niet geschreven'}</div>
         <a class="card-link" href="#" data-nav="instructions">${hasInstr ? 'Instructies bewerken →' : 'Instructies schrijven →'}</a>
       </div>
+      ${VAULT_URL ? `
+      <div class="dash-card">
+        <div class="dash-card-top">
+          <div class="dash-card-title"><span class="card-icon">${iconSvg('key', 17)}</span><h3>Wachtwoordkluis</h3></div>
+          <span class="check ${state.account.vaultInvitedAt ? 'done' : ''}">${state.account.vaultInvitedAt ? iconSvg('check', 12) : ''}</span>
+        </div>
+        <div class="count" style="font-size:18px;">${state.account.vaultInvitedAt ? 'Uitnodiging verstuurd' : 'Wordt aangemaakt…'}</div>
+        ${state.account.vaultInvitedAt
+          ? `<a class="card-link" href="${VAULT_URL}" target="_blank" rel="noopener">Open kluis →</a>`
+          : `<span class="card-link" style="color:var(--color-text-faint);">Je ontvangt een e-mail</span>`}
+      </div>
+      ` : ''}
     </div>
   `;
 }
@@ -1656,6 +1676,21 @@ function renderContactInviteModal() {
         </div>
         <div class="invite-mock-footnote">Dit is een voorbeeld in deze demo: er wordt geen echte e-mail verzonden.</div>
       </div>
+      ${VAULT_URL ? `
+      <div class="vault-tip-card">
+        <div class="vault-tip-title">${iconSvg('key', 15)} Laatste stap: koppel de wachtwoordkluis</div>
+        <p class="vault-tip-body">
+          ${esc(c.name ? c.name.split(' ')[0] : 'Dit contact')} krijgt ook een uitnodiging voor de AfterFile wachtwoordkluis.
+          Om na jouw overlijden echt toegang te krijgen, moet je hen eenmalig als <strong>noodcontact</strong> toevoegen in de Bitwarden-app.
+        </p>
+        <ol class="vault-tip-steps">
+          <li>Open de <strong>Bitwarden-app</strong> (of ga naar <a href="${VAULT_URL}" target="_blank" rel="noopener">${VAULT_URL}</a>)</li>
+          <li>Ga naar <strong>Noodtoegang</strong> in het menu</li>
+          <li>Klik op <strong>Uitnodigen</strong> en voer <strong>${esc(c.email)}</strong> in</li>
+          <li>Klaar &mdash; je hoeft dit nooit meer te doen</li>
+        </ol>
+      </div>
+      ` : ''}
       <div class="invite-modal-actions">
         <button type="button" class="btn btn-secondary btn-sm" data-action="close-invite-preview">Sluiten</button>
       </div>
@@ -2301,6 +2336,11 @@ function wireEvents() {
     // header (vereist, want deze Edge Function draait met verify_jwt: true).
     supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id } })
       .catch(err => console.error('send-contact-invite aanroep mislukt', err));
+    // Kluis: contact ook uitnodigen op Vaultwarden
+    if (VAULT_URL) {
+      supabase.functions.invoke('vault-invite', { body: { email: saved.email, contact_id: saved.id } })
+        .catch(err => console.error('vault-invite contact mislukt', err));
+    }
   });
   } // end if (contactForm)
 
