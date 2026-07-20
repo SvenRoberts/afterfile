@@ -1443,20 +1443,30 @@ function renderVault() {
     return `
       <div class="vault-wrap">
         <div class="vault-overlay">
-          <div class="vault-scene">
-            <div class="vault-wall-glow"></div>
-            <div class="vault-door-3d" id="vault-door-3d">
-              <svg class="vault-door-svg" viewBox="0 0 300 360" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="vgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0c040"/><stop offset="50%" stop-color="#d4a843"/><stop offset="100%" stop-color="#9a7530"/></linearGradient><filter id="vf-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="15" y="5" width="270" height="350" rx="18" fill="#0e0e20" stroke="url(#vgold)" stroke-width="3"/><rect x="27" y="17" width="246" height="326" rx="10" fill="none" stroke="rgba(212,168,67,0.18)" stroke-width="1"/><rect x="8" y="72" width="12" height="48" rx="4" fill="#8B7040"/><circle cx="14" cy="84" r="4" fill="#3a2c10"/><circle cx="14" cy="108" r="4" fill="#3a2c10"/><rect x="8" y="240" width="12" height="48" rx="4" fill="#8B7040"/><circle cx="14" cy="252" r="4" fill="#3a2c10"/><circle cx="14" cy="276" r="4" fill="#3a2c10"/><g><circle cx="56" cy="50" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="56" cy="50" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="56" cy="50" r="4" fill="#d4a843"/></g><g><circle cx="244" cy="50" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="244" cy="50" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="244" cy="50" r="4" fill="#d4a843"/></g><g><circle cx="56" cy="310" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="56" cy="310" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="56" cy="310" r="4" fill="#d4a843"/></g><g><circle cx="244" cy="310" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="244" cy="310" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="244" cy="310" r="4" fill="#d4a843"/></g><circle cx="150" cy="180" r="94" fill="#080816" stroke="url(#vgold)" stroke-width="3"/><circle cx="150" cy="180" r="83" fill="none" stroke="rgba(212,168,67,0.1)" stroke-width="1"/><circle cx="150" cy="180" r="73" fill="none" stroke="rgba(212,168,67,0.06)" stroke-width="1" stroke-dasharray="5 7"/><g class="vault-dial-rotate"><circle cx="150" cy="180" r="62" fill="#0d0d1e" stroke="url(#vgold)" stroke-width="2.5"/><line x1="150" y1="122" x2="150" y2="133" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="150" y1="227" x2="150" y2="238" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="92" y1="180" x2="103" y2="180" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="197" y1="180" x2="208" y2="180" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="181" y1="124" x2="178" y2="134" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="207" y1="150" x2="197" y2="153" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="207" y1="210" x2="197" y2="207" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="181" y1="236" x2="178" y2="226" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="119" y1="236" x2="122" y2="226" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="93" y1="210" x2="103" y2="207" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="93" y1="150" x2="103" y2="153" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="119" y1="124" x2="122" y2="134" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><circle cx="150" cy="180" r="24" fill="#080816" stroke="url(#vgold)" stroke-width="2.5"/><circle cx="150" cy="180" r="14" fill="#d4a843"/><circle cx="150" cy="180" r="7" fill="#0d0d1e"/><line x1="150" y1="172" x2="150" y2="157" stroke="#f0c040" stroke-width="3.5" stroke-linecap="round" filter="url(#vf-glow)"/></g><g class="vault-locking-bars"><rect x="236" y="120" width="38" height="14" rx="7" fill="#5a4520"/><rect x="244" y="124" width="26" height="6" rx="3" fill="#8B7040"/><rect x="236" y="173" width="38" height="14" rx="7" fill="#5a4520"/><rect x="244" y="177" width="26" height="6" rx="3" fill="#8B7040"/><rect x="236" y="226" width="38" height="14" rx="7" fill="#5a4520"/><rect x="244" y="230" width="26" height="6" rx="3" fill="#8B7040"/></g><circle cx="248" cy="180" r="14" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="248" cy="180" r="7" fill="#c49a30"/></svg>
+          <div class="vault-scene" id="vault-door-3d">
+            <svg class="vault-verify-svg" viewBox="-72 -72 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle class="vault-verify-ring" cx="0" cy="0" r="60" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="vault-lock-container">
+              <svg class="vault-lock-svg" viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g class="vault-lock-shackle">
+                  <path d="M 20 44 L 20 30 C 20 18.95 28.95 10 40 10 C 51.05 10 60 18.95 60 30 L 60 44" stroke="#d4a843" stroke-width="8" stroke-linecap="round"/>
+                </g>
+                <rect x="6" y="40" width="68" height="48" rx="10" fill="#141428" stroke="#d4a843" stroke-width="2.5"/>
+                <circle class="vault-keyhole" cx="40" cy="64" r="8" fill="#d4a843"/>
+                <rect x="36" y="70" width="8" height="10" rx="3" fill="#d4a843"/>
+              </svg>
+              <div class="vault-flash"></div>
             </div>
           </div>
-          <p class="vault-unlock-label">Ontgrendelen...</p>
+          <p class="vault-unlock-label">Kluis ontgrendelen</p>
         </div>
       </div>
     `;
   }
 
   const pct = total > 0 ? Math.round((secured / total) * 100) : 0;
-  const dashOffset = Math.round(163.36 - (163.36 * pct / 100));
+  const dashOff = Math.round(163.36 - (163.36 * pct / 100));
   const sections = ASSET_CATEGORIES.map(cat => {
     const items = state.assets.filter(a => a.categoryKey === cat.key);
     if (!items.length) return '';
@@ -1501,7 +1511,7 @@ function renderVault() {
           <div class="vault-stat-ring">
             <svg class="vault-ring-svg" viewBox="0 0 64 64">
               <circle class="vault-ring-bg" cx="32" cy="32" r="26"/>
-              <circle class="vault-ring-fill" cx="32" cy="32" r="26" style="stroke-dashoffset:${dashOffset}"/>
+              <circle class="vault-ring-fill" cx="32" cy="32" r="26" style="stroke-dashoffset:${dashOff}"/>
             </svg>
             <div class="vault-stat-inner">
               <span class="vault-stat-n">${secured}</span><span class="vault-stat-d">/${total}</span>
