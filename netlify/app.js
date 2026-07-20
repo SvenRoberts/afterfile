@@ -422,7 +422,7 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
-let ui = { vaultModal: null, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultModal: null, vaultOpened: false, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1436,51 +1436,87 @@ function renderVaultModal() {
 }
 
 function renderVault() {
-  const secured = state.vaultEntries.length;
   const total   = state.assets.length;
+  const secured = state.vaultEntries.length;
+
+  if (!ui.vaultOpened) {
+    return `
+      <div class="vault-wrap">
+        <div class="vault-overlay">
+          <div class="vault-scene">
+            <div class="vault-wall-glow"></div>
+            <div class="vault-door-3d" id="vault-door-3d">
+              <svg class="vault-door-svg" viewBox="0 0 300 360" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="vgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0c040"/><stop offset="50%" stop-color="#d4a843"/><stop offset="100%" stop-color="#9a7530"/></linearGradient><filter id="vf-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="15" y="5" width="270" height="350" rx="18" fill="#0e0e20" stroke="url(#vgold)" stroke-width="3"/><rect x="27" y="17" width="246" height="326" rx="10" fill="none" stroke="rgba(212,168,67,0.18)" stroke-width="1"/><rect x="8" y="72" width="12" height="48" rx="4" fill="#8B7040"/><circle cx="14" cy="84" r="4" fill="#3a2c10"/><circle cx="14" cy="108" r="4" fill="#3a2c10"/><rect x="8" y="240" width="12" height="48" rx="4" fill="#8B7040"/><circle cx="14" cy="252" r="4" fill="#3a2c10"/><circle cx="14" cy="276" r="4" fill="#3a2c10"/><g><circle cx="56" cy="50" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="56" cy="50" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="56" cy="50" r="4" fill="#d4a843"/></g><g><circle cx="244" cy="50" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="244" cy="50" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="244" cy="50" r="4" fill="#d4a843"/></g><g><circle cx="56" cy="310" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="56" cy="310" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="56" cy="310" r="4" fill="#d4a843"/></g><g><circle cx="244" cy="310" r="16" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="244" cy="310" r="9" fill="#141428" stroke="rgba(212,168,67,0.35)" stroke-width="1"/><circle cx="244" cy="310" r="4" fill="#d4a843"/></g><circle cx="150" cy="180" r="94" fill="#080816" stroke="url(#vgold)" stroke-width="3"/><circle cx="150" cy="180" r="83" fill="none" stroke="rgba(212,168,67,0.1)" stroke-width="1"/><circle cx="150" cy="180" r="73" fill="none" stroke="rgba(212,168,67,0.06)" stroke-width="1" stroke-dasharray="5 7"/><g class="vault-dial-rotate"><circle cx="150" cy="180" r="62" fill="#0d0d1e" stroke="url(#vgold)" stroke-width="2.5"/><line x1="150" y1="122" x2="150" y2="133" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="150" y1="227" x2="150" y2="238" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="92" y1="180" x2="103" y2="180" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="197" y1="180" x2="208" y2="180" stroke="#f0c040" stroke-width="4" stroke-linecap="round" filter="url(#vf-glow)"/><line x1="181" y1="124" x2="178" y2="134" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="207" y1="150" x2="197" y2="153" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="207" y1="210" x2="197" y2="207" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="181" y1="236" x2="178" y2="226" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="119" y1="236" x2="122" y2="226" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="93" y1="210" x2="103" y2="207" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="93" y1="150" x2="103" y2="153" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><line x1="119" y1="124" x2="122" y2="134" stroke="#7a6030" stroke-width="2" stroke-linecap="round"/><circle cx="150" cy="180" r="24" fill="#080816" stroke="url(#vgold)" stroke-width="2.5"/><circle cx="150" cy="180" r="14" fill="#d4a843"/><circle cx="150" cy="180" r="7" fill="#0d0d1e"/><line x1="150" y1="172" x2="150" y2="157" stroke="#f0c040" stroke-width="3.5" stroke-linecap="round" filter="url(#vf-glow)"/></g><g class="vault-locking-bars"><rect x="236" y="120" width="38" height="14" rx="7" fill="#5a4520"/><rect x="244" y="124" width="26" height="6" rx="3" fill="#8B7040"/><rect x="236" y="173" width="38" height="14" rx="7" fill="#5a4520"/><rect x="244" y="177" width="26" height="6" rx="3" fill="#8B7040"/><rect x="236" y="226" width="38" height="14" rx="7" fill="#5a4520"/><rect x="244" y="230" width="26" height="6" rx="3" fill="#8B7040"/></g><circle cx="248" cy="180" r="14" fill="#0a0a18" stroke="url(#vgold)" stroke-width="2"/><circle cx="248" cy="180" r="7" fill="#c49a30"/></svg>
+            </div>
+          </div>
+          <p class="vault-unlock-label">Ontgrendelen...</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const pct = total > 0 ? Math.round((secured / total) * 100) : 0;
+  const dashOffset = Math.round(163.36 - (163.36 * pct / 100));
   const sections = ASSET_CATEGORIES.map(cat => {
     const items = state.assets.filter(a => a.categoryKey === cat.key);
     if (!items.length) return '';
     return `
       <div class="vault-section">
-        <h3 class="vault-section-label">${esc(cat.label)}</h3>
+        <p class="vault-section-label">${esc(cat.label)}</p>
         ${items.map(a => {
           const type  = findType(a.categoryKey, a.typeKey);
           const entry = state.vaultEntries.find(e => e.assetId === a.id);
           return `
             <div class="vault-row${entry ? ' secured' : ''}">
-              <div class="vault-row-icon">${iconSvg(type ? type.icon : 'folder', 18)}</div>
+              <div class="vault-row-icon">${iconSvg(type ? type.icon : 'folder', 16)}</div>
               <div class="vault-row-info">
                 <div class="vault-row-name">${esc(a.name)}</div>
-                <div class="vault-row-type">${esc(a.typeLabel)}</div>
+                <div class="vault-row-meta">${esc(a.typeLabel)}</div>
               </div>
-              ${entry
-                ? `<span class="vault-badge">${iconSvg('shield-check', 13)} Beveiligd</span>
-                   <button type="button" class="vault-btn-edit" data-action="edit-vault" data-asset-id="${a.id}">Bewerk</button>`
-                : `<button type="button" class="vault-btn-add" data-action="open-vault-modal" data-asset-id="${a.id}">+ Toevoegen</button>`
-              }
+              <div class="vault-row-actions">
+                ${entry
+                  ? `<span class="vault-badge">${iconSvg('shield-check', 12)} Beveiligd</span><button type="button" class="vault-btn-edit" data-action="edit-vault" data-asset-id="${a.id}">Bewerk</button>`
+                  : `<button type="button" class="vault-btn-add" data-action="open-vault-modal" data-asset-id="${a.id}">+ Toevoegen</button>`
+                }
+              </div>
             </div>`;
         }).join('')}
       </div>`;
   }).join('');
 
   return `
-    <div class="vault-hero">
-      <div class="vault-hero-glow"></div>
-      <div class="vault-hero-inner">
-        <div class="vault-hero-icon">${iconSvg('lock', 30)}</div>
-        <div class="vault-hero-text">
-          <h1 class="vault-hero-title">Kluis</h1>
-          <p class="vault-hero-sub">Wachtwoorden &amp; inloggegevens, versleuteld opgeslagen. Zelfs wij kunnen ze niet lezen.</p>
+    <div class="vault-wrap">
+      <div class="vault-main">
+        <div class="vault-header">
+          <div class="vault-header-left">
+            <div class="vault-header-icon">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <div>
+              <h1 class="vault-header-title">Kluis</h1>
+              <p class="vault-header-sub">AES-256 versleuteld &middot; alleen jij hebt toegang</p>
+            </div>
+          </div>
+          ${total > 0 ? `
+          <div class="vault-stat-ring">
+            <svg class="vault-ring-svg" viewBox="0 0 64 64">
+              <circle class="vault-ring-bg" cx="32" cy="32" r="26"/>
+              <circle class="vault-ring-fill" cx="32" cy="32" r="26" style="stroke-dashoffset:${dashOffset}"/>
+            </svg>
+            <div class="vault-stat-inner">
+              <span class="vault-stat-n">${secured}</span><span class="vault-stat-d">/${total}</span>
+            </div>
+          </div>` : ''}
         </div>
-        ${total > 0 ? `<div class="vault-hero-stat"><span class="vault-stat-num">${secured}</span><span class="vault-stat-of">/ ${total}</span><span class="vault-stat-label">beveiligd</span></div>` : ''}
+        ${total > 0 ? `<div class="vault-list">${sections}</div>` : `
+          <div class="vault-empty">
+            <div class="vault-empty-icon">${iconSvg('lock', 28)}</div>
+            <p class="vault-empty-title">Nog geen bezittingen</p>
+            <p class="vault-empty-sub">Voeg bezittingen toe via <a href="#" data-nav="assets" class="vault-link">Bezittingen</a> om ze hier te beveiligen.</p>
+          </div>`}
+        ${ui.vaultModal ? renderVaultModal() : ''}
       </div>
     </div>
-    ${total > 0 ? sections : `
-      <div class="empty-state" style="margin-top:32px;">
-        <p>Voeg eerst bezittingen toe via <a href="#" data-nav="assets">Bezittingen</a> om ze hier te beveiligen.</p>
-      </div>`}
-    ${ui.vaultModal ? renderVaultModal() : ''}
   `;
 }
 
@@ -2228,6 +2264,7 @@ function wireEvents() {
       e.preventDefault();
       ui.accountMenuOpen = false;
       let target = el.getAttribute('data-nav');
+      if (target !== 'vault') ui.vaultOpened = false;
       const planHint = el.getAttribute('data-plan');
       if (target === 'signup') {
         ui.selectedPlanKey = planHint || ui.selectedPlanKey || 'compleet';
@@ -2402,6 +2439,9 @@ function wireEvents() {
   });
 
   // ----- Kluis -----
+  if (document.getElementById('vault-door-3d')) {
+    setTimeout(() => { ui.vaultOpened = true; render(); }, 1900);
+  }
   document.querySelectorAll('[data-action="open-vault-modal"]').forEach(btn => {
     btn.addEventListener('click', () => {
       ui.vaultModal = { assetId: btn.dataset.assetId, entryId: null, username: '', password: '', notes: '', submitting: false };
