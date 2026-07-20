@@ -1443,42 +1443,27 @@ function renderVault() {
     return `
       <div class="vault-wrap">
         <div class="vault-overlay">
-          <div class="vault-anim-ring vault-anim-ring-1"></div>
-          <div class="vault-anim-ring vault-anim-ring-2"></div>
-          <div class="vault-anim-ring vault-anim-ring-3"></div>
+          <div class="vault-rings">
+            <div class="vault-ring r1"></div>
+            <div class="vault-ring r2"></div>
+            <div class="vault-ring r3"></div>
+          </div>
           <div class="vault-lock-wrap" id="vault-door-3d">
-            <svg class="vault-lock-svg" viewBox="0 0 90 102" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="lbg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#3b82f6"/>
-                  <stop offset="100%" stop-color="#1d4ed8"/>
-                </linearGradient>
-                <filter id="lsh" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0a1628" flood-opacity="0.7"/>
-                </filter>
-                <filter id="lgl" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="6" result="b"/>
-                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-              </defs>
-              <g filter="url(#lsh)">
+            <div class="vault-lock-box">
+              <svg class="vault-lock-svg" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g class="vault-lock-shackle">
-                  <path d="M22 50 L22 33 C22 20.3 31.5 11 44 11 C56.5 11 66 20.3 66 33 L66 50"
-                        stroke="white" stroke-width="9" stroke-linecap="round" fill="none"/>
+                  <path d="M14 34 L14 22 C14 13.16 22.06 6 32 6 C41.94 6 50 13.16 50 22 L50 34"
+                        stroke="white" stroke-width="7" stroke-linecap="round"/>
                 </g>
-                <rect x="7" y="46" width="76" height="52" rx="13" fill="url(#lbg)"/>
-                <rect x="7" y="46" width="76" height="8" rx="13" fill="rgba(255,255,255,0.18)"/>
-                <rect x="7" y="94" width="76" height="4" rx="0" fill="rgba(0,0,0,0.15)"/>
-                <circle cx="45" cy="72" r="10" fill="white" filter="url(#lgl)" opacity="0.95"/>
-                <rect x="41" y="80" width="8" height="12" rx="3" fill="white" opacity="0.95"/>
-              </g>
-            </svg>
-            <div class="vault-flash"></div>
+                <rect x="4" y="30" width="56" height="38" rx="9" fill="white" fill-opacity="0.18"/>
+                <rect x="6" y="32" width="52" height="34" rx="7" fill="white"/>
+                <circle cx="32" cy="49" r="7" fill="#1d4ed8"/>
+                <rect x="28.5" y="54" width="7" height="9" rx="2.5" fill="#1d4ed8"/>
+              </svg>
+              <div class="vault-flash"></div>
+            </div>
           </div>
-          <div class="vault-overlay-status">
-            <div class="vault-status-dot"></div>
-            <span>Kluis ontgrendelen</span>
-          </div>
+          <p class="vault-unlock-label">Kluis ontgrendelen</p>
         </div>
       </div>
     `;
