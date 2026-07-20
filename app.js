@@ -170,7 +170,6 @@ function defaultState() {
     account: null,
     assets: [],
     contacts: [],
-    vaultEntries: [],
     instructions: '',
     personalInfo: { fullName: '', street: '', postalCode: '', city: '', birthDate: '', phone: '' },
     signups: [],
@@ -185,8 +184,6 @@ function defaultState() {
 // Project URL en publishable key zijn geen geheimen (RLS beperkt sowieso wat elke gebruiker
 // kan zien/doen), dus veilig om hier in de clientcode te zetten.
 const SUPABASE_URL = 'https://prkwfuiadjfpdmcorfas.supabase.co';
-// Vaultwarden URL - leeg laten totdat de server draait; zet hier bijv. 'https://kluis.afterfile.nl'
-const VAULT_URL = '';
 const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 
 // Als het Supabase-client aanmaken faalt, mag dat de rest van de site nooit blokkeren:
@@ -256,17 +253,6 @@ async function decryptField(v) {
     return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, k, b.slice(12)));
   } catch { return ''; }
 }
-async function decryptVaultEntries(entries) {
-  for (const e of entries) {
-    if (e.username) e.username = await decryptField(e.username);
-    if (e.password) e.password = await decryptField(e.password);
-    if (e.notes)    e.notes    = await decryptField(e.notes);
-  }
-}
-function rowToVaultEntry(row) {
-  return { id: row.id, assetId: row.asset_id, username: row.username || '', password: row.password || '', notes: row.notes || '', createdAt: row.created_at };
-}
-
 function rowToAsset(row) {
   return {
     id: row.id, categoryKey: row.category_key, typeKey: row.type_key, typeLabel: row.type_label,
@@ -289,11 +275,10 @@ function rowToContact(row) {
 // allereerste keer inloggen), proberen we het hier zelf nog een paar keer met een korte vertraging.
 async function loadAccountFromSupabase(userId, email, attempt) {
   attempt = attempt || 0;
-  const [{ data: profile, error: profileError }, { data: assets }, { data: contacts }, { data: vaultData }] = await Promise.all([
+  const [{ data: profile, error: profileError }, { data: assets }, { data: contacts }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase.from('assets').select('*').eq('account_id', userId).order('created_at', { ascending: true }),
     supabase.from('contacts').select('*').eq('account_id', userId).order('created_at', { ascending: true }),
-    supabase.from('vault_entries').select('*').eq('account_id', userId).order('created_at', { ascending: true }),
   ]);
   if (profileError || !profile) {
     if (attempt >= 3) {
@@ -303,7 +288,7 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     await new Promise(r => setTimeout(r, 600));
     return loadAccountFromSupabase(userId, email, attempt + 1);
   }
-  state.account = { id: userId, name: profile.name || email.split('@')[0], email: profile.email || email, plan: profile.plan, createdAt: profile.created_at, role: profile.role || 'user', vaultInvitedAt: profile.vault_invited_at || null };
+  state.account = { id: userId, name: profile.name || email.split('@')[0], email: profile.email || email, plan: profile.plan, createdAt: profile.created_at, role: profile.role || 'user' };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
     city: profile.city || '', birthDate: profile.birth_date || '', phone: profile.phone || '',
@@ -312,10 +297,6 @@ async function loadAccountFromSupabase(userId, email, attempt) {
   state.checkins = { status: profile.checkin_status || 'active', waitingStartedAt: profile.waiting_started_at };
   state.completedAt = profile.completed_at ? new Date(profile.completed_at).getTime() : null;
   state.assets = (assets || []).map(rowToAsset);
-  await loadFieldKey();
-  const rawVault = (vaultData || []).map(rowToVaultEntry);
-  await decryptVaultEntries(rawVault);
-  state.vaultEntries = rawVault;
   state.contacts = (contacts || []).map(rowToContact);
 
   // Veiligheidsmechanisme: gewoon opnieuw inloggen is de manier om een onterechte
@@ -333,12 +314,6 @@ async function loadAccountFromSupabase(userId, email, attempt) {
 
   syncCurrentSignupRecord();
   saveLocalDemoState();
-  // Kluis: stille, niet-blokkerende uitnodiging bij eerste login
-  if (VAULT_URL && supabase && !state.account.vaultInvitedAt) {
-    supabase.functions.invoke('vault-invite', { body: { email: state.account.email, account_id: state.account.id } })
-      .then(({ data }) => { if (data && data.ok && !data.skipped) { state.account.vaultInvitedAt = new Date().toISOString(); render(); } })
-      .catch(() => {});
-  }
 }
 
 // Eén centrale plek die reageert op elke sessiewijziging: eerste laden, magic-link-redirect
@@ -352,7 +327,6 @@ async function applySession(session) {
     state.account = null;
     state.assets = [];
     state.contacts = [];
-    state.vaultEntries = [];
     state.instructions = '';
     state.personalInfo = defaultState().personalInfo;
     state.checkins = { status: 'active', waitingStartedAt: null };
@@ -422,7 +396,7 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
-let ui = { vaultModal: null, vaultOpened: false, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -705,7 +679,6 @@ function render() {
       case 'instructions': content = renderInstructions(); break;
       case 'report': content = renderReport(); break;
       case 'admin': content = renderAdmin(); break;
-      case 'vault': content = renderVault(); break;
       default: content = renderDashboard();
     }
     html = renderShell(content);
@@ -1354,7 +1327,6 @@ function renderShell(content) {
           ${navLink('dashboard', 'Dashboard')}
           ${navLink('assets', 'Bezittingen')}
           ${navLink('contacts', 'Contacten')}
-          ${navLink('vault', 'Kluis')}
         </div>
         ${renderAccountMenu(v)}
       </div>
@@ -1390,433 +1362,6 @@ function renderAccountMenu(activeView) {
           <button type="button" class="account-menu-link account-menu-logout" data-action="logout">Uitloggen</button>
         </div>
       ` : ''}
-    </div>
-  `;
-}
-
-function renderVaultModal() {
-  const m = ui.vaultModal;
-  const asset = state.assets.find(a => a.id === m.assetId);
-  if (!asset) return '';
-  return `
-    <div class="vault-modal-backdrop" id="vault-backdrop">
-      <div class="vault-modal-card">
-        <div class="vault-modal-head">
-          <div class="vault-modal-lock-icon">${iconSvg('lock', 20)}</div>
-          <div>
-            <p class="vault-modal-title">${m.entryId ? 'Inloggegevens bewerken' : 'Inloggegevens opslaan'}</p>
-            <p class="vault-modal-asset">${esc(asset.name)}</p>
-          </div>
-        </div>
-        <form id="vault-form">
-          <div class="field">
-            <label>Gebruikersnaam / e-mailadres <span style="color:var(--color-text-faint);font-weight:400;">(optioneel)</span></label>
-            <input name="username" type="text" placeholder="bijv. jan@gmail.com" value="${esc(m.username || '')}" autocomplete="off">
-          </div>
-          <div class="field">
-            <label>Wachtwoord / pincode <span style="color:var(--color-text-faint);font-weight:400;">(optioneel)</span></label>
-            <div class="pw-input-wrap">
-              <input id="vault-pw-input" name="password" type="password" placeholder="••••••••" value="${esc(m.password || '')}" autocomplete="new-password">
-              <button type="button" class="pw-text-btn" id="vault-pw-toggle">Toon</button>
-            </div>
-          </div>
-          <div class="field">
-            <label>Notitie <span style="color:var(--color-text-faint);font-weight:400;">(optioneel)</span></label>
-            <input name="notes" type="text" placeholder="bijv. antwoord beveiligingsvraag of loginpagina" value="${esc(m.notes || '')}">
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary"${m.submitting ? ' disabled' : ''}>${m.submitting ? 'Bezig...' : 'Opslaan in kluis'}</button>
-            ${m.entryId ? `<button type="button" class="btn btn-ghost vault-delete-btn" data-action="delete-vault-entry" data-entry-id="${m.entryId}">Verwijderen</button>` : ''}
-            <button type="button" class="btn btn-ghost" data-action="close-vault-modal">Annuleren</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  `;
-}
-
-function renderVault() {
-  const total   = state.assets.length;
-  const secured = state.vaultEntries.length;
-
-  const pct = total > 0 ? Math.round((secured / total) * 100) : 0;
-  const dashOff = Math.round(163.36 - (163.36 * pct / 100));
-  let rowIdx = 0;
-  const sections = ASSET_CATEGORIES.map(cat => {
-    const items = state.assets.filter(a => a.categoryKey === cat.key);
-    if (!items.length) return '';
-    return `
-      <div class="vault-section">
-        <p class="vault-section-label">${esc(cat.label)}</p>
-        ${items.map(a => {
-          const delay = rowIdx++ * 45;
-          const type  = findType(a.categoryKey, a.typeKey);
-          const entry = state.vaultEntries.find(e => e.assetId === a.id);
-          return `
-            <div class="vault-row${entry ? ' secured' : ''}" style="animation-delay:${delay}ms">
-              <div class="vault-row-icon">${iconSvg(type ? type.icon : 'folder', 16)}</div>
-              <div class="vault-row-info">
-                <div class="vault-row-name">${esc(a.name)}</div>
-                <div class="vault-row-meta">${esc(a.typeLabel)}</div>
-              </div>
-              <div class="vault-row-actions">
-                ${entry
-                  ? `<span class="vault-badge">${iconSvg('shield-check', 12)} Beveiligd</span><button type="button" class="vault-btn-edit" data-action="edit-vault" data-asset-id="${a.id}">Bewerk</button>`
-                  : `<button type="button" class="vault-btn-add" data-action="open-vault-modal" data-asset-id="${a.id}">+ Toevoegen</button>`
-                }
-              </div>
-            </div>`;
-        }).join('')}
-      </div>`;
-  }).join('');
-
-  return `
-    <style id="vault-css">.vault-wrap {
-  margin: -48px -32px -96px;
-  min-height: calc(100vh - 60px);
-  background: linear-gradient(160deg, #0d1b35 0%, #0a1220 100%);
-}
-
-.vault-overlay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #1e3a8a 100%);
-  position: relative;
-  overflow: hidden;
-  animation: vlt-overlay-out 0.45s ease-in 1.65s both;
-}
-@keyframes vlt-overlay-out { to { opacity: 0; pointer-events: none; } }
-
-.vault-rings {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.vault-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.35);
-  animation: vlt-ring 2s ease-out infinite;
-}
-.r1 { width: 160px; height: 160px; animation-delay: 0s; }
-.r2 { width: 260px; height: 260px; animation-delay: 0.4s; }
-.r3 { width: 380px; height: 380px; animation-delay: 0.8s; }
-@keyframes vlt-ring {
-  0%   { transform: scale(0.7); opacity: 0.8; }
-  100% { transform: scale(1.1); opacity: 0; }
-}
-
-.vault-lock-wrap {
-  position: relative;
-  z-index: 10;
-  animation: vlt-lock-in 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) 0.1s both;
-}
-@keyframes vlt-lock-in {
-  from { opacity: 0; transform: scale(0.4); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-.vault-lock-box {
-  position: relative;
-  width: 100px; height: 100px;
-  background: rgba(255,255,255,0.15);
-  border: 2px solid rgba(255,255,255,0.4);
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
-}
-
-.vault-lock-svg {
-  width: 54px;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
-}
-
-.vault-lock-shackle {
-  transform-box: fill-box;
-  transform-origin: right bottom;
-  animation: vlt-shackle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.85s both;
-}
-@keyframes vlt-shackle {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(42deg); }
-}
-
-.vault-flash {
-  position: absolute;
-  inset: -40px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255,255,255,0.5) 0%, transparent 70%);
-  opacity: 0;
-  pointer-events: none;
-  animation: vlt-flash 0.55s ease-out 0.87s;
-}
-@keyframes vlt-flash {
-  0%   { transform: scale(0.3); opacity: 0; }
-  25%  { opacity: 0.9; }
-  100% { transform: scale(1.8); opacity: 0; }
-}
-
-.vault-unlock-label {
-  margin-top: 28px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.7);
-  position: relative;
-  z-index: 10;
-}
-
-.vault-main {
-  max-width: 740px;
-  margin: 0 auto;
-  padding: 40px 32px 96px;
-}
-
-.vault-hero-card {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 60%, #172554 100%);
-  border-radius: 20px;
-  padding: 28px;
-  margin-bottom: 32px;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    inset 0 -1px 0 rgba(0,0,0,0.2),
-    0 8px 32px rgba(29,78,216,0.4),
-    0 2px 8px rgba(0,0,0,0.3);
-  overflow: hidden;
-  position: relative;
-  animation: vlt-hero-in 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) both;
-}
-.vault-hero-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; height: 40%;
-  background: rgba(255,255,255,0.06);
-  pointer-events: none;
-}
-@keyframes vlt-hero-in {
-  from { opacity: 0; transform: perspective(600px) rotateX(8deg) translateY(12px); }
-  to   { opacity: 1; transform: perspective(600px) rotateX(0deg) translateY(0); }
-}
-.vault-hero-icon {
-  width: 52px; height: 52px; flex-shrink: 0;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.2);
-}
-.vault-hero-text { flex: 1; }
-.vault-hero-title {
-  font-size: 24px; font-weight: 700; color: white;
-  margin: 0 0 4px; letter-spacing: -0.01em;
-}
-.vault-hero-sub {
-  font-size: 13px; color: rgba(147,197,253,0.85);
-  font-weight: 500; margin: 0;
-}
-
-.vault-stat-ring {
-  position: relative; flex-shrink: 0;
-  width: 70px; height: 70px;
-}
-.vault-ring-svg { width: 70px; height: 70px; transform: rotate(-90deg); }
-.vault-ring-bg   { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 5; }
-.vault-ring-fill {
-  fill: none; stroke: white; stroke-width: 5;
-  stroke-linecap: round; stroke-dasharray: 163.36;
-}
-.vault-stat-inner {
-  position: absolute; inset: 0;
-  display: flex; align-items: baseline; justify-content: center;
-  padding-top: 20px;
-}
-.vault-stat-n { font-size: 18px; font-weight: 700; color: white; line-height: 1; }
-.vault-stat-d  { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1; }
-
-.vault-section { margin-bottom: 20px; }
-.vault-section-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(147,197,253,0.5);
-  margin: 0 0 8px;
-}
-
-.vault-row {
-  display: flex; align-items: center; gap: 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  padding: 13px 16px; margin-bottom: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07);
-  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-  animation: vlt-row-in 0.4s cubic-bezier(0.34, 1.15, 0.64, 1) both;
-}
-@keyframes vlt-row-in {
-  from { opacity: 0; transform: perspective(400px) translateZ(-16px) translateY(8px); }
-  to   { opacity: 1; transform: perspective(400px) translateZ(0) translateY(0); }
-}
-.vault-row:hover {
-  background: rgba(255,255,255,0.1);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-}
-.vault-row.secured {
-  background: rgba(34,197,94,0.07);
-  border-color: rgba(34,197,94,0.22);
-}
-.vault-row.secured:hover { background: rgba(34,197,94,0.12); }
-
-.vault-row-icon {
-  width: 36px; height: 36px;
-  background: rgba(59,130,246,0.2);
-  border: 1px solid rgba(59,130,246,0.3);
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; color: #93c5fd;
-}
-.vault-row-info { flex: 1; min-width: 0; }
-.vault-row-name {
-  font-size: 14px; font-weight: 600; color: white;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.vault-row-meta { font-size: 12px; color: rgba(147,197,253,0.55); margin-top: 2px; }
-.vault-row-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-.vault-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 11px; font-weight: 600; color: #4ade80;
-  background: rgba(34,197,94,0.12);
-  border: 1px solid rgba(34,197,94,0.28);
-  border-radius: 20px; padding: 3px 10px; white-space: nowrap;
-}
-.vault-btn-add {
-  font-size: 12px; font-weight: 600; color: white;
-  background: #2563eb; border: 1px solid #3b82f6;
-  border-radius: 8px; padding: 6px 14px; cursor: pointer;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.4);
-  transition: all 0.15s; white-space: nowrap;
-}
-.vault-btn-add:hover { background: #3b82f6; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,130,246,0.5); }
-.vault-btn-edit {
-  font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.45);
-  background: transparent; border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 8px; padding: 6px 14px; cursor: pointer;
-  transition: all 0.15s; white-space: nowrap;
-}
-.vault-btn-edit:hover { color: white; border-color: rgba(255,255,255,0.3); }
-
-.vault-empty {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 72px 24px; text-align: center;
-}
-.vault-empty-icon {
-  width: 64px; height: 64px;
-  background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
-  border-radius: 18px; display: flex; align-items: center; justify-content: center;
-  color: #93c5fd; margin-bottom: 20px;
-}
-.vault-empty-title { font-size: 18px; font-weight: 700; color: white; margin: 0 0 8px; }
-.vault-empty-sub   { font-size: 14px; color: rgba(147,197,253,0.6); margin: 0; max-width: 300px; }
-.vault-link        { color: #60a5fa; text-decoration: none; }
-.vault-link:hover  { color: #93c5fd; }
-
-.vault-modal-backdrop {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(7,15,30,0.8); backdrop-filter: blur(8px);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
-}
-.vault-modal-card {
-  background: #0f1e36; border: 1px solid rgba(59,130,246,0.25);
-  border-radius: 18px; padding: 28px; width: 100%; max-width: 460px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(29,78,216,0.15);
-}
-.vault-modal-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
-.vault-modal-lock-icon {
-  width: 44px; height: 44px;
-  background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
-  border: 1px solid rgba(59,130,246,0.4); border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  color: white; flex-shrink: 0; box-shadow: 0 4px 12px rgba(29,78,216,0.4);
-}
-.vault-modal-title { font-size: 16px; font-weight: 700; color: white; margin: 0 0 2px; }
-.vault-modal-asset { font-size: 13px; color: #93c5fd; margin: 0; }
-
-.vault-modal-card .field label { color: rgba(147,197,253,0.8); }
-.vault-modal-card input[type="text"],
-.vault-modal-card input[type="password"] {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(59,130,246,0.2) !important;
-  color: white;
-}
-.vault-modal-card input:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important;
-}
-.vault-modal-card input::placeholder { color: rgba(147,197,253,0.3); }
-
-.pw-input-wrap { position: relative; display: flex; align-items: center; }
-.pw-input-wrap input { flex: 1; padding-right: 72px; }
-.pw-text-btn {
-  position: absolute; right: 12px;
-  font-size: 12px; font-weight: 600; color: #60a5fa;
-  background: none; border: none; cursor: pointer; padding: 0;
-}
-.pw-text-btn:hover { color: #93c5fd; }
-
-@media (max-width: 640px) {
-  .vault-wrap { margin: -48px -16px -96px; }
-  .vault-main { padding: 24px 16px 64px; }
-  .vault-hero-card { flex-wrap: wrap; padding: 20px; gap: 14px; }
-  .vault-hero-title { font-size: 20px; }
-  .vault-lock-svg { width: 46px; }
-  .vault-lock-box { width: 84px; height: 84px; }
-  .r3 { display: none; }
-  .vault-row { padding: 11px 12px; gap: 10px; }
-  .vault-stat-ring { display: none; }
-  .vault-modal-card { padding: 20px; }
-}</style>
-    <div class="vault-wrap">
-      <div class="vault-main">
-        <div class="vault-hero-card">
-          <div class="vault-hero-icon">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </div>
-          <div class="vault-hero-text">
-            <h1 class="vault-hero-title">Kluis</h1>
-            <p class="vault-hero-sub">AES-256 versleuteld &middot; alleen jij hebt toegang</p>
-          </div>
-          ${total > 0 ? `
-          <div class="vault-stat-ring">
-            <svg class="vault-ring-svg" viewBox="0 0 64 64" width="70" height="70">
-              <circle class="vault-ring-bg" cx="32" cy="32" r="26" fill="none"/>
-              <circle class="vault-ring-fill" cx="32" cy="32" r="26" fill="none" style="stroke-dashoffset:${dashOff}"/>
-            </svg>
-            <div class="vault-stat-inner">
-              <span class="vault-stat-n">${secured}</span><span class="vault-stat-d">/${total}</span>
-            </div>
-          </div>` : ''}
-        </div>
-        ${total > 0 ? `<div class="vault-list">${sections}</div>` : `
-          <div class="vault-empty">
-            <div class="vault-empty-icon">${iconSvg('lock', 26)}</div>
-            <p class="vault-empty-title">Nog geen bezittingen</p>
-            <p class="vault-empty-sub">Voeg bezittingen toe via <a href="#" data-nav="assets" class="vault-link">Bezittingen</a> om ze hier te beveiligen.</p>
-          </div>`}
-        ${ui.vaultModal ? renderVaultModal() : ''}
-      </div>
     </div>
   `;
 }
@@ -1946,18 +1491,6 @@ function renderDashboard() {
         <div class="count" style="font-size:18px;">${hasInstr ? 'Geschreven' : 'Nog niet geschreven'}</div>
         <a class="card-link" href="#" data-nav="instructions">${hasInstr ? 'Instructies bewerken →' : 'Instructies schrijven →'}</a>
       </div>
-      ${VAULT_URL ? `
-      <div class="dash-card">
-        <div class="dash-card-top">
-          <div class="dash-card-title"><span class="card-icon">${iconSvg('key', 17)}</span><h3>Wachtwoordkluis</h3></div>
-          <span class="check ${state.account.vaultInvitedAt ? 'done' : ''}">${state.account.vaultInvitedAt ? iconSvg('check', 12) : ''}</span>
-        </div>
-        <div class="count" style="font-size:18px;">${state.account.vaultInvitedAt ? 'Uitnodiging verstuurd' : 'Wordt aangemaakt…'}</div>
-        ${state.account.vaultInvitedAt
-          ? `<a class="card-link" href="${VAULT_URL}" target="_blank" rel="noopener">Open kluis →</a>`
-          : `<span class="card-link" style="color:var(--color-text-faint);">Je ontvangt een e-mail</span>`}
-      </div>
-      ` : ''}
     </div>
   `;
 }
@@ -2153,21 +1686,6 @@ function renderContactInviteModal() {
         </div>
         <div class="invite-mock-footnote">Dit is een voorbeeld in deze demo: er wordt geen echte e-mail verzonden.</div>
       </div>
-      ${VAULT_URL ? `
-      <div class="vault-tip-card">
-        <div class="vault-tip-title">${iconSvg('key', 15)} Laatste stap: koppel de wachtwoordkluis</div>
-        <p class="vault-tip-body">
-          ${esc(c.name ? c.name.split(' ')[0] : 'Dit contact')} krijgt ook een uitnodiging voor de AfterFile wachtwoordkluis.
-          Om na jouw overlijden echt toegang te krijgen, moet je hen eenmalig als <strong>noodcontact</strong> toevoegen in de Bitwarden-app.
-        </p>
-        <ol class="vault-tip-steps">
-          <li>Open de <strong>Bitwarden-app</strong> (of ga naar <a href="${VAULT_URL}" target="_blank" rel="noopener">${VAULT_URL}</a>)</li>
-          <li>Ga naar <strong>Noodtoegang</strong> in het menu</li>
-          <li>Klik op <strong>Uitnodigen</strong> en voer <strong>${esc(c.email)}</strong> in</li>
-          <li>Klaar &mdash; je hoeft dit nooit meer te doen</li>
-        </ol>
-      </div>
-      ` : ''}
       <div class="invite-modal-actions">
         <button type="button" class="btn btn-secondary btn-sm" data-action="close-invite-preview">Sluiten</button>
       </div>
@@ -2738,80 +2256,6 @@ function wireEvents() {
     });
   });
 
-  // ----- Kluis -----
-  document.querySelectorAll('[data-action="open-vault-modal"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      ui.vaultModal = { assetId: btn.dataset.assetId, entryId: null, username: '', password: '', notes: '', submitting: false };
-      render();
-    });
-  });
-  document.querySelectorAll('[data-action="edit-vault"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const entry = state.vaultEntries.find(e => e.assetId === btn.dataset.assetId);
-      if (!entry) return;
-      ui.vaultModal = { assetId: btn.dataset.assetId, entryId: entry.id, username: entry.username, password: entry.password, notes: entry.notes, submitting: false };
-      render();
-    });
-  });
-  document.querySelectorAll('[data-action="close-vault-modal"]').forEach(el => {
-    el.addEventListener('click', () => { ui.vaultModal = null; render(); });
-  });
-  const vaultBackdrop = document.getElementById('vault-backdrop');
-  if (vaultBackdrop) {
-    vaultBackdrop.addEventListener('click', e => { if (e.target === vaultBackdrop) { ui.vaultModal = null; render(); } });
-  }
-  const vaultPwToggle = document.getElementById('vault-pw-toggle');
-  if (vaultPwToggle) {
-    vaultPwToggle.addEventListener('click', () => {
-      const inp = document.getElementById('vault-pw-input');
-      if (!inp) return;
-      inp.type = inp.type === 'password' ? 'text' : 'password';
-      vaultPwToggle.textContent = inp.type === 'password' ? 'Toon' : 'Verberg';
-    });
-  }
-  const vaultForm = document.getElementById('vault-form');
-  if (vaultForm) {
-    vaultForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      if (!ui.vaultModal || !supabase) return;
-      const fd = new FormData(vaultForm);
-      const plainUser = (fd.get('username') || '').trim();
-      const plainPass = (fd.get('password') || '').trim();
-      const plainNote = (fd.get('notes') || '').trim();
-      const { assetId, entryId } = ui.vaultModal;
-      ui.vaultModal = { ...ui.vaultModal, submitting: true };
-      render();
-      await loadFieldKey();
-      const encUser = await encryptField(plainUser);
-      const encPass = await encryptField(plainPass);
-      const encNote = await encryptField(plainNote);
-      let error;
-      if (entryId) {
-        ({ error } = await supabase.from('vault_entries').update({ username: encUser, password: encPass, notes: encNote }).eq('id', entryId));
-        if (!error) {
-          const idx = state.vaultEntries.findIndex(e => e.id === entryId);
-          if (idx >= 0) Object.assign(state.vaultEntries[idx], { username: plainUser, password: plainPass, notes: plainNote });
-        }
-      } else {
-        const { data: vd, error: ve } = await supabase.from('vault_entries').insert({ account_id: state.account.id, asset_id: assetId, username: encUser, password: encPass, notes: encNote }).select().single();
-        error = ve;
-        if (!error && vd) state.vaultEntries.push({ id: vd.id, assetId: vd.asset_id, username: plainUser, password: plainPass, notes: plainNote, createdAt: vd.created_at });
-      }
-      if (error) { flashToast('Opslaan niet gelukt, probeer opnieuw.'); ui.vaultModal = { ...ui.vaultModal, submitting: false }; render(); return; }
-      ui.vaultModal = null; render();
-      flashToast(entryId ? 'Kluis bijgewerkt' : 'Opgeslagen in kluis');
-    });
-  }
-  document.querySelectorAll('[data-action="delete-vault-entry"]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const { error } = await supabase.from('vault_entries').delete().eq('id', btn.dataset.entryId);
-      if (error) { flashToast('Verwijderen niet gelukt.'); return; }
-      state.vaultEntries = state.vaultEntries.filter(e => e.id !== btn.dataset.entryId);
-      ui.vaultModal = null; render();
-      flashToast('Verwijderd uit kluis');
-    });
-  });
-
   const relationshipSelect = document.getElementById('ct-relationship');
   if (relationshipSelect) relationshipSelect.addEventListener('change', () => {
     const otherInput = document.getElementById('ct-relationship-other');
@@ -2887,11 +2331,6 @@ function wireEvents() {
     // header (vereist, want deze Edge Function draait met verify_jwt: true).
     supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id } })
       .catch(err => console.error('send-contact-invite aanroep mislukt', err));
-    // Kluis: contact ook uitnodigen op Vaultwarden
-    if (VAULT_URL) {
-      supabase.functions.invoke('vault-invite', { body: { email: saved.email, contact_id: saved.id } })
-        .catch(err => console.error('vault-invite contact mislukt', err));
-    }
   });
   } // end if (contactForm)
 
