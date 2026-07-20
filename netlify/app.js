@@ -1483,7 +1483,7 @@ function renderVault() {
           </div>
           ${total > 0 ? `
           <div class="vault-stat-ring">
-            <svg class="vault-ring-svg" viewBox="0 0 64 64">
+            <svg class="vault-ring-svg" viewBox="0 0 64 64" width="70" height="70">
               <circle class="vault-ring-bg" cx="32" cy="32" r="26"/>
               <circle class="vault-ring-fill" cx="32" cy="32" r="26" style="stroke-dashoffset:${dashOff}"/>
             </svg>
