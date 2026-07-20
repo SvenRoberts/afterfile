@@ -1439,36 +1439,6 @@ function renderVault() {
   const total   = state.assets.length;
   const secured = state.vaultEntries.length;
 
-  if (!ui.vaultOpened) {
-    return `
-      <div class="vault-wrap">
-        <div class="vault-overlay">
-          <div class="vault-rings">
-            <div class="vault-ring r1"></div>
-            <div class="vault-ring r2"></div>
-            <div class="vault-ring r3"></div>
-          </div>
-          <div class="vault-lock-wrap" id="vault-door-3d">
-            <div class="vault-lock-box">
-              <svg class="vault-lock-svg" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g class="vault-lock-shackle">
-                  <path d="M14 34 L14 22 C14 13.16 22.06 6 32 6 C41.94 6 50 13.16 50 22 L50 34"
-                        stroke="white" stroke-width="7" stroke-linecap="round"/>
-                </g>
-                <rect x="4" y="30" width="56" height="38" rx="9" fill="white" fill-opacity="0.18"/>
-                <rect x="6" y="32" width="52" height="34" rx="7" fill="white"/>
-                <circle cx="32" cy="49" r="7" fill="#1d4ed8"/>
-                <rect x="28.5" y="54" width="7" height="9" rx="2.5" fill="#1d4ed8"/>
-              </svg>
-              <div class="vault-flash"></div>
-            </div>
-          </div>
-          <p class="vault-unlock-label">Kluis ontgrendelen</p>
-        </div>
-      </div>
-    `;
-  }
-
   const pct = total > 0 ? Math.round((secured / total) * 100) : 0;
   const dashOff = Math.round(163.36 - (163.36 * pct / 100));
   let rowIdx = 0;
@@ -2278,7 +2248,6 @@ function wireEvents() {
       e.preventDefault();
       ui.accountMenuOpen = false;
       let target = el.getAttribute('data-nav');
-      if (target !== 'vault') ui.vaultOpened = false;
       const planHint = el.getAttribute('data-plan');
       if (target === 'signup') {
         ui.selectedPlanKey = planHint || ui.selectedPlanKey || 'compleet';
@@ -2453,9 +2422,6 @@ function wireEvents() {
   });
 
   // ----- Kluis -----
-  if (document.getElementById('vault-door-3d')) {
-    setTimeout(() => { ui.vaultOpened = true; render(); }, 1900);
-  }
   document.querySelectorAll('[data-action="open-vault-modal"]').forEach(btn => {
     btn.addEventListener('click', () => {
       ui.vaultModal = { assetId: btn.dataset.assetId, entryId: null, username: '', password: '', notes: '', submitting: false };
