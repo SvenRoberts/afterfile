@@ -1,4 +1,4 @@
-// AfterFile — webapp met een echte Supabase-backend (database + login via magic link, geen
+// AfterFile - webapp met een echte Supabase-backend (database + login via magic link, geen
 // wachtwoord). Accountgegevens (account, bezittingen, contacten, instructies, persoonsgegevens)
 // leven in Supabase, niet meer alleen in deze browser. De Beheer-pagina en de "meld een
 // overlijden"-demo zijn nog niet gemigreerd en werken voorlopig nog lokaal, zie saveState().
@@ -61,7 +61,7 @@ const ASSET_CATEGORIES = [
 ];
 
 // ---------- icons ----------
-// Hand-drawn line-icon set (no emoji, no external icon font) — consistent
+// Hand-drawn line-icon set (no emoji, no external icon font) - consistent
 // 24x24 stroke style so the whole product reads as one deliberate system.
 const ICON_PATHS = {
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path>',
@@ -96,7 +96,7 @@ function iconSvg(name, size) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${inner}</svg>`;
 }
 
-// Wordmark glyph: a shield with a key — the AfterFile mark.
+// Wordmark glyph: a shield with a key - the AfterFile mark.
 // Refined shield proportions, a soft drop shadow and a subtle top sheen,
 // with a simple line-art key (access/legacy) instead of a checkmark.
 let _logoGradSeq = 0;
@@ -185,7 +185,7 @@ function defaultState() {
 // Project URL en publishable key zijn geen geheimen (RLS beperkt sowieso wat elke gebruiker
 // kan zien/doen), dus veilig om hier in de clientcode te zetten.
 const SUPABASE_URL = 'https://prkwfuiadjfpdmcorfas.supabase.co';
-// Vaultwarden URL — leeg laten totdat de server draait; zet hier bijv. 'https://kluis.afterfile.nl'
+// Vaultwarden URL - leeg laten totdat de server draait; zet hier bijv. 'https://kluis.afterfile.nl'
 const VAULT_URL = '';
 const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 
@@ -196,7 +196,7 @@ let supabase;
 try {
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (e) {
-  console.error('Supabase-client aanmaken faalde — site blijft verder lokaal werken:', e);
+  console.error('Supabase-client aanmaken faalde - site blijft verder lokaal werken:', e);
 }
 
 // state.signups/state.waitlist zijn de nog-niet-gemigreerde demo-onderdelen (Beheer-pagina,
@@ -426,7 +426,7 @@ let ui = { vaultModal: null, vaultOpened: false, addingAssetType: null, addingAs
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
-// Render meteen, synchroon, met de lokale staat — de site is zo altijd direct zichtbaar
+// Render meteen, synchroon, met de lokale staat - de site is zo altijd direct zichtbaar
 // en werkt volledig op zichzelf, zonder op Supabase te wachten of daarvan af te hangen.
 // Onvoorwaardelijk: zelfs als Supabase hierboven faalde verschijnt de site gewoon.
 render();
@@ -658,7 +658,7 @@ async function reportDeathViaSupabase(details) {
   if (row.result_status === 'shared') return { type: 'already-shared', deceasedName, real: true };
   if (row.result_status === 'waiting' && !row.is_new) return { type: 'already-waiting', deceasedName, hasCertificate: row.has_certificate, real: true };
   // Verse melding: stuur de vangnet-mail naar het account zelf (legt uit dat opnieuw inloggen
-  // de melding annuleert). Niet blokkerend voor de UI — als deze faalt, is de melding zelf al
+  // de melding annuleert). Niet blokkerend voor de UI - als deze faalt, is de melding zelf al
   // wel correct verwerkt door de RPC hierboven.
   supabase.functions.invoke('send-death-report-alert', {
     body: {
@@ -1471,6 +1471,323 @@ function renderVault() {
   }).join('');
 
   return `
+    <style id="vault-css">.vault-wrap {
+  margin: -48px -32px -96px;
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(160deg, #0d1b35 0%, #0a1220 100%);
+}
+
+.vault-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #1e3a8a 100%);
+  position: relative;
+  overflow: hidden;
+  animation: vlt-overlay-out 0.45s ease-in 1.65s both;
+}
+@keyframes vlt-overlay-out { to { opacity: 0; pointer-events: none; } }
+
+.vault-rings {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vault-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.35);
+  animation: vlt-ring 2s ease-out infinite;
+}
+.r1 { width: 160px; height: 160px; animation-delay: 0s; }
+.r2 { width: 260px; height: 260px; animation-delay: 0.4s; }
+.r3 { width: 380px; height: 380px; animation-delay: 0.8s; }
+@keyframes vlt-ring {
+  0%   { transform: scale(0.7); opacity: 0.8; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+
+.vault-lock-wrap {
+  position: relative;
+  z-index: 10;
+  animation: vlt-lock-in 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) 0.1s both;
+}
+@keyframes vlt-lock-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.vault-lock-box {
+  position: relative;
+  width: 100px; height: 100px;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.vault-lock-svg {
+  width: 54px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+}
+
+.vault-lock-shackle {
+  transform-box: fill-box;
+  transform-origin: right bottom;
+  animation: vlt-shackle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.85s both;
+}
+@keyframes vlt-shackle {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(42deg); }
+}
+
+.vault-flash {
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.5) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  animation: vlt-flash 0.55s ease-out 0.87s;
+}
+@keyframes vlt-flash {
+  0%   { transform: scale(0.3); opacity: 0; }
+  25%  { opacity: 0.9; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.vault-unlock-label {
+  margin-top: 28px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  position: relative;
+  z-index: 10;
+}
+
+.vault-main {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 40px 32px 96px;
+}
+
+.vault-hero-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 60%, #172554 100%);
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 32px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 8px 32px rgba(29,78,216,0.4),
+    0 2px 8px rgba(0,0,0,0.3);
+  overflow: hidden;
+  position: relative;
+  animation: vlt-hero-in 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+.vault-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 40%;
+  background: rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+@keyframes vlt-hero-in {
+  from { opacity: 0; transform: perspective(600px) rotateX(8deg) translateY(12px); }
+  to   { opacity: 1; transform: perspective(600px) rotateX(0deg) translateY(0); }
+}
+.vault-hero-icon {
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.2);
+}
+.vault-hero-text { flex: 1; }
+.vault-hero-title {
+  font-size: 24px; font-weight: 700; color: white;
+  margin: 0 0 4px; letter-spacing: -0.01em;
+}
+.vault-hero-sub {
+  font-size: 13px; color: rgba(147,197,253,0.85);
+  font-weight: 500; margin: 0;
+}
+
+.vault-stat-ring {
+  position: relative; flex-shrink: 0;
+  width: 70px; height: 70px;
+}
+.vault-ring-svg { width: 70px; height: 70px; transform: rotate(-90deg); }
+.vault-ring-bg   { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 5; }
+.vault-ring-fill {
+  fill: none; stroke: white; stroke-width: 5;
+  stroke-linecap: round; stroke-dasharray: 163.36;
+}
+.vault-stat-inner {
+  position: absolute; inset: 0;
+  display: flex; align-items: baseline; justify-content: center;
+  padding-top: 20px;
+}
+.vault-stat-n { font-size: 18px; font-weight: 700; color: white; line-height: 1; }
+.vault-stat-d  { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1; }
+
+.vault-section { margin-bottom: 20px; }
+.vault-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(147,197,253,0.5);
+  margin: 0 0 8px;
+}
+
+.vault-row {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 13px 16px; margin-bottom: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07);
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  animation: vlt-row-in 0.4s cubic-bezier(0.34, 1.15, 0.64, 1) both;
+}
+@keyframes vlt-row-in {
+  from { opacity: 0; transform: perspective(400px) translateZ(-16px) translateY(8px); }
+  to   { opacity: 1; transform: perspective(400px) translateZ(0) translateY(0); }
+}
+.vault-row:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+.vault-row.secured {
+  background: rgba(34,197,94,0.07);
+  border-color: rgba(34,197,94,0.22);
+}
+.vault-row.secured:hover { background: rgba(34,197,94,0.12); }
+
+.vault-row-icon {
+  width: 36px; height: 36px;
+  background: rgba(59,130,246,0.2);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: #93c5fd;
+}
+.vault-row-info { flex: 1; min-width: 0; }
+.vault-row-name {
+  font-size: 14px; font-weight: 600; color: white;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vault-row-meta { font-size: 12px; color: rgba(147,197,253,0.55); margin-top: 2px; }
+.vault-row-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.vault-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; color: #4ade80;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.28);
+  border-radius: 20px; padding: 3px 10px; white-space: nowrap;
+}
+.vault-btn-add {
+  font-size: 12px; font-weight: 600; color: white;
+  background: #2563eb; border: 1px solid #3b82f6;
+  border-radius: 8px; padding: 6px 14px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+  transition: all 0.15s; white-space: nowrap;
+}
+.vault-btn-add:hover { background: #3b82f6; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,130,246,0.5); }
+.vault-btn-edit {
+  font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.45);
+  background: transparent; border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px; padding: 6px 14px; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.vault-btn-edit:hover { color: white; border-color: rgba(255,255,255,0.3); }
+
+.vault-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 72px 24px; text-align: center;
+}
+.vault-empty-icon {
+  width: 64px; height: 64px;
+  background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 18px; display: flex; align-items: center; justify-content: center;
+  color: #93c5fd; margin-bottom: 20px;
+}
+.vault-empty-title { font-size: 18px; font-weight: 700; color: white; margin: 0 0 8px; }
+.vault-empty-sub   { font-size: 14px; color: rgba(147,197,253,0.6); margin: 0; max-width: 300px; }
+.vault-link        { color: #60a5fa; text-decoration: none; }
+.vault-link:hover  { color: #93c5fd; }
+
+.vault-modal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(7,15,30,0.8); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.vault-modal-card {
+  background: #0f1e36; border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 18px; padding: 28px; width: 100%; max-width: 460px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(29,78,216,0.15);
+}
+.vault-modal-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.vault-modal-lock-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+  border: 1px solid rgba(59,130,246,0.4); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; flex-shrink: 0; box-shadow: 0 4px 12px rgba(29,78,216,0.4);
+}
+.vault-modal-title { font-size: 16px; font-weight: 700; color: white; margin: 0 0 2px; }
+.vault-modal-asset { font-size: 13px; color: #93c5fd; margin: 0; }
+
+.vault-modal-card .field label { color: rgba(147,197,253,0.8); }
+.vault-modal-card input[type="text"],
+.vault-modal-card input[type="password"] {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(59,130,246,0.2) !important;
+  color: white;
+}
+.vault-modal-card input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important;
+}
+.vault-modal-card input::placeholder { color: rgba(147,197,253,0.3); }
+
+.pw-input-wrap { position: relative; display: flex; align-items: center; }
+.pw-input-wrap input { flex: 1; padding-right: 72px; }
+.pw-text-btn {
+  position: absolute; right: 12px;
+  font-size: 12px; font-weight: 600; color: #60a5fa;
+  background: none; border: none; cursor: pointer; padding: 0;
+}
+.pw-text-btn:hover { color: #93c5fd; }
+
+@media (max-width: 640px) {
+  .vault-wrap { margin: -48px -16px -96px; }
+  .vault-main { padding: 24px 16px 64px; }
+  .vault-hero-card { flex-wrap: wrap; padding: 20px; gap: 14px; }
+  .vault-hero-title { font-size: 20px; }
+  .vault-lock-svg { width: 46px; }
+  .vault-lock-box { width: 84px; height: 84px; }
+  .r3 { display: none; }
+  .vault-row { padding: 11px 12px; gap: 10px; }
+  .vault-stat-ring { display: none; }
+  .vault-modal-card { padding: 20px; }
+}</style>
     <div class="vault-wrap">
       <div class="vault-main">
         <div class="vault-hero-card">
@@ -1541,7 +1858,7 @@ function renderDashboard() {
   const offset = circumference * (1 - pct / 100);
   const firstName = getFirstName();
 
-  // Self-serve upgrade voor Basis-gebruikers — dekt twee gevallen: iemand die bij signup al
+  // Self-serve upgrade voor Basis-gebruikers - dekt twee gevallen: iemand die bij signup al
   // voor Basis koos en later toch wil upgraden, én herstel als de automatische redirect naar
   // Stripe na het kiezen van een betaald plan (zie maybeStartCheckout()) ooit onderbroken werd.
   const upgradeBannerHtml = (state.account.plan === 'basis') ? `
@@ -1819,7 +2136,7 @@ function renderContactInviteModal() {
     <div class="invite-modal-overlay" data-action="close-invite-preview"></div>
     <div class="invite-modal" role="dialog" aria-modal="true" aria-label="Voorbeeld e-mail aan vertrouwd contact">
       <div class="invite-modal-top">
-        <span>Contact opgeslagen — zo zou de e-mail eruitzien</span>
+        <span>Contact opgeslagen - zo zou de e-mail eruitzien</span>
         <button type="button" class="invite-modal-close" data-action="close-invite-preview" aria-label="Sluiten">${iconSvg('x', 16)}</button>
       </div>
       <div class="invite-mock">
@@ -1967,7 +2284,7 @@ function renderInstructions() {
     </div>
     <div class="instruction-tip">
       ${iconSvg('key', 15)}
-      <span><strong>Vergeet je wachtwoordmanager niet.</strong> Vermeld welke app je gebruikt (bijv. 1Password of Bitwarden) en waar je masterkey of emergency kit te vinden is — bij de notaris, in een kluis of in een envelop. AfterFile bewaart zelf nooit wachtwoorden.</span>
+      <span><strong>Vergeet je wachtwoordmanager niet.</strong> Vermeld welke app je gebruikt (bijv. 1Password of Bitwarden) en waar je masterkey of emergency kit te vinden is - bij de notaris, in een kluis of in een envelop. AfterFile bewaart zelf nooit wachtwoorden.</span>
     </div>
   `;
 }

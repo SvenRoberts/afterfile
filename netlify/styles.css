@@ -1,4 +1,4 @@
-/* AfterFile — premium, calm, enterprise-grade design system */
+/* AfterFile - premium, calm, enterprise-grade design system */
 
 :root {
   --color-primary: #2F5DD9;
@@ -1281,7 +1281,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
 
 
 /* ===================================================
-   KLUIS — blue + white
+   KLUIS - blue + white
    =================================================== */
 
 .vault-wrap {
@@ -1304,7 +1304,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
 }
 @keyframes vlt-overlay-out { to { opacity: 0; pointer-events: none; } }
 
-/* Pulsing rings — wit en duidelijk zichtbaar */
+/* Pulsing rings - wit en duidelijk zichtbaar */
 .vault-rings {
   position: absolute;
   inset: 0;
