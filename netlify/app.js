@@ -1443,23 +1443,42 @@ function renderVault() {
     return `
       <div class="vault-wrap">
         <div class="vault-overlay">
-          <div class="vault-scene" id="vault-door-3d">
-            <svg class="vault-verify-svg" viewBox="-72 -72 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle class="vault-verify-ring" cx="0" cy="0" r="60" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <div class="vault-lock-container">
-              <svg class="vault-lock-svg" viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div class="vault-anim-ring vault-anim-ring-1"></div>
+          <div class="vault-anim-ring vault-anim-ring-2"></div>
+          <div class="vault-anim-ring vault-anim-ring-3"></div>
+          <div class="vault-lock-wrap" id="vault-door-3d">
+            <svg class="vault-lock-svg" viewBox="0 0 90 102" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="lbg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#3b82f6"/>
+                  <stop offset="100%" stop-color="#1d4ed8"/>
+                </linearGradient>
+                <filter id="lsh" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0a1628" flood-opacity="0.7"/>
+                </filter>
+                <filter id="lgl" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="6" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <g filter="url(#lsh)">
                 <g class="vault-lock-shackle">
-                  <path d="M 20 44 L 20 30 C 20 18.95 28.95 10 40 10 C 51.05 10 60 18.95 60 30 L 60 44" stroke="#d4a843" stroke-width="8" stroke-linecap="round"/>
+                  <path d="M22 50 L22 33 C22 20.3 31.5 11 44 11 C56.5 11 66 20.3 66 33 L66 50"
+                        stroke="white" stroke-width="9" stroke-linecap="round" fill="none"/>
                 </g>
-                <rect x="6" y="40" width="68" height="48" rx="10" fill="#141428" stroke="#d4a843" stroke-width="2.5"/>
-                <circle class="vault-keyhole" cx="40" cy="64" r="8" fill="#d4a843"/>
-                <rect x="36" y="70" width="8" height="10" rx="3" fill="#d4a843"/>
-              </svg>
-              <div class="vault-flash"></div>
-            </div>
+                <rect x="7" y="46" width="76" height="52" rx="13" fill="url(#lbg)"/>
+                <rect x="7" y="46" width="76" height="8" rx="13" fill="rgba(255,255,255,0.18)"/>
+                <rect x="7" y="94" width="76" height="4" rx="0" fill="rgba(0,0,0,0.15)"/>
+                <circle cx="45" cy="72" r="10" fill="white" filter="url(#lgl)" opacity="0.95"/>
+                <rect x="41" y="80" width="8" height="12" rx="3" fill="white" opacity="0.95"/>
+              </g>
+            </svg>
+            <div class="vault-flash"></div>
           </div>
-          <p class="vault-unlock-label">Kluis ontgrendelen</p>
+          <div class="vault-overlay-status">
+            <div class="vault-status-dot"></div>
+            <span>Kluis ontgrendelen</span>
+          </div>
         </div>
       </div>
     `;
@@ -1467,6 +1486,7 @@ function renderVault() {
 
   const pct = total > 0 ? Math.round((secured / total) * 100) : 0;
   const dashOff = Math.round(163.36 - (163.36 * pct / 100));
+  let rowIdx = 0;
   const sections = ASSET_CATEGORIES.map(cat => {
     const items = state.assets.filter(a => a.categoryKey === cat.key);
     if (!items.length) return '';
@@ -1474,10 +1494,11 @@ function renderVault() {
       <div class="vault-section">
         <p class="vault-section-label">${esc(cat.label)}</p>
         ${items.map(a => {
+          const delay = rowIdx++ * 45;
           const type  = findType(a.categoryKey, a.typeKey);
           const entry = state.vaultEntries.find(e => e.assetId === a.id);
           return `
-            <div class="vault-row${entry ? ' secured' : ''}">
+            <div class="vault-row${entry ? ' secured' : ''}" style="animation-delay:${delay}ms">
               <div class="vault-row-icon">${iconSvg(type ? type.icon : 'folder', 16)}</div>
               <div class="vault-row-info">
                 <div class="vault-row-name">${esc(a.name)}</div>
@@ -1497,15 +1518,13 @@ function renderVault() {
   return `
     <div class="vault-wrap">
       <div class="vault-main">
-        <div class="vault-header">
-          <div class="vault-header-left">
-            <div class="vault-header-icon">
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            </div>
-            <div>
-              <h1 class="vault-header-title">Kluis</h1>
-              <p class="vault-header-sub">AES-256 versleuteld &middot; alleen jij hebt toegang</p>
-            </div>
+        <div class="vault-hero-card">
+          <div class="vault-hero-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="vault-hero-text">
+            <h1 class="vault-hero-title">Kluis</h1>
+            <p class="vault-hero-sub">AES-256 versleuteld &middot; alleen jij hebt toegang</p>
           </div>
           ${total > 0 ? `
           <div class="vault-stat-ring">
@@ -1520,7 +1539,7 @@ function renderVault() {
         </div>
         ${total > 0 ? `<div class="vault-list">${sections}</div>` : `
           <div class="vault-empty">
-            <div class="vault-empty-icon">${iconSvg('lock', 28)}</div>
+            <div class="vault-empty-icon">${iconSvg('lock', 26)}</div>
             <p class="vault-empty-title">Nog geen bezittingen</p>
             <p class="vault-empty-sub">Voeg bezittingen toe via <a href="#" data-nav="assets" class="vault-link">Bezittingen</a> om ze hier te beveiligen.</p>
           </div>`}
