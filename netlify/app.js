@@ -873,7 +873,7 @@ function renderLanding() {
         </div>
       </div>
     </nav>
-    <main class="page">
+    <main class="page${state.view === 'vault' ? ' vk-page' : ''}">
       <div class="container">
         <div class="hero-split">
           <div class="hero-photo">
@@ -1938,7 +1938,7 @@ function renderVaultLock() {
         <div class="vk-icon-wrap">${VK_PADLOCK}</div>
         <h1 class="vk-title" style="font-size:30px;font-weight:800;color:#fff;margin:0;letter-spacing:-0.5px;">Kluis</h1>
         <p class="vk-sub">Voer je mastercode in om verder te gaan</p>
-        <input class="vk-input" id="vk-pw" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:17px;letter-spacing:3px;outline:none;text-align:center;" type="password" placeholder="Mastercode" autocomplete="current-password">
+        <input class="vk-input" id="vk-pw" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:17px;letter-spacing:3px;outline:none;text-align:center;" type="password" placeholder="Jouw mastercode" autocomplete="current-password">
         <button class="vk-btn" id="vk-unlock-btn" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;">Ontgrendelen</button>
         <p class="vk-err" id="vk-err" style="display:none">Onjuiste code, probeer opnieuw.</p>
       </div>
@@ -1951,7 +1951,7 @@ function renderVaultSetup() {
     <div class="vk-screen" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);margin:-48px -32px -96px;background:linear-gradient(145deg,#050c1c 0%,#0c1c3a 60%,#060e20 100%);">
       <div class="vk-card" style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 28px;">
         <div class="vk-icon-wrap">${VK_PADLOCK}</div>
-        <h1 class="vk-title">Kluis instellen</h1>
+        <h1 class="vk-title" style="font-size:26px;font-weight:800;color:#fff;margin:0;">Kluis instellen</h1>
         <p class="vk-sub">Kies een sterke mastercode. Schrijf hem op papier, sla hem nergens digitaal op.</p>
         <input class="vk-input" id="vk-setup-pw" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:16px;letter-spacing:1px;outline:none;text-align:center;"  type="password" placeholder="Mastercode (min. 8 tekens)" autocomplete="new-password">
         <input class="vk-input" id="vk-setup-pw2" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:16px;letter-spacing:1px;outline:none;text-align:center;" type="password" placeholder="Herhaal mastercode"         autocomplete="new-password">
@@ -1967,6 +1967,7 @@ function renderVaultUnlocked() {
   const entries = (ui.vaultData && ui.vaultData.entries) || [];
   const total   = state.assets.length;
   const secured = entries.length;
+
   const rows = ASSET_CATEGORIES.map(cat => {
     const items = state.assets.filter(a => a.categoryKey === cat.key);
     if (!items.length) return '';
@@ -1976,45 +1977,64 @@ function renderVaultUnlocked() {
         const type  = (cat.types || []).find(t => t.key === a.typeKey);
         const icon  = type ? type.icon : 'folder';
         const entry = entries.find(e => e.assetId === a.id);
-        return `<div class="vk-row${entry ? ' vk-row--on' : ''}">
-          <div class="vk-row-icon">${iconSvg(icon, 18)}</div>
-          <div class="vk-row-info">
-            <div class="vk-row-name">${esc(a.name)}</div>
-            <div class="vk-row-type">${esc(a.typeLabel)}</div>
-          </div>
-          ${entry ? `
+        if (entry) {
+          return `<div class="vk-row vk-row--on">
+            <div class="vk-row-icon">${iconSvg(icon, 18)}</div>
+            <div class="vk-row-info">
+              <div class="vk-row-name">${esc(a.name)}</div>
+              <div class="vk-row-type">${esc(a.typeLabel)}</div>
+            </div>
+            <div class="vk-row-secured">${iconSvg('lock', 12)} Beveiligd</div>
             <div class="vk-creds">
               <div class="vk-cred">
-                <span class="vk-cred-lbl">Gebruiker</span>
+                <span class="vk-cred-lbl">Gebruikersnaam</span>
                 <span class="vk-cred-val">${esc(entry.username || '-')}</span>
                 ${entry.username ? `<button class="vk-copy" data-copy="${esc(entry.username)}">${iconSvg('copy', 13)}</button>` : ''}
               </div>
               <div class="vk-cred">
                 <span class="vk-cred-lbl">Wachtwoord</span>
-                <span class="vk-cred-val vk-dots" id="vkpw-${entry.id}">........</span>
+                <span class="vk-cred-val vk-dots" id="vkpw-${entry.id}">&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;</span>
                 <button class="vk-eye" data-pw="${esc(entry.password)}" data-id="${entry.id}">${iconSvg('eye', 13)}</button>
                 <button class="vk-copy" data-copy="${esc(entry.password)}">${iconSvg('copy', 13)}</button>
               </div>
               ${entry.notes ? `<div class="vk-cred"><span class="vk-cred-lbl">Notitie</span><span class="vk-cred-val">${esc(entry.notes)}</span></div>` : ''}
             </div>
-            <button class="vk-edit" data-action="vault-edit" data-asset-id="${a.id}">${iconSvg('edit', 13)} Bewerk</button>
-          ` : `<button class="vk-add" data-action="vault-add" data-asset-id="${a.id}">+ Toevoegen</button>`}
-        </div>`;
+            <button class="vk-edit-btn" data-action="vault-edit" data-asset-id="${a.id}">${iconSvg('edit', 13)} Bewerken</button>
+          </div>`;
+        } else {
+          return `<div class="vk-row">
+            <div class="vk-row-icon">${iconSvg(icon, 18)}</div>
+            <div class="vk-row-info">
+              <div class="vk-row-name">${esc(a.name)}</div>
+              <div class="vk-row-type">${esc(a.typeLabel)}</div>
+            </div>
+            <button class="vk-add-btn" data-action="vault-add" data-asset-id="${a.id}">${iconSvg('plus', 14)} Wachtwoord opslaan</button>
+          </div>`;
+        }
       }).join('')}
     </div>`;
   }).join('');
 
+  const emptyState = `
+    <div class="vk-empty-state">
+      <p style="color:rgba(255,255,255,0.45);margin:0 0 16px;font-size:15px;">Je hebt nog geen bezittingen toegevoegd.</p>
+      <a href="#" data-nav="assets" class="btn btn-primary" style="display:inline-flex;">+ Bezittingen toevoegen</a>
+    </div>`;
+
   return `
     <div class="vk-wrap">
       <div class="vk-topbar">
-        <div>
-          <h1 class="vk-topbar-title">Kluis</h1>
-          <p class="vk-topbar-sub">${secured} van ${total} bezittingen beveiligd</p>
+        <div class="vk-topbar-left">
+          <div class="vk-topbar-icon">${iconSvg('unlock', 22)}</div>
+          <div>
+            <h1 class="vk-topbar-title">Kluis</h1>
+            <p class="vk-topbar-sub">${secured} van ${total} bezittingen hebben een wachtwoord opgeslagen</p>
+          </div>
         </div>
-        <button class="vk-lock-btn" data-action="vault-lock">${iconSvg('lock', 15)} Vergrendelen</button>
+        <button class="vk-lock-btn" data-action="vault-lock">${iconSvg('lock', 14)} Vergrendelen</button>
       </div>
       <div class="vk-list">
-        ${total > 0 ? rows : '<div class="vk-empty"><p>Voeg eerst bezittingen toe via <a href="#" data-nav="assets">Bezittingen</a>.</p></div>'}
+        ${total > 0 ? rows : emptyState}
       </div>
       ${ui.vaultModal ? renderVaultModal() : ''}
     </div>

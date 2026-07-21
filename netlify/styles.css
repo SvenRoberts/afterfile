@@ -1341,6 +1341,15 @@ footer.site-footer a:hover { color: var(--color-primary); }
    ============================================================ */
 
 /* Lock + setup screen */
+
+/* ── Vault pagina-achtergrond override ── */
+.vk-page {
+  background: linear-gradient(145deg, #050c1c 0%, #0a1628 100%) !important;
+}
+.vk-page::before {
+  display: none !important;
+}
+
 .vk-screen {
   display: flex; align-items: center; justify-content: center;
   min-height: calc(100vh - 60px);
@@ -1413,10 +1422,8 @@ footer.site-footer a:hover { color: var(--color-primary); }
 
 /* Unlocked view */
 .vk-wrap {
-  min-height:calc(100vh - 60px);
-  margin:-48px -32px -96px;
-  background:linear-gradient(160deg,#070d1e 0%,#0c1c38 100%);
-  padding:32px 32px 80px;
+  min-height:calc(100vh - 120px);
+  padding:32px 0 80px;
 }
 .vk-topbar {
   display:flex; align-items:center; justify-content:space-between;
@@ -1518,3 +1525,38 @@ footer.site-footer a:hover { color: var(--color-primary); }
   .vk-card  { padding:0 20px; }
   .vk-screen { margin:-48px -16px -96px; }
 }
+
+
+.vk-add-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:9px 16px; border:none; border-radius:10px;
+  background:linear-gradient(135deg,#2563eb,#4f46e5);
+  color:#fff; font-size:13px; font-weight:600;
+  cursor:pointer; white-space:nowrap; flex-shrink:0;
+  transition:filter .18s;
+}
+.vk-add-btn:hover { filter:brightness(1.1); }
+.vk-edit-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:6px 12px; border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px; background:transparent;
+  color:rgba(255,255,255,0.6); font-size:12px; cursor:pointer;
+  transition:background .18s;
+}
+.vk-edit-btn:hover { background:rgba(255,255,255,0.08); color:#fff; }
+.vk-row-secured {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:11px; color:#4ade80; font-weight:600;
+  background:rgba(74,222,128,0.12); padding:3px 8px;
+  border-radius:20px; flex-shrink:0;
+}
+.vk-topbar-left {
+  display:flex; align-items:center; gap:14px;
+}
+.vk-topbar-icon {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  background:rgba(37,99,235,0.2); border:1px solid rgba(37,99,235,0.35);
+  display:flex; align-items:center; justify-content:center;
+  color:#60a5fa;
+}
+.vk-empty-state { text-align:center; padding:48px 0; }
