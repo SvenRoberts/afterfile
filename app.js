@@ -1847,6 +1847,17 @@ function renderInstructions() {
       ${iconSvg('key', 15)}
       <span><strong>Vergeet je wachtwoordmanager niet.</strong> Vermeld welke app je gebruikt (bijv. 1Password of Bitwarden) en waar je masterkey of emergency kit te vinden is — bij de notaris, in een kluis of in een envelop. AfterFile bewaart zelf nooit wachtwoorden.</span>
     </div>
+    <details class="pw-betoog">
+      <summary class="pw-betoog-toggle">${iconSvg('alert-triangle', 15)} Waarom je wachtwoorden nooit digitaal moet opslaan</summary>
+      <div class="pw-betoog-body">
+        <p>Het lijkt handig: wachtwoorden opslaan in een tekstbestand, een notitie-app, een e-mail aan jezelf of een spreadsheet in de cloud. Maar elk van die opties is een tikkende tijdbom.</p>
+        <p><strong>Digitale bestanden worden gestolen zonder dat je het merkt.</strong> Een hacker die toegang krijgt tot je laptop, je cloudopslag of je e-mailaccount, heeft in een klap alle sleutels van je digitale leven. Je bankrekening, je crypto, je verzekeringsportaal, je belastingaangifte. Geen braakspoor, geen alarm. Je weet het soms pas maanden later, als de schade al gedaan is.</p>
+        <p><strong>Digitale opslag is kopieerdbaar op wereldschaal.</strong> Een papieren notitie kan gestolen worden door wie er fysiek bij kan. Een digitaal bestand kan in seconden gekopieerd worden naar de andere kant van de wereld, door iemand die je nooit zult kennen. De schaal van potentiele schade is daarmee onvergelijkbaar groter.</p>
+        <p><strong>Synchronisatie maakt het erger, niet beter.</strong> Sla je wachtwoorden op in een Word-document in OneDrive of Google Drive, dan zijn ze automatisch beschikbaar op elk apparaat dat ooit ingelogd is geweest, inclusief die oude telefoon die je vergeten bent te wissen, of de laptop van je ex die nog toegang had tot je account.</p>
+        <p><strong>Wat dan wel?</strong> Gebruik een serieuze wachtwoordmanager (1Password, Bitwarden of KeePass) met een sterke mastercode die je nergens anders gebruikt. Die mastercode en je emergency kit schrijf je op papier, met de hand, en bewaar je op een fysieke plek die alleen jij kent: een brandkast, een envelop bij de notaris, of een afsluitbare la. Vertel in AfterFile <em>waar</em> dat papier ligt, geen wachtwoorden, alleen de locatie.</p>
+        <p class="pw-betoog-conclusion">Wachtwoorden digitaal opslaan buiten een wachtwoordmanager is niet lui, het is gevaarlijk. De extra moeite van een goede wachtwoordmanager is de enige verdediging die echt werkt.</p>
+      </div>
+    </details>
   `;
 }
 
