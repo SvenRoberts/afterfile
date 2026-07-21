@@ -17,7 +17,8 @@ for /f "tokens=1-3 delims=/ " %%a in ("%date%") do set DAG=%%a&set MAAND=%%b&set
 for /f "tokens=1-2 delims=:." %%a in ("%time%") do set UUR=%%a&set MIN=%%b
 set UUR=%UUR: =0%
 
-git add .
+git update-index --really-refresh >nul 2>&1
+git add -A
 git diff --cached --quiet
 if %errorlevel%==0 (
     echo Geen wijzigingen om te deployen.
