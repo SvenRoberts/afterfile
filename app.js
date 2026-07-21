@@ -224,7 +224,7 @@ const VK_LOCK_MS = 5 * 60 * 1000;
 async function vkDeriveKey(pw, salt) {
   const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' },
     base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
   );
 }
@@ -1922,7 +1922,7 @@ function renderInstructions() {
 
 
 // ── Kluis render ──────────────────────────────────────────────────────────
-const VK_PADLOCK = `<svg class="vk-padlock-svg" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="vk-shackle" d="M14 32 V20 A18 18 0 0 1 50 20 V32" stroke="url(#vkg)" stroke-width="7" stroke-linecap="round" fill="none"/><rect x="4" y="29" width="56" height="40" rx="10" fill="url(#vkb)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/><circle cx="32" cy="50" r="7" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/><rect x="29.5" y="54" width="5" height="8" rx="2.5" fill="rgba(255,255,255,0.65)"/><defs><linearGradient id="vkg" x1="14" y1="20" x2="50" y2="20" gradientUnits="userSpaceOnUse"><stop stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient><linearGradient id="vkb" x1="4" y1="29" x2="60" y2="69" gradientUnits="userSpaceOnUse"><stop stop-color="#1e3a5f"/><stop offset="1" stop-color="#0c1a36"/></linearGradient></defs></svg>`;
+const VK_PADLOCK = `<svg class="vk-padlock-svg" viewBox="0 0 64 80" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="vk-shackle-grp"><path d="M18 38 V22 A14 14 0 0 1 46 22 V38" stroke="url(#vkg2)" stroke-width="6" stroke-linecap="round" fill="none"/></g><rect x="6" y="34" width="52" height="42" rx="10" fill="url(#vkb2)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/><circle cx="32" cy="56" r="7" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/><rect x="29.5" y="60" width="5" height="9" rx="2.5" fill="rgba(255,255,255,0.6)"/><defs><linearGradient id="vkg2" x1="18" y1="22" x2="46" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient><linearGradient id="vkb2" x1="6" y1="34" x2="58" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#1a3560"/><stop offset="1" stop-color="#0a1628"/></linearGradient></defs></svg>`;
 
 function renderVault() {
   if (!state.account) return '';
@@ -1933,13 +1933,13 @@ function renderVault() {
 
 function renderVaultLock() {
   return `
-    <div class="vk-screen">
-      <div class="vk-card">
+    <div class="vk-screen" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);margin:-48px -32px -96px;background:linear-gradient(145deg,#050c1c 0%,#0c1c3a 60%,#060e20 100%);">
+      <div class="vk-card" style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 28px;">
         <div class="vk-icon-wrap">${VK_PADLOCK}</div>
-        <h1 class="vk-title">Kluis</h1>
+        <h1 class="vk-title" style="font-size:30px;font-weight:800;color:#fff;margin:0;letter-spacing:-0.5px;">Kluis</h1>
         <p class="vk-sub">Voer je mastercode in om verder te gaan</p>
-        <input class="vk-input" id="vk-pw" type="password" placeholder="Mastercode" autocomplete="current-password">
-        <button class="vk-btn" id="vk-unlock-btn">Ontgrendelen</button>
+        <input class="vk-input" id="vk-pw" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:17px;letter-spacing:3px;outline:none;text-align:center;" type="password" placeholder="Mastercode" autocomplete="current-password">
+        <button class="vk-btn" id="vk-unlock-btn" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;">Ontgrendelen</button>
         <p class="vk-err" id="vk-err" style="display:none">Onjuiste code, probeer opnieuw.</p>
       </div>
     </div>
@@ -1948,14 +1948,14 @@ function renderVaultLock() {
 
 function renderVaultSetup() {
   return `
-    <div class="vk-screen">
-      <div class="vk-card">
+    <div class="vk-screen" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);margin:-48px -32px -96px;background:linear-gradient(145deg,#050c1c 0%,#0c1c3a 60%,#060e20 100%);">
+      <div class="vk-card" style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 28px;">
         <div class="vk-icon-wrap">${VK_PADLOCK}</div>
         <h1 class="vk-title">Kluis instellen</h1>
         <p class="vk-sub">Kies een sterke mastercode. Schrijf hem op papier, sla hem nergens digitaal op.</p>
-        <input class="vk-input" id="vk-setup-pw"  type="password" placeholder="Mastercode (min. 8 tekens)" autocomplete="new-password">
-        <input class="vk-input" id="vk-setup-pw2" type="password" placeholder="Herhaal mastercode"         autocomplete="new-password">
-        <button class="vk-btn" id="vk-setup-btn">Kluis aanmaken</button>
+        <input class="vk-input" id="vk-setup-pw" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:16px;letter-spacing:1px;outline:none;text-align:center;"  type="password" placeholder="Mastercode (min. 8 tekens)" autocomplete="new-password">
+        <input class="vk-input" id="vk-setup-pw2" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:16px;letter-spacing:1px;outline:none;text-align:center;" type="password" placeholder="Herhaal mastercode"         autocomplete="new-password">
+        <button class="vk-btn" id="vk-setup-btn" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;">Kluis aanmaken</button>
         <p class="vk-err" id="vk-err" style="display:none"></p>
         <p class="vk-notice">${iconSvg('alert-triangle', 13)} Als je je mastercode vergeet zijn je gegevens permanent ontoegankelijk. Er is geen hersteloptie.</p>
       </div>
@@ -2333,13 +2333,16 @@ function wireEvents() {
     const btn = document.getElementById('vk-unlock-btn');
     if (!inp || !btn) return;
     const pw = (inp.value || '').trim();
-    if (!pw) return;
+    if (!pw) { inp.focus(); return; }
     btn.disabled = true; btn.textContent = 'Even geduld...';
-    const ok = await vkUnlock(pw);
-    if (ok) { render(); return; }
+    try {
+      const ok = await vkUnlock(pw);
+      if (ok) { render(); return; }
+    } catch(e) { console.error('vkUnlock error', e); }
     btn.disabled = false; btn.textContent = 'Ontgrendelen';
     const err = document.getElementById('vk-err');
     if (err) err.style.display = 'block';
+    inp.value = ''; inp.focus();
     inp.classList.add('vk-shake');
     setTimeout(() => inp.classList.remove('vk-shake'), 600);
   }
