@@ -1,4 +1,4 @@
-// AfterFile - webapp met een echte Supabase-backend (database + login via magic link, geen
+// AfterFile — webapp met een echte Supabase-backend (database + login via magic link, geen
 // wachtwoord). Accountgegevens (account, bezittingen, contacten, instructies, persoonsgegevens)
 // leven in Supabase, niet meer alleen in deze browser. De Beheer-pagina en de "meld een
 // overlijden"-demo zijn nog niet gemigreerd en werken voorlopig nog lokaal, zie saveState().
@@ -61,12 +61,11 @@ const ASSET_CATEGORIES = [
 ];
 
 // ---------- icons ----------
-// Hand-drawn line-icon set (no emoji, no external icon font) - consistent
+// Hand-drawn line-icon set (no emoji, no external icon font) — consistent
 // 24x24 stroke style so the whole product reads as one deliberate system.
 const ICON_PATHS = {
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path>',
   'shield-check': '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path>',
-  eye: '<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path><circle cx="12" cy="12" r="2.5"></circle>',
   'eye-off': '<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="M4 4l16 16"></path>',
   'key-off': '<circle cx="8" cy="14.5" r="3.2"></circle><path d="M10.3 12.2 19 3.5"></path><path d="M15.5 7 18 9.5M13 9.5l2 2"></path><path d="M4 4l16 16"></path>',
   key: '<circle cx="8" cy="14.5" r="3.2"></circle><path d="M10.3 12.2 19 3.5"></path><path d="M15.5 7 18 9.5M13 9.5l2 2"></path>',
@@ -96,7 +95,7 @@ function iconSvg(name, size) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${inner}</svg>`;
 }
 
-// Wordmark glyph: a shield with a key - the AfterFile mark.
+// Wordmark glyph: a shield with a key — the AfterFile mark.
 // Refined shield proportions, a soft drop shadow and a subtle top sheen,
 // with a simple line-art key (access/legacy) instead of a checkmark.
 let _logoGradSeq = 0;
@@ -193,7 +192,7 @@ let supabase;
 try {
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (e) {
-  console.error('Supabase-client aanmaken faalde - site blijft verder lokaal werken:', e);
+  console.error('Supabase-client aanmaken faalde — site blijft verder lokaal werken:', e);
 }
 
 // state.signups/state.waitlist zijn de nog-niet-gemigreerde demo-onderdelen (Beheer-pagina,
@@ -224,35 +223,6 @@ function saveState() {
 
 // Zet ruwe Supabase-rijen (snake_case) om naar de camelCase-vorm die de render-functies al
 // gebruiken, zodat de rest van de app ongewijzigd kan blijven.
-// ---------- veldversleuteling (AES-GCM) ----------
-let fieldKey = null;
-function hexToBytes(hex) {
-  const b = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) b[i / 2] = parseInt(hex.substr(i, 2), 16);
-  return b;
-}
-async function loadFieldKey() {
-  if (fieldKey || !supabase) return;
-  try { const { data } = await supabase.functions.invoke('get-field-key'); if (data && data.key) fieldKey = data.key; } catch { /* stille fallback */ }
-}
-async function encryptField(v) {
-  if (!fieldKey || !v) return v;
-  try {
-    const k = await crypto.subtle.importKey('raw', hexToBytes(fieldKey), 'AES-GCM', false, ['encrypt']);
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(v));
-    const out = new Uint8Array(12 + enc.byteLength); out.set(iv); out.set(new Uint8Array(enc), 12);
-    return 'enc:' + btoa(String.fromCharCode(...out));
-  } catch { return v; }
-}
-async function decryptField(v) {
-  if (!fieldKey || !v || !v.startsWith('enc:')) return v;
-  try {
-    const k = await crypto.subtle.importKey('raw', hexToBytes(fieldKey), 'AES-GCM', false, ['decrypt']);
-    const b = Uint8Array.from(atob(v.slice(4)), c => c.charCodeAt(0));
-    return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, k, b.slice(12)));
-  } catch { return ''; }
-}
 function rowToAsset(row) {
   return {
     id: row.id, categoryKey: row.category_key, typeKey: row.type_key, typeLabel: row.type_label,
@@ -314,6 +284,9 @@ async function loadAccountFromSupabase(userId, email, attempt) {
 
   syncCurrentSignupRecord();
   saveLocalDemoState();
+  if (!state.personalInfo?.fullName && !localStorage.getItem('af_onboarding_done')) {
+    ui.onboardingStep = 1;
+  }
 }
 
 // Eén centrale plek die reageert op elke sessiewijziging: eerste laden, magic-link-redirect
@@ -396,11 +369,11 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
-let ui = { addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { onboardingStep: 0, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
-// Render meteen, synchroon, met de lokale staat - de site is zo altijd direct zichtbaar
+// Render meteen, synchroon, met de lokale staat — de site is zo altijd direct zichtbaar
 // en werkt volledig op zichzelf, zonder op Supabase te wachten of daarvan af te hangen.
 // Onvoorwaardelijk: zelfs als Supabase hierboven faalde verschijnt de site gewoon.
 render();
@@ -632,7 +605,7 @@ async function reportDeathViaSupabase(details) {
   if (row.result_status === 'shared') return { type: 'already-shared', deceasedName, real: true };
   if (row.result_status === 'waiting' && !row.is_new) return { type: 'already-waiting', deceasedName, hasCertificate: row.has_certificate, real: true };
   // Verse melding: stuur de vangnet-mail naar het account zelf (legt uit dat opnieuw inloggen
-  // de melding annuleert). Niet blokkerend voor de UI - als deze faalt, is de melding zelf al
+  // de melding annuleert). Niet blokkerend voor de UI — als deze faalt, is de melding zelf al
   // wel correct verwerkt door de RPC hierboven.
   supabase.functions.invoke('send-death-report-alert', {
     body: {
@@ -667,6 +640,12 @@ function render() {
     else if (state.view === 'death-report') html = renderDeathReport();
     else html = renderLanding();
   } else {
+    if (ui.onboardingStep > 0) {
+      html = renderShell(renderOnboarding());
+      root.innerHTML = html;
+      wireEvents();
+      return;
+    }
     if (state.view === 'assets' && !personalInfoComplete()) {
       state.view = 'gegevens';
       saveState();
@@ -687,6 +666,70 @@ function render() {
   wireEvents();
 }
 
+function finishOnboarding() {
+  ui.onboardingStep = 0;
+  localStorage.setItem('af_onboarding_done', '1');
+  render();
+}
+
+function renderOnboarding() {
+  const step = ui.onboardingStep;
+  const STEPS = ['Jouw naam', 'Bezittingen', 'Contacten', 'Klaar'];
+  const dots = STEPS.map((_, i) => {
+    const cls = i + 1 === step ? 'ob-dot ob-dot--active' : i + 1 < step ? 'ob-dot ob-dot--done' : 'ob-dot';
+    return '<span class="' + cls + '"></span>';
+  }).join('');
+
+  let body = '';
+  if (step === 1) {
+    body = `
+      <div class="ob-icon">${iconSvg('shield-check', 36)}</div>
+      <h2 class="ob-title">Welkom bij AfterFile</h2>
+      <p class="ob-sub">We beginnen met je naam, zodat je dossier op de juiste persoon staat.</p>
+      <form id="ob-form-1" class="ob-form">
+        <div class="field">
+          <label for="ob-fullname">Volledige naam</label>
+          <input id="ob-fullname" type="text" name="fullName" placeholder="bijv. Jan de Vries" value="${esc(state.personalInfo?.fullName || '')}" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Opslaan en verder &rarr;</button>
+      </form>
+      <button class="ob-skip" data-action="ob-skip">Sla over en ga naar dashboard</button>
+    `;
+  } else if (step === 2) {
+    body = `
+      <div class="ob-icon">${iconSvg('folder', 36)}</div>
+      <h2 class="ob-title">Jouw bezittingen</h2>
+      <p class="ob-sub">Leg vast wat je hebt: bankrekeningen, crypto, e-mailaccounts en meer. Je naasten weten dan precies wat er is en waar het staat.</p>
+      <button class="btn btn-primary btn-block btn-lg" data-action="ob-goto-assets">Ga naar Bezittingen &rarr;</button>
+      <button class="ob-skip" data-action="ob-next">Nu overslaan</button>
+    `;
+  } else if (step === 3) {
+    body = `
+      <div class="ob-icon">${iconSvg('users', 36)}</div>
+      <h2 class="ob-title">Vertrouwde contacten</h2>
+      <p class="ob-sub">Wie neemt de regie over na jouw overlijden? Voeg minimaal één persoon toe die toegang krijgt tot jouw dossier.</p>
+      <button class="btn btn-primary btn-block btn-lg" data-action="ob-goto-contacts">Ga naar Contacten &rarr;</button>
+      <button class="ob-skip" data-action="ob-next">Nu overslaan</button>
+    `;
+  } else {
+    body = `
+      <div class="ob-icon ob-icon--success">${iconSvg('check', 36)}</div>
+      <h2 class="ob-title">Je bent er klaar voor</h2>
+      <p class="ob-sub">Je dossier staat klaar. Vul je bezittingen en contacten aan wanneer het jou uitkomt. Alles kun je later aanpassen.</p>
+      <button class="btn btn-primary btn-block btn-lg" data-action="ob-finish">Naar mijn dashboard</button>
+    `;
+  }
+
+  return `
+    <div class="ob-wrap">
+      <div class="ob-card">
+        <div class="ob-dots">${dots}</div>
+        <p class="ob-step-label">Stap ${step} van ${STEPS.length}</p>
+        ${body}
+      </div>
+    </div>
+  `;
+}
 
 function renderSiteFooter() {
   return `<footer class="site-footer">
@@ -1403,7 +1446,7 @@ function renderDashboard() {
   const offset = circumference * (1 - pct / 100);
   const firstName = getFirstName();
 
-  // Self-serve upgrade voor Basis-gebruikers - dekt twee gevallen: iemand die bij signup al
+  // Self-serve upgrade voor Basis-gebruikers — dekt twee gevallen: iemand die bij signup al
   // voor Basis koos en later toch wil upgraden, én herstel als de automatische redirect naar
   // Stripe na het kiezen van een betaald plan (zie maybeStartCheckout()) ooit onderbroken werd.
   const upgradeBannerHtml = (state.account.plan === 'basis') ? `
@@ -1633,7 +1676,7 @@ function renderAssets() {
     ` : '';
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div><strong>Jouw bezittingen en inloggegevens, veilig vastgelegd voor wie je lief zijn.</strong></div></div>
+      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Geen wachtwoorden. Geen inloggegevens. <strong>Een totaaloverzicht van je bezittingen voor wie je lief zijn.</strong></div></div>
       ${pickerHtml}
       ${listHtml}
       ${!ui.addingAsset ? `<div style="margin-top:24px;"><button type="button" class="btn btn-primary" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button></div>` : ''}
@@ -1642,7 +1685,7 @@ function renderAssets() {
     // No assets yet: show tile grid immediately to encourage first add
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div><strong>Jouw bezittingen en inloggegevens, veilig vastgelegd voor wie je lief zijn.</strong></div></div>
+      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Geen wachtwoorden. Geen inloggegevens. <strong>Een totaaloverzicht van je bezittingen voor wie je lief zijn.</strong></div></div>
       ${formHtml}
       ${typeGroups}
       <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
@@ -1669,7 +1712,7 @@ function renderContactInviteModal() {
     <div class="invite-modal-overlay" data-action="close-invite-preview"></div>
     <div class="invite-modal" role="dialog" aria-modal="true" aria-label="Voorbeeld e-mail aan vertrouwd contact">
       <div class="invite-modal-top">
-        <span>Contact opgeslagen - zo zou de e-mail eruitzien</span>
+        <span>Contact opgeslagen — zo zou de e-mail eruitzien</span>
         <button type="button" class="invite-modal-close" data-action="close-invite-preview" aria-label="Sluiten">${iconSvg('x', 16)}</button>
       </div>
       <div class="invite-mock">
@@ -1802,7 +1845,7 @@ function renderInstructions() {
     </div>
     <div class="instruction-tip">
       ${iconSvg('key', 15)}
-      <span><strong>Vergeet je wachtwoordmanager niet.</strong> Vermeld welke app je gebruikt (bijv. 1Password of Bitwarden) en waar je masterkey of emergency kit te vinden is - bij de notaris, in een kluis of in een envelop. AfterFile bewaart zelf nooit wachtwoorden.</span>
+      <span><strong>Vergeet je wachtwoordmanager niet.</strong> Vermeld welke app je gebruikt (bijv. 1Password of Bitwarden) en waar je masterkey of emergency kit te vinden is — bij de notaris, in een kluis of in een envelop. AfterFile bewaart zelf nooit wachtwoorden.</span>
     </div>
   `;
 }
@@ -2077,6 +2120,42 @@ function renderAdmin() {
 
 // ---------- events ----------
 function wireEvents() {
+  // --- Onboarding wizard ---
+  if (ui.onboardingStep > 0) {
+    const obForm1 = document.getElementById('ob-form-1');
+    if (obForm1) {
+      obForm1.addEventListener('submit', async e => {
+        e.preventDefault();
+        const fullName = (document.getElementById('ob-fullname').value || '').trim();
+        if (!fullName) return;
+        state.personalInfo = Object.assign({}, state.personalInfo, { fullName });
+        if (supabase && state.account) {
+          await supabase.from('profiles').update({ full_name: fullName }).eq('id', state.account.id);
+        }
+        ui.onboardingStep = 2;
+        render();
+      });
+    }
+    document.querySelectorAll('[data-action="ob-next"]').forEach(btn => btn.addEventListener('click', () => {
+      ui.onboardingStep = Math.min(ui.onboardingStep + 1, 4);
+      render();
+    }));
+    document.querySelectorAll('[data-action="ob-skip"]').forEach(btn => btn.addEventListener('click', () => finishOnboarding()));
+    document.querySelectorAll('[data-action="ob-finish"]').forEach(btn => btn.addEventListener('click', () => finishOnboarding()));
+    document.querySelectorAll('[data-action="ob-goto-assets"]').forEach(btn => btn.addEventListener('click', () => {
+      finishOnboarding();
+      state.view = personalInfoComplete() ? 'assets' : 'gegevens';
+      saveState();
+      render();
+    }));
+    document.querySelectorAll('[data-action="ob-goto-contacts"]').forEach(btn => btn.addEventListener('click', () => {
+      finishOnboarding();
+      state.view = 'contacts';
+      saveState();
+      render();
+    }));
+    return;
+  }
   // --- Normale events ---
   document.querySelectorAll('[data-nav]').forEach(el => {
     el.addEventListener('click', (e) => {
