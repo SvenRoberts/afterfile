@@ -212,73 +212,6 @@ function loadLocalDemoState() {
 function saveLocalDemoState() {
   localStorage.setItem(LOCAL_DEMO_KEY, JSON.stringify({ signups: state.signups, waitlist: state.waitlist }));
 }
-// ============================================================
-// KLUIS - client-side AES-256-GCM versleuteld, geen server
-// ============================================================
-const VK_SALT  = 'af_v_salt';
-const VK_CHECK = 'af_v_check';
-const VK_DATA  = 'af_v_data';
-const VK_PLAIN = 'afterfile-vault-v1';
-const VK_LOCK_MS = 5 * 60 * 1000;
-
-async function vkDeriveKey(pw, salt) {
-  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' },
-    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
-  );
-}
-async function vkEnc(key, text) {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
-  const out = new Uint8Array(12 + ct.byteLength);
-  out.set(iv); out.set(new Uint8Array(ct), 12);
-  return btoa(String.fromCharCode(...out));
-}
-async function vkDec(key, b64) {
-  const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-  return new TextDecoder().decode(
-    await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12))
-  );
-}
-async function vkUnlock(pw) {
-  const saltB64 = localStorage.getItem(VK_SALT);
-  if (!saltB64) return false;
-  try {
-    const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
-    const key  = await vkDeriveKey(pw, salt);
-    if (await vkDec(key, localStorage.getItem(VK_CHECK)) !== VK_PLAIN) return false;
-    ui.vaultKey   = key;
-    const raw = localStorage.getItem(VK_DATA);
-    ui.vaultData  = raw ? JSON.parse(await vkDec(key, raw)) : { entries: [] };
-    ui.vaultState = 'unlocked';
-    vkResetTimer();
-    return true;
-  } catch { return false; }
-}
-async function vkSetup(pw) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const key  = await vkDeriveKey(pw, salt);
-  localStorage.setItem(VK_SALT,  btoa(String.fromCharCode(...salt)));
-  localStorage.setItem(VK_CHECK, await vkEnc(key, VK_PLAIN));
-  ui.vaultKey = key; ui.vaultData = { entries: [] }; ui.vaultState = 'unlocked';
-  vkResetTimer();
-  await vkSave();
-}
-async function vkSave() {
-  if (!ui.vaultKey || !ui.vaultData) return;
-  localStorage.setItem(VK_DATA, await vkEnc(ui.vaultKey, JSON.stringify(ui.vaultData)));
-}
-function vkLock() {
-  if (ui.vaultLockTimer) clearTimeout(ui.vaultLockTimer);
-  Object.assign(ui, { vaultKey: null, vaultData: null, vaultState: localStorage.getItem(VK_SALT) ? 'locked' : 'setup', vaultModal: null });
-  if (state.view === 'vault') render();
-}
-function vkResetTimer() {
-  if (ui.vaultLockTimer) clearTimeout(ui.vaultLockTimer);
-  ui.vaultLockTimer = setTimeout(vkLock, VK_LOCK_MS);
-}
-
 
 // Bewaart alleen de nog-niet-gemigreerde demo-onderdelen (state.signups/state.waitlist),
 // gebruikt door de "meld een overlijden"-demo en de Beheer-pagina. De echte accountgegevens
@@ -436,7 +369,7 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
-let ui = { vaultState: localStorage.getItem('af_v_salt') ? 'locked' : 'setup', vaultKey: null, vaultData: null, vaultModal: null, vaultLockTimer: null, onboardingStep: 0, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { onboardingStep: 0, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -722,7 +655,6 @@ function render() {
       case 'gegevens': content = renderPersonalInfo(); break;
       case 'assets': content = renderAssets(); break;
       case 'contacts': content = renderContacts(); break;
-      case 'vault': content = renderVault(); break;
       case 'instructions': content = renderInstructions(); break;
       case 'report': content = renderReport(); break;
       case 'admin': content = renderAdmin(); break;
@@ -873,7 +805,7 @@ function renderLanding() {
         </div>
       </div>
     </nav>
-    <main class="page${state.view === 'vault' ? ' vk-page' : ''}">
+    <main class="page">
       <div class="container">
         <div class="hero-split">
           <div class="hero-photo">
@@ -1438,7 +1370,6 @@ function renderShell(content) {
           ${navLink('dashboard', 'Dashboard')}
           ${navLink('assets', 'Bezittingen')}
           ${navLink('contacts', 'Contacten')}
-          <a href="#" class="nav-link vault-nav-link${state.view === 'vault' ? ' active' : ''}" data-nav="vault">${ui.vaultState === 'unlocked' ? iconSvg('unlock', 14) : iconSvg('lock', 14)} Kluis</a>
         </div>
         ${renderAccountMenu(v)}
       </div>
@@ -1921,161 +1852,6 @@ function renderInstructions() {
 }
 
 
-// ── Kluis render ──────────────────────────────────────────────────────────
-const VK_PADLOCK = `<svg class="vk-padlock-svg" viewBox="0 0 64 80" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="vk-shackle-grp"><path d="M18 38 V22 A14 14 0 0 1 46 22 V38" stroke="url(#vkg2)" stroke-width="6" stroke-linecap="round" fill="none"/></g><rect x="6" y="34" width="52" height="42" rx="10" fill="url(#vkb2)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/><circle cx="32" cy="56" r="7" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/><rect x="29.5" y="60" width="5" height="9" rx="2.5" fill="rgba(255,255,255,0.6)"/><defs><linearGradient id="vkg2" x1="18" y1="22" x2="46" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient><linearGradient id="vkb2" x1="6" y1="34" x2="58" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#1a3560"/><stop offset="1" stop-color="#0a1628"/></linearGradient></defs></svg>`;
-
-function renderVault() {
-  if (!state.account) return '';
-  if (ui.vaultState === 'setup')    return renderVaultSetup();
-  if (ui.vaultState === 'locked')   return renderVaultLock();
-  return renderVaultUnlocked();
-}
-
-function renderVaultLock() {
-  return `
-    <div class="vk-screen" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);margin:-48px -32px -96px;background:linear-gradient(145deg,#050c1c 0%,#0c1c3a 60%,#060e20 100%);">
-      <div class="vk-card" style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 28px;">
-        <div class="vk-icon-wrap">${VK_PADLOCK}</div>
-        <h1 class="vk-title" style="font-size:30px;font-weight:800;color:#fff;margin:0;letter-spacing:-0.5px;">Kluis</h1>
-        <p class="vk-sub">Voer je mastercode in om verder te gaan</p>
-        <input class="vk-input" id="vk-pw" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:17px;letter-spacing:3px;outline:none;text-align:center;" type="password" placeholder="Jouw mastercode" autocomplete="current-password">
-        <button class="vk-btn" id="vk-unlock-btn" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;">Ontgrendelen</button>
-        <p class="vk-err" id="vk-err" style="display:none">Onjuiste code, probeer opnieuw.</p>
-      </div>
-    </div>
-  `;
-}
-
-function renderVaultSetup() {
-  return `
-    <div class="vk-screen" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);margin:-48px -32px -96px;background:linear-gradient(145deg,#050c1c 0%,#0c1c3a 60%,#060e20 100%);">
-      <div class="vk-card" style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 28px;">
-        <div class="vk-icon-wrap">${VK_PADLOCK}</div>
-        <h1 class="vk-title" style="font-size:26px;font-weight:800;color:#fff;margin:0;">Kluis instellen</h1>
-        <p class="vk-sub">Kies een sterke mastercode. Schrijf hem op papier, sla hem nergens digitaal op.</p>
-        <input class="vk-input" id="vk-setup-pw" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:16px;letter-spacing:1px;outline:none;text-align:center;"  type="password" placeholder="Mastercode (min. 8 tekens)" autocomplete="new-password">
-        <input class="vk-input" id="vk-setup-pw2" style="width:100%;padding:13px 18px;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:16px;letter-spacing:1px;outline:none;text-align:center;" type="password" placeholder="Herhaal mastercode"         autocomplete="new-password">
-        <button class="vk-btn" id="vk-setup-btn" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;">Kluis aanmaken</button>
-        <p class="vk-err" id="vk-err" style="display:none"></p>
-        <p class="vk-notice">${iconSvg('alert-triangle', 13)} Als je je mastercode vergeet zijn je gegevens permanent ontoegankelijk. Er is geen hersteloptie.</p>
-      </div>
-    </div>
-  `;
-}
-
-function renderVaultUnlocked() {
-  const entries = (ui.vaultData && ui.vaultData.entries) || [];
-  const total   = state.assets.length;
-  const secured = entries.length;
-
-  const rows = ASSET_CATEGORIES.map(cat => {
-    const items = state.assets.filter(a => a.categoryKey === cat.key);
-    if (!items.length) return '';
-    return `<div class="vk-section">
-      <p class="vk-section-label">${esc(cat.label)}</p>
-      ${items.map(a => {
-        const type  = (cat.types || []).find(t => t.key === a.typeKey);
-        const icon  = type ? type.icon : 'folder';
-        const entry = entries.find(e => e.assetId === a.id);
-        if (entry) {
-          return `<div class="vk-row vk-row--on">
-            <div class="vk-row-icon">${iconSvg(icon, 18)}</div>
-            <div class="vk-row-info">
-              <div class="vk-row-name">${esc(a.name)}</div>
-              <div class="vk-row-type">${esc(a.typeLabel)}</div>
-            </div>
-            <div class="vk-row-secured">${iconSvg('lock', 12)} Beveiligd</div>
-            <div class="vk-creds">
-              <div class="vk-cred">
-                <span class="vk-cred-lbl">Gebruikersnaam</span>
-                <span class="vk-cred-val">${esc(entry.username || '-')}</span>
-                ${entry.username ? `<button class="vk-copy" data-copy="${esc(entry.username)}">${iconSvg('copy', 13)}</button>` : ''}
-              </div>
-              <div class="vk-cred">
-                <span class="vk-cred-lbl">Wachtwoord</span>
-                <span class="vk-cred-val vk-dots" id="vkpw-${entry.id}">&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;</span>
-                <button class="vk-eye" data-pw="${esc(entry.password)}" data-id="${entry.id}">${iconSvg('eye', 13)}</button>
-                <button class="vk-copy" data-copy="${esc(entry.password)}">${iconSvg('copy', 13)}</button>
-              </div>
-              ${entry.notes ? `<div class="vk-cred"><span class="vk-cred-lbl">Notitie</span><span class="vk-cred-val">${esc(entry.notes)}</span></div>` : ''}
-            </div>
-            <button class="vk-edit-btn" data-action="vault-edit" data-asset-id="${a.id}">${iconSvg('edit', 13)} Bewerken</button>
-          </div>`;
-        } else {
-          return `<div class="vk-row">
-            <div class="vk-row-icon">${iconSvg(icon, 18)}</div>
-            <div class="vk-row-info">
-              <div class="vk-row-name">${esc(a.name)}</div>
-              <div class="vk-row-type">${esc(a.typeLabel)}</div>
-            </div>
-            <button class="vk-add-btn" data-action="vault-add" data-asset-id="${a.id}">${iconSvg('plus', 14)} Wachtwoord opslaan</button>
-          </div>`;
-        }
-      }).join('')}
-    </div>`;
-  }).join('');
-
-  const emptyState = `
-    <div class="vk-empty-state">
-      <p style="color:rgba(255,255,255,0.45);margin:0 0 16px;font-size:15px;">Je hebt nog geen bezittingen toegevoegd.</p>
-      <a href="#" data-nav="assets" class="btn btn-primary" style="display:inline-flex;">+ Bezittingen toevoegen</a>
-    </div>`;
-
-  return `
-    <div class="vk-wrap">
-      <div class="vk-topbar">
-        <div class="vk-topbar-left">
-          <div class="vk-topbar-icon">${iconSvg('unlock', 22)}</div>
-          <div>
-            <h1 class="vk-topbar-title">Kluis</h1>
-            <p class="vk-topbar-sub">${secured} van ${total} bezittingen hebben een wachtwoord opgeslagen</p>
-          </div>
-        </div>
-        <button class="vk-lock-btn" data-action="vault-lock">${iconSvg('lock', 14)} Vergrendelen</button>
-      </div>
-      <div class="vk-list">
-        ${total > 0 ? rows : emptyState}
-      </div>
-      ${ui.vaultModal ? renderVaultModal() : ''}
-    </div>
-  `;
-}
-
-function renderVaultModal() {
-  const m = ui.vaultModal;
-  const asset = state.assets.find(a => a.id === m.assetId);
-  if (!asset) return '';
-  return `
-    <div class="vk-modal-bd" id="vk-modal-bd">
-      <div class="vk-modal">
-        <div class="vk-modal-head">
-          <div class="vk-modal-title">${m.id ? 'Inloggegevens bewerken' : 'Inloggegevens opslaan'}</div>
-          <div class="vk-modal-asset">${esc(asset.name)}</div>
-        </div>
-        <div class="field">
-          <label>Gebruikersnaam / e-mail <span class="vk-opt">(optioneel)</span></label>
-          <input id="vk-m-user" type="text" placeholder="jan@gmail.com" value="${esc(m.username || '')}" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Wachtwoord <span class="vk-opt">(optioneel)</span></label>
-          <div class="pw-input-wrap">
-            <input id="vk-m-pw" type="password" placeholder="........" value="${esc(m.password || '')}" autocomplete="new-password">
-            <button type="button" class="pw-text-btn" id="vk-m-pw-toggle">Toon</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>Notitie <span class="vk-opt">(optioneel)</span></label>
-          <input id="vk-m-notes" type="text" placeholder="bijv. antwoord beveiligingsvraag" value="${esc(m.notes || '')}">
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" id="vk-m-save"${m.saving ? ' disabled' : ''}>${m.saving ? 'Bezig...' : 'Opslaan'}</button>
-          ${m.id ? '<button class="btn btn-ghost" id="vk-m-del">Verwijderen</button>' : ''}
-          <button class="btn btn-ghost" data-action="vault-modal-close">Annuleren</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
 
 function renderReport() {
   const isCompleet = state.account && state.account.plan !== 'basis';
@@ -2347,110 +2123,6 @@ function renderAdmin() {
 
 // ---------- events ----------
 function wireEvents() {
-  // ── Vault ─────────────────────────────────────────────────────────────
-  async function doVkUnlock() {
-    const inp = document.getElementById('vk-pw');
-    const btn = document.getElementById('vk-unlock-btn');
-    if (!inp || !btn) return;
-    const pw = (inp.value || '').trim();
-    if (!pw) { inp.focus(); return; }
-    btn.disabled = true; btn.textContent = 'Even geduld...';
-    try {
-      const ok = await vkUnlock(pw);
-      if (ok) { render(); return; }
-    } catch(e) { console.error('vkUnlock error', e); }
-    btn.disabled = false; btn.textContent = 'Ontgrendelen';
-    const err = document.getElementById('vk-err');
-    if (err) err.style.display = 'block';
-    inp.value = ''; inp.focus();
-    inp.classList.add('vk-shake');
-    setTimeout(() => inp.classList.remove('vk-shake'), 600);
-  }
-  const vkUnlockBtn = document.getElementById('vk-unlock-btn');
-  if (vkUnlockBtn) {
-    vkUnlockBtn.addEventListener('click', doVkUnlock);
-    const vkPwInp = document.getElementById('vk-pw');
-    if (vkPwInp) { vkPwInp.addEventListener('keydown', e => { if (e.key === 'Enter') doVkUnlock(); }); setTimeout(() => vkPwInp.focus(), 60); }
-  }
-  const vkSetupBtn = document.getElementById('vk-setup-btn');
-  if (vkSetupBtn) {
-    vkSetupBtn.addEventListener('click', async () => {
-      const pw  = (document.getElementById('vk-setup-pw').value || '').trim();
-      const pw2 = (document.getElementById('vk-setup-pw2').value || '').trim();
-      const err = document.getElementById('vk-err');
-      if (!pw || pw.length < 8) { err.textContent = 'Kies een mastercode van minimaal 8 tekens.'; err.style.display = 'block'; return; }
-      if (pw !== pw2)           { err.textContent = 'Codes komen niet overeen.';                  err.style.display = 'block'; return; }
-      vkSetupBtn.disabled = true; vkSetupBtn.textContent = 'Even geduld...';
-      await vkSetup(pw); render();
-    });
-    setTimeout(() => { const i = document.getElementById('vk-setup-pw'); if (i) i.focus(); }, 60);
-  }
-  document.querySelectorAll('[data-action="vault-lock"]').forEach(b => b.addEventListener('click', vkLock));
-  document.querySelectorAll('[data-action="vault-add"]').forEach(b => {
-    b.addEventListener('click', () => { vkResetTimer(); ui.vaultModal = { assetId: b.dataset.assetId, id: null, username: '', password: '', notes: '' }; render(); });
-  });
-  document.querySelectorAll('[data-action="vault-edit"]').forEach(b => {
-    b.addEventListener('click', () => {
-      vkResetTimer();
-      const entry = (ui.vaultData && ui.vaultData.entries || []).find(e => e.assetId === b.dataset.assetId);
-      if (!entry) return;
-      ui.vaultModal = { assetId: b.dataset.assetId, id: entry.id, username: entry.username, password: entry.password, notes: entry.notes };
-      render();
-    });
-  });
-  document.querySelectorAll('[data-action="vault-modal-close"]').forEach(b => { b.addEventListener('click', () => { ui.vaultModal = null; render(); }); });
-  const vkBd = document.getElementById('vk-modal-bd');
-  if (vkBd) vkBd.addEventListener('click', e => { if (e.target === vkBd) { ui.vaultModal = null; render(); } });
-  const vkMPwToggle = document.getElementById('vk-m-pw-toggle');
-  if (vkMPwToggle) {
-    vkMPwToggle.addEventListener('click', () => {
-      const inp = document.getElementById('vk-m-pw'); if (!inp) return;
-      inp.type = inp.type === 'password' ? 'text' : 'password';
-      vkMPwToggle.textContent = inp.type === 'password' ? 'Toon' : 'Verberg';
-    });
-  }
-  const vkMSave = document.getElementById('vk-m-save');
-  if (vkMSave) {
-    vkMSave.addEventListener('click', async () => {
-      vkResetTimer();
-      const m = ui.vaultModal; if (!m) return;
-      const username = (document.getElementById('vk-m-user').value  || '').trim();
-      const password = (document.getElementById('vk-m-pw').value    || '').trim();
-      const notes    = (document.getElementById('vk-m-notes').value || '').trim();
-      ui.vaultModal = { ...m, saving: true }; render();
-      const entries = ui.vaultData.entries;
-      if (m.id) {
-        const idx = entries.findIndex(e => e.id === m.id);
-        if (idx >= 0) entries[idx] = { ...entries[idx], username, password, notes };
-      } else {
-        entries.push({ id: (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)), assetId: m.assetId, username, password, notes });
-      }
-      await vkSave();
-      ui.vaultModal = null; render();
-      flashToast(m.id ? 'Bijgewerkt in kluis' : 'Opgeslagen in kluis');
-    });
-  }
-  const vkMDel = document.getElementById('vk-m-del');
-  if (vkMDel) {
-    vkMDel.addEventListener('click', async () => {
-      vkResetTimer();
-      const m = ui.vaultModal; if (!m || !m.id) return;
-      ui.vaultData.entries = ui.vaultData.entries.filter(e => e.id !== m.id);
-      await vkSave(); ui.vaultModal = null; render();
-      flashToast('Verwijderd uit kluis');
-    });
-  }
-  document.querySelectorAll('[data-copy]').forEach(b => {
-    b.addEventListener('click', () => { vkResetTimer(); navigator.clipboard.writeText(b.dataset.copy).then(() => flashToast('Gekopieerd')).catch(() => {}); });
-  });
-  document.querySelectorAll('.vk-eye').forEach(b => {
-    b.addEventListener('click', () => {
-      vkResetTimer();
-      const el = document.getElementById('vkpw-' + b.dataset.id); if (!el) return;
-      if (el.classList.contains('vk-dots')) { el.textContent = b.dataset.pw; el.classList.remove('vk-dots'); }
-      else { el.textContent = '........'; el.classList.add('vk-dots'); }
-    });
-  });
 
   // --- Onboarding wizard ---
   if (ui.onboardingStep > 0) {
