@@ -1373,3 +1373,319 @@ footer.site-footer a:hover { color: var(--color-primary); }
   }
 
 
+
+
+/* ============================================================
+   VAULT  — AES-256-GCM wachtwoordkluis
+   ============================================================ */
+.vk-page { background: var(--bg); }
+
+.vk-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+/* Hero (setup/locked states) */
+.vk-hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.vk-hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.35);
+  color: #fff;
+}
+.vk-hero-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.5rem;
+}
+.vk-hero-sub {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Card */
+.vk-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+/* Form */
+.vk-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.vk-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.vk-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color 0.15s;
+  outline: none;
+}
+.vk-input:focus { border-color: #6366f1; }
+.vk-err {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin: 0;
+}
+.vk-err.hidden { display: none; }
+.vk-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 1rem 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+/* Buttons */
+.vk-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  margin-top: 0.5rem;
+}
+.vk-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.vk-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+.vk-btn-ghost:hover { border-color: #6366f1; color: #6366f1; }
+
+/* Toolbar (unlocked) */
+.vk-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.vk-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.vk-lock-btn {
+  width: auto;
+  margin: 0;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+}
+.vk-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem;
+}
+
+/* Asset list */
+.vk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.vk-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+}
+.vk-asset-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--card-bg, #fff);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  gap: 1rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.vk-asset-card:hover { border-color: #6366f1; box-shadow: 0 2px 12px rgba(99,102,241,0.1); }
+.vk-has-pw { border-color: #a5b4fc; background: linear-gradient(to right, #fafaff, #f5f3ff); }
+.vk-asset-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.vk-asset-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vk-asset-cat {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.vk-asset-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.vk-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.15s;
+}
+.vk-btn-add { background: #ede9fe; color: #6366f1; border-color: #c4b5fd; }
+.vk-btn-add:hover { background: #6366f1; color: #fff; border-color: #6366f1; }
+.vk-btn-show { background: #dbeafe; color: #2563eb; border-color: #bfdbfe; }
+.vk-btn-show:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+.vk-btn-edit { background: #fef3c7; color: #d97706; border-color: #fde68a; }
+.vk-btn-edit:hover { background: #d97706; color: #fff; border-color: #d97706; }
+.vk-btn-del { background: #fee2e2; color: #ef4444; border-color: #fecaca; width: 32px; height: 32px; padding: 0; justify-content: center; }
+.vk-btn-del:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+/* Nav link highlight */
+.vk-nav-link { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+/* Modal */
+.vk-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+.vk-modal {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+.vk-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.25rem;
+}
+.vk-modal-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+/* Password display (show mode) */
+.vk-pw-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f4f4f8;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+}
+.vk-pw-text {
+  font-family: monospace;
+  font-size: 1rem;
+  flex: 1;
+  word-break: break-all;
+  color: var(--text);
+}
+.vk-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.vk-copy-btn:hover { opacity: 0.85; }
+
+/* Password input row (edit mode) */
+.vk-pw-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.vk-pw-row .vk-input { flex: 1; }
+.vk-show-toggle {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: border-color 0.15s;
+}
+.vk-show-toggle:hover { border-color: #6366f1; color: #6366f1; }

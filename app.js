@@ -1,3 +1,4 @@
+// AfterFile app.js — build 2026-07-28 19:48:24
 // AfterFile — webapp met een echte Supabase-backend (database + login via magic link, geen
 // wachtwoord). Accountgegevens (account, bezittingen, contacten, instructies, persoonsgegevens)
 // leven in Supabase, niet meer alleen in deze browser. De Beheer-pagina en de "meld een
@@ -185,6 +186,75 @@ function defaultState() {
 const SUPABASE_URL = 'https://prkwfuiadjfpdmcorfas.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 
+// ============================================================
+// VAULT - AES-256-GCM, alleen lokaal opgeslagen, geen server
+// ============================================================
+const VK_SALT    = 'af_v_salt';
+const VK_CHECK   = 'af_v_check';
+const VK_DATA    = 'af_v_data';
+const VK_PLAIN   = 'afterfile-vault-v1';
+const VK_LOCK_MS = 5 * 60 * 1000;
+
+async function vkDeriveKey(pw, salt) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+async function vkEnc(key, text) {
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+  const out = new Uint8Array(12 + ct.byteLength);
+  out.set(iv); out.set(new Uint8Array(ct), 12);
+  return btoa(String.fromCharCode(...out));
+}
+async function vkDec(key, b64) {
+  const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return new TextDecoder().decode(
+    await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12))
+  );
+}
+async function vkUnlock(pw) {
+  const saltB64 = localStorage.getItem(VK_SALT);
+  if (!saltB64) return false;
+  try {
+    const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
+    const key  = await vkDeriveKey(pw, salt);
+    if (await vkDec(key, localStorage.getItem(VK_CHECK)) !== VK_PLAIN) return false;
+    ui.vaultKey  = key;
+    const raw    = localStorage.getItem(VK_DATA);
+    ui.vaultData = raw ? JSON.parse(await vkDec(key, raw)) : { entries: [] };
+    ui.vaultState = 'unlocked';
+    vkResetTimer();
+    return true;
+  } catch { return false; }
+}
+async function vkSetup(pw) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key  = await vkDeriveKey(pw, salt);
+  localStorage.setItem(VK_SALT,  btoa(String.fromCharCode(...salt)));
+  localStorage.setItem(VK_CHECK, await vkEnc(key, VK_PLAIN));
+  ui.vaultKey = key; ui.vaultData = { entries: [] }; ui.vaultState = 'unlocked';
+  vkResetTimer();
+  await vkSave();
+}
+async function vkSave() {
+  if (!ui.vaultKey || !ui.vaultData) return;
+  localStorage.setItem(VK_DATA, await vkEnc(ui.vaultKey, JSON.stringify(ui.vaultData)));
+}
+function vkLock() {
+  if (ui.vaultLockTimer) clearTimeout(ui.vaultLockTimer);
+  Object.assign(ui, { vaultKey: null, vaultData: null, vaultModal: null,
+    vaultState: localStorage.getItem(VK_SALT) ? 'locked' : 'setup' });
+  if (state.view === 'vault') render();
+}
+function vkResetTimer() {
+  if (ui.vaultLockTimer) clearTimeout(ui.vaultLockTimer);
+  ui.vaultLockTimer = setTimeout(vkLock, VK_LOCK_MS);
+}
+
+
 // Als het Supabase-client aanmaken faalt, mag dat de rest van de site nooit blokkeren:
 // we loggen het alleen naar de console en gaan verder. supabase blijft dan undefined,
 // en de code hieronder die supabase gebruikt is daar al overal op voorbereid (if (supabase)).
@@ -369,7 +439,7 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
-let ui = { onboardingStep: 0, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultState: localStorage.getItem('af_v_salt') ? 'locked' : 'setup', vaultKey: null, vaultData: null, vaultModal: null, vaultLockTimer: null, onboardingStep: 0, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -654,6 +724,7 @@ function render() {
     switch (state.view) {
       case 'gegevens': content = renderPersonalInfo(); break;
       case 'assets': content = renderAssets(); break;
+      case 'vault': content = renderVault(); break;
       case 'contacts': content = renderContacts(); break;
       case 'instructions': content = renderInstructions(); break;
       case 'report': content = renderReport(); break;
@@ -805,7 +876,7 @@ function renderLanding() {
         </div>
       </div>
     </nav>
-    <main class="page">
+    <main class="page${state.view === 'vault' ? ' vk-page' : ''}">
       <div class="container">
         <div class="hero-split">
           <div class="hero-photo">
@@ -1370,6 +1441,7 @@ function renderShell(content) {
           ${navLink('dashboard', 'Dashboard')}
           ${navLink('assets', 'Bezittingen')}
           ${navLink('contacts', 'Contacten')}
+          <a href="#" class="nav-link vk-nav-link${state.view === 'vault' ? ' active' : ''}" data-nav="vault">${iconSvg('lock', 14)} Vault</a>
         </div>
         ${renderAccountMenu(v)}
       </div>
@@ -1735,6 +1807,132 @@ function renderContactInviteModal() {
     </div>
   `;
 }
+
+// ============================
+// VAULT render functions
+// ============================
+function renderVault() {
+  if (ui.vaultState === 'setup') return renderVaultSetup();
+  if (ui.vaultState === 'locked') return renderVaultLock();
+  return renderVaultUnlocked();
+}
+
+function renderVaultSetup() {
+  return `
+  <div class="vk-wrap">
+    <div class="vk-hero">
+      <div class="vk-hero-icon">${iconSvg('lock', 32)}</div>
+      <h1 class="vk-hero-title">Maak je Vault aan</h1>
+      <p class="vk-hero-sub">Wachtwoorden worden versleuteld opgeslagen in je browser. Ze verlaten je apparaat nooit.</p>
+    </div>
+    <div class="vk-card">
+      <form id="vk-setup-form" class="vk-form" autocomplete="off">
+        <label class="vk-label">Kies een vault-wachtwoord</label>
+        <input id="vk-pw1" type="password" class="vk-input" placeholder="Minimaal 8 tekens" autocomplete="new-password" />
+        <label class="vk-label">Bevestig wachtwoord</label>
+        <input id="vk-pw2" type="password" class="vk-input" placeholder="Herhaal wachtwoord" autocomplete="new-password" />
+        <p id="vk-err" class="vk-err hidden"></p>
+        <button type="submit" class="vk-btn-primary">Vault aanmaken</button>
+      </form>
+      <p class="vk-note">${iconSvg('shield', 12)} AES-256 versleuteld &bull; Alleen lokaal &bull; Auto-vergrendeld na 5 min</p>
+    </div>
+  </div>`;
+}
+
+function renderVaultLock() {
+  return `
+  <div class="vk-wrap">
+    <div class="vk-hero">
+      <div class="vk-hero-icon">${iconSvg('lock', 32)}</div>
+      <h1 class="vk-hero-title">Vault vergrendeld</h1>
+      <p class="vk-hero-sub">Voer je vault-wachtwoord in om te ontgrendelen.</p>
+    </div>
+    <div class="vk-card">
+      <form id="vk-unlock-form" class="vk-form" autocomplete="off">
+        <label class="vk-label">Vault-wachtwoord</label>
+        <input id="vk-pw" type="password" class="vk-input" placeholder="Wachtwoord" autocomplete="current-password" autofocus />
+        <p id="vk-err" class="vk-err hidden"></p>
+        <button type="submit" class="vk-btn-primary">Ontgrendelen</button>
+      </form>
+      <button class="vk-btn-ghost" data-action="vk-reset">Vault wissen en opnieuw beginnen</button>
+    </div>
+  </div>`;
+}
+
+function renderVaultUnlocked() {
+  const assets = state.assets || [];
+  const entries = ui.vaultData ? ui.vaultData.entries : [];
+
+  const cards = assets.length === 0
+    ? `<p class="vk-empty">Je hebt nog geen bezittingen toegevoegd. Voeg eerst bezittingen toe via de Bezittingen-pagina.</p>`
+    : assets.map(asset => {
+        const entry = entries.find(e => e.assetId === asset.id);
+        const hasPw = entry && entry.c;
+        return `
+        <div class="vk-asset-card${hasPw ? ' vk-has-pw' : ''}">
+          <div class="vk-asset-info">
+            <span class="vk-asset-name">${esc(asset.name || 'Bezitting')}</span>
+            <span class="vk-asset-cat">${esc(asset.category || '')}</span>
+          </div>
+          <div class="vk-asset-actions">
+            ${hasPw
+              ? `<button class="vk-btn-sm vk-btn-show" data-action="vk-show" data-id="${asset.id}">${iconSvg('eye', 14)} Toon</button>
+                 <button class="vk-btn-sm vk-btn-edit" data-action="vk-edit" data-id="${asset.id}">${iconSvg('edit', 14)} Wijzig</button>
+                 <button class="vk-btn-sm vk-btn-del" data-action="vk-del" data-id="${asset.id}">${iconSvg('x', 14)}</button>`
+              : `<button class="vk-btn-sm vk-btn-add" data-action="vk-add" data-id="${asset.id}">${iconSvg('plus', 14)} Wachtwoord</button>`
+            }
+          </div>
+        </div>`;
+      }).join('');
+
+  const modal = ui.vaultModal ? renderVaultModal() : '';
+
+  return `
+  <div class="vk-wrap">
+    <div class="vk-toolbar">
+      <h1 class="vk-title">${iconSvg('lock', 18)} Vault</h1>
+      <button class="vk-btn-ghost vk-lock-btn" data-action="vk-lock">${iconSvg('lock', 14)} Vergrendelen</button>
+    </div>
+    <p class="vk-desc">Sla per bezitting een wachtwoord op. Alles wordt versleuteld bewaard in je browser.</p>
+    <div class="vk-list">${cards}</div>
+  </div>
+  ${modal}`;
+}
+
+function renderVaultModal() {
+  const m = ui.vaultModal;
+  if (m.mode === 'show') {
+    return `
+    <div class="vk-modal-backdrop" data-action="vk-modal-close">
+      <div class="vk-modal" role="dialog">
+        <h2 class="vk-modal-title">${esc(m.assetName)}</h2>
+        <div class="vk-pw-display">
+          <span id="vk-pw-text" class="vk-pw-text">${esc(m.password)}</span>
+          <button class="vk-copy-btn" data-action="vk-copy">${iconSvg('copy', 14)} Kopieren</button>
+        </div>
+        <button class="vk-btn-ghost" data-action="vk-modal-close">Sluiten</button>
+      </div>
+    </div>`;
+  }
+  // edit / add mode
+  return `
+  <div class="vk-modal-backdrop" data-action="vk-modal-close">
+    <div class="vk-modal" role="dialog">
+      <h2 class="vk-modal-title">${m.mode === 'add' ? 'Wachtwoord toevoegen' : 'Wachtwoord wijzigen'}</h2>
+      <p class="vk-modal-sub">${esc(m.assetName)}</p>
+      <form id="vk-entry-form" class="vk-form" autocomplete="off">
+        <label class="vk-label">Wachtwoord</label>
+        <div class="vk-pw-row">
+          <input id="vk-entry-pw" type="password" class="vk-input" placeholder="Wachtwoord" autocomplete="new-password" value="${esc(m.password || '')}" />
+          <button type="button" class="vk-show-toggle" data-action="vk-toggle-pw">${iconSvg('eye', 14)}</button>
+        </div>
+        <button type="submit" class="vk-btn-primary">${m.mode === 'add' ? 'Opslaan' : 'Bijwerken'}</button>
+        <button type="button" class="vk-btn-ghost" data-action="vk-modal-close">Annuleren</button>
+      </form>
+    </div>
+  </div>`;
+}
+
 
 function renderContacts() {
   const relationshipOptionsHtml = RELATIONSHIP_SUGGESTIONS.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
@@ -2123,6 +2321,117 @@ function renderAdmin() {
 
 // ---------- events ----------
 function wireEvents() {
+
+  // --- Vault ---
+  // Setup form
+  const vkSetupForm = document.getElementById('vk-setup-form');
+  if (vkSetupForm) {
+    vkSetupForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const pw1 = document.getElementById('vk-pw1').value;
+      const pw2 = document.getElementById('vk-pw2').value;
+      const err = document.getElementById('vk-err');
+      if (pw1.length < 8) { err.textContent = 'Wachtwoord moet minimaal 8 tekens zijn.'; err.classList.remove('hidden'); return; }
+      if (pw1 !== pw2) { err.textContent = 'Wachtwoorden komen niet overeen.'; err.classList.remove('hidden'); return; }
+      err.classList.add('hidden');
+      await vkSetup(pw1);
+      render();
+    });
+  }
+
+  // Unlock form
+  const vkUnlockForm = document.getElementById('vk-unlock-form');
+  if (vkUnlockForm) {
+    vkUnlockForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const pw = document.getElementById('vk-pw').value;
+      const err = document.getElementById('vk-err');
+      const ok = await vkUnlock(pw);
+      if (!ok) { err.textContent = 'Onjuist wachtwoord.'; err.classList.remove('hidden'); return; }
+      err.classList.add('hidden');
+      render();
+    });
+  }
+
+  // Vault page delegation
+  document.querySelectorAll('[data-action="vk-lock"]').forEach(el => el.addEventListener('click', () => { vkLock(); }));
+  document.querySelectorAll('[data-action="vk-reset"]').forEach(el => el.addEventListener('click', () => {
+    if (!confirm('Weet je zeker dat je de vault wilt wissen? Alle opgeslagen wachtwoorden gaan verloren.')) return;
+    [VK_SALT, VK_CHECK, VK_DATA].forEach(k => localStorage.removeItem(k));
+    Object.assign(ui, { vaultState: 'setup', vaultKey: null, vaultData: null, vaultModal: null });
+    render();
+  }));
+
+  // Add / edit / show / delete buttons
+  document.querySelectorAll('[data-action="vk-add"]').forEach(el => el.addEventListener('click', () => {
+    const assetId = el.dataset.id;
+    const asset = (state.assets || []).find(a => a.id === assetId);
+    ui.vaultModal = { mode: 'add', assetId, assetName: asset ? (asset.name || 'Bezitting') : assetId, password: '' };
+    render();
+  }));
+  document.querySelectorAll('[data-action="vk-edit"]').forEach(el => el.addEventListener('click', async () => {
+    const assetId = el.dataset.id;
+    const asset = (state.assets || []).find(a => a.id === assetId);
+    const entry = ui.vaultData.entries.find(e => e.assetId === assetId);
+    const plain = entry ? await vkDec(ui.vaultKey, entry.c) : '';
+    ui.vaultModal = { mode: 'edit', assetId, assetName: asset ? (asset.name || 'Bezitting') : assetId, password: plain };
+    render();
+  }));
+  document.querySelectorAll('[data-action="vk-show"]').forEach(el => el.addEventListener('click', async () => {
+    const assetId = el.dataset.id;
+    const asset = (state.assets || []).find(a => a.id === assetId);
+    const entry = ui.vaultData.entries.find(e => e.assetId === assetId);
+    const plain = entry ? await vkDec(ui.vaultKey, entry.c) : '';
+    ui.vaultModal = { mode: 'show', assetId, assetName: asset ? (asset.name || 'Bezitting') : assetId, password: plain };
+    render();
+  }));
+  document.querySelectorAll('[data-action="vk-del"]').forEach(el => el.addEventListener('click', async () => {
+    const assetId = el.dataset.id;
+    if (!confirm('Wachtwoord verwijderen voor deze bezitting?')) return;
+    ui.vaultData.entries = ui.vaultData.entries.filter(e => e.assetId !== assetId);
+    await vkSave();
+    render();
+  }));
+
+  // Modal close + backdrop
+  document.querySelectorAll('[data-action="vk-modal-close"]').forEach(el => el.addEventListener('click', e => {
+    if (e.target === el) { ui.vaultModal = null; render(); }
+  }));
+
+  // Modal entry form (add/edit)
+  const vkEntryForm = document.getElementById('vk-entry-form');
+  if (vkEntryForm) {
+    vkEntryForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const pw = document.getElementById('vk-entry-pw').value;
+      if (!pw) return;
+      const m = ui.vaultModal;
+      const encrypted = await vkEnc(ui.vaultKey, pw);
+      const idx = ui.vaultData.entries.findIndex(e => e.assetId === m.assetId);
+      if (idx >= 0) ui.vaultData.entries[idx] = { assetId: m.assetId, c: encrypted };
+      else ui.vaultData.entries.push({ assetId: m.assetId, c: encrypted });
+      await vkSave();
+      ui.vaultModal = null;
+      render();
+    });
+    // Toggle show/hide password in modal
+    document.querySelectorAll('[data-action="vk-toggle-pw"]').forEach(btn => btn.addEventListener('click', () => {
+      const inp = document.getElementById('vk-entry-pw');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }));
+  }
+
+  // Copy password button
+  document.querySelectorAll('[data-action="vk-copy"]').forEach(btn => btn.addEventListener('click', () => {
+    const txt = document.getElementById('vk-pw-text');
+    if (txt) navigator.clipboard.writeText(txt.textContent).catch(() => {});
+  }));
+
+  // Reset auto-lock timer on any vault activity
+  if (ui.vaultState === 'unlocked') {
+    document.addEventListener('click', vkResetTimer, { once: true });
+  }
+
 
   // --- Onboarding wizard ---
   if (ui.onboardingStep > 0) {
