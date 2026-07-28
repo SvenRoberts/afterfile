@@ -1689,3 +1689,215 @@ footer.site-footer a:hover { color: var(--color-primary); }
   transition: border-color 0.15s;
 }
 .vk-show-toggle:hover { border-color: #6366f1; color: #6366f1; }
+
+/* Vault setup info strip */
+.vk-info-strip {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+.vk-info-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.vk-hint {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+.vk-warn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #d97706;
+  font-size: 0.88rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+/* Claim pagina entries */
+.vk-claim-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.vk-claim-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex: 1;
+  min-width: 120px;
+}
+.vk-claim-pw {
+  font-family: monospace;
+  font-size: 0.88rem;
+  background: #f1f5f9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  word-break: break-all;
+  flex: 2;
+}
+
+/* ── Kluiscontact setup card (dashboard) ── */
+.kluis-setup-card {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+  border: 1.5px solid #c7d2fe;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.kluis-setup-icon {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(99,102,241,.3);
+}
+.kluis-setup-body h3 {
+  margin: 0 0 .35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e1b4b;
+}
+.kluis-setup-body p {
+  margin: 0 0 .85rem;
+  font-size: .85rem;
+  color: #4338ca;
+  line-height: 1.5;
+}
+.kluis-setup-form {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.kluis-select {
+  flex: 1;
+  min-width: 200px;
+  padding: .55rem .8rem;
+  border: 1.5px solid #a5b4fc;
+  border-radius: 8px;
+  font-size: .88rem;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+}
+.kluis-select:focus { border-color: #6366f1; }
+.kluis-btn { padding: .55rem 1.1rem; white-space: nowrap; }
+.kluis-warn {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .83rem; color: #92400e;
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 8px; padding: .6rem .9rem;
+}
+
+/* ── A/B/C strip ── */
+.abc-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem .75rem;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .65rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: .8rem;
+  color: var(--text-muted);
+}
+.abc-strip--active {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.abc-item { display: inline-flex; align-items: center; gap: .3rem; }
+.abc-done { color: #16a34a; font-weight: 600; }
+.abc-sep  { color: #cbd5e1; font-weight: 700; }
+.abc-rule { margin-left: auto; font-style: italic; font-size: .76rem; }
+
+/* ── Publieke claim-pagina ── */
+.claim-page {
+  max-width: 560px;
+  margin: 2.5rem auto;
+  padding: 0 1.25rem 4rem;
+}
+.claim-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.claim-logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-radius: 18px;
+  color: #fff;
+  margin-bottom: 1rem;
+  box-shadow: 0 6px 20px rgba(99,102,241,.3);
+}
+.claim-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0 0 .5rem; }
+.claim-header p  { font-size: .9rem; color: var(--text-muted); margin: 0; }
+.claim-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+.claim-abc {
+  display: flex; align-items: center; justify-content: center;
+  gap: .5rem; flex-wrap: wrap;
+  margin-top: 1.25rem;
+  font-size: .75rem; color: var(--text-muted);
+}
+.claim-result-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+  margin-bottom: 1.25rem;
+}
+.claim-unlocked-badge {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: #dcfce7; color: #15803d;
+  border-radius: 999px; padding: .3rem .85rem;
+  font-size: .82rem; font-weight: 700;
+}
+.claim-ts { font-size: .78rem; color: var(--text-muted); }
+.claim-section { margin-bottom: 1.5rem; }
+.claim-section h3 {
+  font-size: .78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-muted);
+  margin: 0 0 .6rem; padding-bottom: .4rem;
+  border-bottom: 1px solid var(--border);
+}
+.claim-item {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: .25rem .75rem;
+  padding: .6rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.claim-item:last-child { border-bottom: none; }
+.claim-item-name   { font-weight: 600; font-size: .92rem; color: var(--text); }
+.claim-item-cat    { font-size: .78rem; color: var(--text-muted); background: #f1f5f9; padding: .1rem .45rem; border-radius: 999px; }
+.claim-item-detail { font-size: .82rem; color: var(--text-muted); width: 100%; }
+.claim-item-notes  { font-size: .82rem; color: #64748b; font-style: italic; width: 100%; }
+.claim-instructions {
+  font-size: .88rem; color: var(--text);
+  background: #f8fafc; border: 1px solid var(--border);
+  border-radius: 10px; padding: .9rem 1.1rem;
+  line-height: 1.7; white-space: pre-wrap;
+}
+.claim-empty { font-size: .85rem; color: var(--text-muted); padding: .5rem 0; }
