@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 echo === Deployen naar PRODUCTIE ===
-echo (main branch → afterfile.nl)
+echo (main branch -> afterfile.nl)
 echo.
 
 if not exist ".git" (
@@ -22,14 +22,13 @@ if exist ".git\index" del /f /q ".git\index"
 git add -A
 git diff --cached --quiet
 if %errorlevel%==0 (
-    echo Geen wijzigingen om te deployen.
+    echo Geen wijzigingen, toch pushen voor de zekerheid...
+    git push origin main
 ) else (
     git commit -m "Productie update %JAAR%-%MAAND%-%DAG% %UUR%:%MIN%"
     git push origin main
     echo.
-    echo Gedeployed naar productie!
-    echo Bekijk: https://afterfile.nl
+    echo === Deploy gestart! ===
+    echo Netlify bouwt automatisch na de git push.
 )
-
-echo.
 pause
