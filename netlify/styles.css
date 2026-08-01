@@ -718,7 +718,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
   margin: 0 0 12px;
   font-weight: 700;
 }
-.type-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.type-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .type-tile {
   display: flex;
   align-items: center;

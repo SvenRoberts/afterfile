@@ -839,6 +839,7 @@ function render() {
       case 'contacts': content = renderContacts(); break;
       case 'instructions': content = renderInstructions(); break;
       case 'report': content = renderReport(); break;
+      case 'faq': content = renderFaqPage(); break;
       case 'admin': content = renderAdmin(); break;
       default: content = renderDashboard();
     }
@@ -1517,12 +1518,40 @@ function renderAccountMenu(activeView) {
         <div class="account-menu-panel">
           ${menuLink('gegevens', 'Mijn gegevens')}
           ${menuLink('report', 'Rapport')}
+          ${menuLink('faq', 'FAQ')}
           ${state.account && state.account.role === 'owner' ? menuLink('admin', 'Beheer') : ''}
           <div class="account-menu-divider"></div>
           <button type="button" class="account-menu-link account-menu-logout" data-action="logout">Uitloggen</button>
         </div>
       ` : ''}
     </div>
+  `;
+}
+
+function renderFaqPage() {
+  const faqs = [
+    { q: 'Wat is AfterFile?', a: 'AfterFile is een veilige, persoonlijke plek om je digitale nalatenschap te regelen: je bezittingen, accounts en instructies vastgelegd voor de mensen die je vertrouwt, voor het moment dat jij dat zelf niet meer kan.' },
+    { q: 'Hoe werkt de beveiliging van mijn gegevens?', a: 'Je sleutel wordt in drie stukjes geknipt. Stuk A blijft op jouw apparaat. Stuk B bewaren wij bij AfterFile. Stuk C sturen we naar het contact dat jij aanwijst. Om de kluis te openen heb je twee van die drie stukjes nodig, maar nooit alle drie tegelijk. Zolang je leeft opent jouw apparaat (A) samen met AfterFile (B) de kluis automatisch als je inlogt. Gebeurt er iets met jou? Dan stuurt AfterFile stuk B naar jouw contact. Dat contact combineert B met hun eigen stuk C, en ziet alles. Niemand kan de kluis alleen openen: niet AfterFile, niet jouw contact, en ook een hacker die één stukje steelt heeft er niks aan.' },
+    { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.' },
+    { q: 'Hoe meldt een vertrouwd contact een overlijden?', a: 'Via de link "Voor Naasten" in de menubalk. Daar vult het contact de naam en het e-mailadres in waarmee de overledene bij AfterFile bekend was, samen met zijn of haar eigen naam en contactgegevens, zodat dit gecontroleerd kan worden.' },
+    { q: 'Kan ik op elk moment opzeggen?', a: 'Ja. Je kunt je abonnement op elk moment stopzetten. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.' },
+    { q: 'Is de cloud niet onveiliger dan opslaan op mijn eigen apparaat?', a: 'Nee, en voor digitale nalatenschap geldt juist het omgekeerde. Apps die alles lokaal opslaan lossen het technische opslagprobleem op, maar creëren een groter probleem: hoe krijgen je naasten ooit toegang tot een bestand op een apparaat dat zij niet kennen, niet kunnen ontgrendelen, of dat al jaren geleden kapot is gegaan? AfterFile versleutelt je gegevens in de cloud (AES-256) én koppelt vrijgave aan een gecontroleerde verificatieprocedure. Zo zijn je gegevens tijdens je leven beschermd, en na je overlijden gegarandeerd bereikbaar voor de juiste mensen.' },
+    { q: 'Welke betaalmethoden worden ondersteund?', a: 'We ondersteunen iDEAL, Visa en Mastercard.' },
+    { q: 'Heb ik vragen of hulp nodig?', a: 'Stuur een e-mail naar info@afterfile.nl. We reageren doorgaans binnen één werkdag.' },
+  ];
+  const faqHtml = faqs.map((f, i) => `
+    <div class="faq-item ${ui.openFaqIndex === i ? 'open' : ''}">
+      <button type="button" class="faq-question" data-action="toggle-faq" data-index="${i}">
+        <span>${esc(f.q)}</span>
+        ${iconSvg('chevron-down', 18)}
+      </button>
+      <div class="faq-answer"><p>${esc(f.a)}</p></div>
+    </div>
+  `).join('');
+  return `
+    ${pageHeader({ kicker: 'FAQ', title: 'Veelgestelde vragen.' })}
+    <div class="faq-list" style="max-width:680px;">${faqHtml}</div>
+    <p style="margin-top:32px;font-size:14px;color:var(--color-text-muted);">Staat je vraag er niet bij? Mail naar <a href="mailto:info@afterfile.nl">info@afterfile.nl</a>.</p>
   `;
 }
 
@@ -1837,8 +1866,11 @@ function renderAssets() {
       <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div></div>
       ${pickerHtml}
       ${listHtml}
-      ${!ui.addingAsset ? `<div style="margin-top:24px;"><button type="button" class="btn btn-primary" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button></div>` : ''}
-      <div style="margin-top:32px;"><button type="button" class="btn btn-primary" data-action="vk-lock">${iconSvg('lock', 16)} Kluis verlaten</button></div>
+      ${!ui.addingAsset ? `
+        <div style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <button type="button" class="btn btn-primary" style="width:auto;" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button>
+          <button type="button" class="btn btn-ghost" style="color:var(--color-text-muted);border-color:var(--color-border);" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+        </div>` : ''}
     `;
   } else {
     // No assets yet: show tile grid immediately to encourage first add
@@ -1848,7 +1880,9 @@ function renderAssets() {
       ${formHtml}
       ${typeGroups}
       <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
-      <div style="margin-top:32px;"><button type="button" class="btn btn-primary" data-action="vk-lock">${iconSvg('lock', 16)} Kluis verlaten</button></div>
+      <div style="margin-top:24px;text-align:right;">
+        <button type="button" class="btn btn-ghost" style="color:var(--color-text-muted);border-color:var(--color-border);" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+      </div>
     `;
   }
 }
@@ -2885,78 +2919,4 @@ function wireEvents() {
     });
   });
 
-  document.querySelectorAll('[data-action="toggle-signup"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-id');
-      ui.openSignupId = ui.openSignupId === id ? null : id;
-      render();
-    });
-  });
-
-  const deathReportForm = document.getElementById('death-report-form');
-  if (deathReportForm) deathReportForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(deathReportForm);
-    const deceasedName = (fd.get('deceasedName') || '').trim();
-    const deceasedEmail = (fd.get('deceasedEmail') || '').trim();
-    const relationship = (fd.get('relationship') || '').trim() || (fd.get('relationship-other') || '').trim();
-    const reporterName = (fd.get('reporterName') || '').trim();
-    const reporterEmail = (fd.get('reporterEmail') || '').trim();
-    const reporterPhone = (fd.get('reporterPhone') || '').trim();
-    const message = (fd.get('message') || '').trim();
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const errors = {};
-    if (!deceasedName) errors.deceasedName = true;
-    if (!emailPattern.test(deceasedEmail)) errors.deceasedEmail = true;
-    if (!reporterName) errors.reporterName = true;
-    if (!emailPattern.test(reporterEmail)) errors.reporterEmail = true;
-    if (Object.keys(errors).length) {
-      ui.deathReportErrors = errors;
-      ui.deathReportResult = null;
-      render();
-      setTimeout(() => { const el = document.getElementById('meld-overlijden'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 0);
-      return;
-    }
-    ui.deathReportErrors = null;
-    ui.deathReportSubmitting = true;
-    render();
-    ui.deathReportResult = await reportDeathViaSupabase({ deceasedName, deceasedEmail, relationship, reporterName, reporterEmail, reporterPhone, message });
-    ui.deathReportSubmitting = false;
-    render();
-    setTimeout(() => { const el = document.getElementById('meld-overlijden'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 0);
-  });
-
-  const drRelationshipSelect = document.getElementById('dr-relationship');
-  if (drRelationshipSelect) drRelationshipSelect.addEventListener('change', () => {
-    const otherInput = document.getElementById('dr-relationship-other');
-    if (!otherInput) return;
-    if (drRelationshipSelect.value === '') {
-      otherInput.style.display = 'block';
-      otherInput.focus();
-    } else {
-      otherInput.style.display = 'none';
-      otherInput.value = '';
-    }
-  });
-
-  const simDeathWaitBtn = document.querySelector('[data-action="sim-death-wait-elapsed"]');
-  if (simDeathWaitBtn) simDeathWaitBtn.addEventListener('click', () => simulateWaitingElapsedForSignup(simDeathWaitBtn.getAttribute('data-id')));
-
-  document.querySelectorAll('[data-action="close-invite-preview"]').forEach(el => {
-    el.addEventListener('click', () => { ui.contactInvitePreview = null; render(); });
-  });
-
-  const waitlistForm = document.getElementById('waitlist-form');
-  if (waitlistForm) waitlistForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = (document.getElementById('wl-name')?.value || '').trim();
-    const email = (document.getElementById('wl-email')?.value || '').trim();
-    ui.waitlistEmailError = '';
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ui.waitlistEmailError = 'Vul een geldig e-mailadres in.'; render(); return; }
-
-    if (!supabase) { flashToast('Supabase niet beschikbaar.'); return; }
-    const { data: isBypass } = await supabase.rpc('is_bypass_email', { check_email: email });
-    if (isBypass) {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { name: name || email.sp
+  document.querySelectorAll('[data-action="toggle-sign
