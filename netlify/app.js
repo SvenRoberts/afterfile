@@ -1025,12 +1025,12 @@ function renderLanding() {
           <div class="partner-landing-inner">
             <div class="partner-landing-left">
               <span class="kicker">Voor professionals</span>
-              <h2>Bent u notaris of advocaat?</h2>
+              <h2>Werkt u in de financiële of juridische sector?</h2>
               <p>Word exclusief partner van AfterFile in uw regio.</p>
               <a href="#" class="btn btn-secondary" data-nav="partner" style="display:inline-flex;align-items:center;gap:6px;margin-top:4px;">Meer informatie voor partners ${iconSvg('chevron-right', 15)}</a>
             </div>
             <div class="partner-landing-right">
-              <div class="partner-usp">${iconSvg('shield-check', 16)} <span><strong>Exclusief per regio</strong>, maximaal één notariskantoor en één advocatenkantoor</span></div>
+              <div class="partner-usp">${iconSvg('shield-check', 16)} <span><strong>Exclusief per regio</strong>, maximaal één partner per beroepsgroep</span></div>
               <div class="partner-usp">${iconSvg('shield-check', 16)} <span><strong>Gratis in de startfase</strong>, in ruil voor promotie bij uw cliënten</span></div>
               <div class="partner-usp">${iconSvg('shield-check', 16)} <span><strong>Eigen verwijslink</strong>, direct inzetbaar in nieuwsbrief of op website</span></div>
             </div>
