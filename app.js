@@ -16,46 +16,57 @@ const LOCAL_DEMO_KEY = 'afterfile_demo_extra_v1';
 
 // Naast de basisvakken (naam, beschrijving, locatie, notities) heeft elk type nog een
 // klein aantal extra, type-specifieke vakken: net genoeg om iets te herkennen of terug
-// te vinden, nooit een wachtwoord, code of andere inloggegevens.
+// te vinden. Wachtwoorden worden gemaskeerd weergegeven.
 const ASSET_CATEGORIES = [
   { key: 'financial', label: 'Financieel', types: [
       { key: 'bank', label: 'Bankrekening', icon: 'bank', namePlaceholder: 'bijv. Betaalrekening ING', extraFields: [
           { key: 'bankName', label: 'Bank', placeholder: 'bijv. ING, Rabobank, ABN AMRO' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'crypto', label: 'Crypto', icon: 'diamond', namePlaceholder: 'bijv. Bitcoin wallet Ledger', extraFields: [
           { key: 'walletType', label: 'Soort wallet of platform', placeholder: 'bijv. hardware wallet (Ledger), Coinbase-account' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'broker', label: 'Broker', icon: 'trending-up', namePlaceholder: 'bijv. Beleggingsrekening DEGIRO', extraFields: [
           { key: 'platform', label: 'Naam broker of platform', placeholder: 'bijv. DEGIRO, Saxo Bank, eToro' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'pension', label: 'Pensioen', icon: 'umbrella', namePlaceholder: 'bijv. Pensioen via werkgever', extraFields: [
           { key: 'provider', label: 'Pensioenuitvoerder', placeholder: 'bijv. ABP, ASR, BrightPensioen' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
   ]},
   { key: 'digital', label: 'Digitaal', types: [
       { key: 'website', label: 'Website', icon: 'globe', namePlaceholder: 'bijv. Facebook account', extraFields: [
           { key: 'username', label: 'Gebruikersnaam', placeholder: 'bijv. jouwgebruikersnaam' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'domain', label: 'Domeinnaam', icon: 'link', namePlaceholder: 'bijv. mijnwebsite.nl', extraFields: [
           { key: 'registrar', label: 'Registrar', placeholder: 'bijv. TransIP, Vimexx' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'cloud', label: 'Cloudopslag', icon: 'cloud', namePlaceholder: 'bijv. Google Drive opslag', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Google Drive, Dropbox, iCloud' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'email', label: 'E-mailaccount', icon: 'mail', namePlaceholder: 'bijv. Gmail prive', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
   ]},
   { key: 'other', label: 'Overig', types: [
       { key: 'safe', label: 'Kluis', icon: 'safe', namePlaceholder: 'bijv. Brandkast slaapkamer', extraFields: [
           { key: 'keyHolder', label: 'Wie heeft toegang of de sleutel', placeholder: 'bijv. ligt bij de buren, in de meterkast' },
+          { key: 'password', label: 'Code of combinatie', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'documents', label: 'Fysieke documenten', icon: 'document', namePlaceholder: 'bijv. Testament bij notaris', extraFields: [
           { key: 'documentType', label: 'Type document', placeholder: 'bijv. testament, paspoort, eigendomsbewijs' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'password-manager', label: 'Wachtwoordmanager', icon: 'key', namePlaceholder: 'bijv. Mijn wachtwoordkluis', extraFields: [
           { key: 'app', label: 'Welke app', placeholder: 'bijv. 1Password, Bitwarden, LastPass' },
           { key: 'keyLocation', label: 'Waar staat de masterkey / emergency kit', placeholder: 'bijv. in een envelop bij de notaris, in de kluis thuis' },
+          { key: 'password', label: 'Masterpassword', placeholder: 'Optioneel, alleen als je hem hier wilt bewaren', type: 'password' },
       ]},
       { key: 'other', label: 'Overige belangrijke informatie', icon: 'folder', namePlaceholder: 'bijv. Lidmaatschap sportclub' },
   ]},
@@ -316,7 +327,15 @@ async function vkAutoUnlock() {
 async function vkInit() {
   state.vaultContactEmail = localStorage.getItem(VK_CONTACT) || '';
   const hasFragA = !!localStorage.getItem(VK_FRAG_A);
-  if (!hasFragA) { ui.vaultState = 'setup'; return; }
+  if (!hasFragA) {
+    // Check of er al een kluis bestaat in de DB (= ander apparaat, niet eerste setup)
+    if (supabase && state.account) {
+      const { data } = await supabase.from('vault_data').select('id').eq('user_id', state.account.id).maybeSingle();
+      if (data) { ui.vaultState = 'locked'; return; }
+    }
+    ui.vaultState = 'setup';
+    return;
+  }
   const ok = await vkAutoUnlock();
   if (!ok) { ui.vaultState = 'setup'; state.vaultContactEmail = ''; }
 }
@@ -514,7 +533,7 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1655,6 +1674,63 @@ function renderPersonalInfo() {
 }
 
 function renderAssets() {
+  // ── Vault gate ──
+  if (ui.vaultState === 'loading') {
+    return `${pageHeader({ kicker: 'Bezittingen', title: 'Even laden…' })}<p style="color:var(--color-text-muted)">Kluis wordt geopend…</p>`;
+  }
+  if (ui.vaultState === 'showing-key') {
+    return `
+      ${pageHeader({ kicker: 'Bezittingen', title: 'Bewaar je sleutelcode.' })}
+      <div class="vault-gate-card">
+        ${iconSvg('key', 28)}
+        <h3>Dit is jouw persoonlijke sleutelcode</h3>
+        <p>AfterFile heeft deze code <strong>niet</strong>. Zonder hem kun je je bezittingen op een nieuw apparaat niet openen. Kopieer hem naar je wachtwoordmanager, of schrijf hem op en bewaar hem veilig.</p>
+        <div class="vault-key-display" id="vk-key-display">${esc(ui.vaultKeyToShow || '')}</div>
+        <button class="btn btn-primary" id="vk-key-saved-btn">Ik heb de code opgeslagen →</button>
+      </div>`;
+  }
+  if (ui.vaultState === 'setup') {
+    const contacts = (state.contacts || []).filter(c => c.email);
+    const opts = contacts.map(c => `<option value="${esc(c.email)}">${esc(c.name)} (${esc(c.email)})</option>`).join('');
+    return `
+      ${pageHeader({ kicker: 'Bezittingen', title: 'Activeer je kluis.' })}
+      <div class="vault-gate-card">
+        ${iconSvg('lock', 28)}
+        <h3>Stel je kluis in om bezittingen te bewaren</h3>
+        <p>Kies een vertrouwd contact dat jouw kluis kan openen als er iets met jou gebeurt. Je ontvangt daarna een persoonlijke sleutelcode die je zelf bewaart.</p>
+        ${contacts.length === 0
+          ? `<p class="vault-gate-warn">${iconSvg('info', 14)} Voeg eerst een contact met e-mailadres toe via de Contacten-pagina.</p>`
+          : `<form id="vk-setup-form" class="vault-setup-form">
+              <div class="field">
+                <label for="vk-contact-select">Kluiscontact</label>
+                <select id="vk-contact-select">
+                  <option value="">Kies een contactpersoon…</option>
+                  ${opts}
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Kluis aanmaken</button>
+            </form>`
+        }
+      </div>`;
+  }
+  if (ui.vaultState === 'locked') {
+    return `
+      ${pageHeader({ kicker: 'Bezittingen', title: 'Voer je sleutelcode in.' })}
+      <div class="vault-gate-card">
+        ${iconSvg('lock', 28)}
+        <h3>Kluis vergrendeld</h3>
+        <p>Je bent op een nieuw apparaat of de browser is gewist. Voer je persoonlijke sleutelcode in om toegang te krijgen tot je bezittingen.</p>
+        <form id="vk-unlock-form" class="vault-setup-form">
+          <div class="field">
+            <label for="vk-frag-a-input">Sleutelcode</label>
+            <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="font-family:monospace;font-size:13px;resize:vertical;"></textarea>
+          </div>
+          <div id="vk-unlock-err" style="color:var(--color-danger);font-size:13px;display:none;">Ongeldige code. Controleer of je de juiste code hebt geplakt.</div>
+          <button type="submit" class="btn btn-primary">Kluis openen</button>
+        </form>
+      </div>`;
+  }
+  // vaultState === 'unlocked' → normale bezittingen
   const adding = ui.addingAssetType;
   let formHtml = '';
   if (adding) {
@@ -1663,7 +1739,7 @@ function renderAssets() {
     const extraFieldsHtml = (type.extraFields || []).map(ef => `
           <div class="field">
             <label for="as-${ef.key}">${esc(ef.label)} <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-            <input id="as-${ef.key}" name="${ef.key}" type="text" placeholder="${esc(ef.placeholder || '')}" value="${esc((ui.draftAsset[ef.key] || ''))}">
+            <input id="as-${ef.key}" name="${ef.key}" type="${ef.type || 'text'}" placeholder="${esc(ef.placeholder || '')}" value="${esc((ui.draftAsset[ef.key] || ''))}">
           </div>`).join('');
     formHtml = `
       <div class="inline-form-card">
@@ -1725,7 +1801,7 @@ function renderAssets() {
                 <button class="btn-danger-ghost" data-action="delete-asset" data-id="${a.id}">Verwijderen</button>
               </div>
               <h4>${esc(a.name)}</h4>
-              ${(findType(a.categoryKey, a.typeKey)?.extraFields || []).map(ef => (a.extra || {})[ef.key] ? `<p class="meta-row"><strong>${esc(ef.label)}:</strong> ${esc(a.extra[ef.key])}</p>` : '').join('')}
+              ${(findType(a.categoryKey, a.typeKey)?.extraFields || []).map(ef => (a.extra || {})[ef.key] ? `<p class="meta-row"><strong>${esc(ef.label)}:</strong> ${ef.type === 'password' ? '••••••••' : esc(a.extra[ef.key])}</p>` : '').join('')}
               ${a.description ? `<p class="meta-row">${esc(a.description)}</p>` : ''}
               ${a.location ? `<p class="meta-row"><strong>Locatie:</strong> ${esc(a.location)}</p>` : ''}
               ${a.notes ? `<p class="meta-row"><strong>Notities:</strong> ${esc(a.notes)}</p>` : ''}
@@ -1747,7 +1823,7 @@ function renderAssets() {
     ` : '';
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Geen wachtwoorden. Geen inloggegevens. <strong>Een totaaloverzicht van je bezittingen voor wie je lief zijn.</strong></div></div>
+      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div></div>
       ${pickerHtml}
       ${listHtml}
       ${!ui.addingAsset ? `<div style="margin-top:24px;"><button type="button" class="btn btn-primary" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button></div>` : ''}
@@ -1756,7 +1832,7 @@ function renderAssets() {
     // No assets yet: show tile grid immediately to encourage first add
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Geen wachtwoorden. Geen inloggegevens. <strong>Een totaaloverzicht van je bezittingen voor wie je lief zijn.</strong></div></div>
+      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div></div>
       ${formHtml}
       ${typeGroups}
       <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
@@ -2337,14 +2413,59 @@ function wireEvents() {
       });
 
       if (res.ok) {
-        ui.vaultKey  = key;
-        ui.vaultData = snapshot;
-        ui.vaultState = 'unlocked';
+        ui.vaultKey      = key;
+        ui.vaultData     = snapshot;
+        ui.vaultKeyToShow = u8ToB64(fragA);
+        ui.vaultState    = 'showing-key';
         localStorage.setItem(VK_DATA_LS, blob);
         render();
       } else {
-        btn.disabled = false; btn.textContent = 'Kluis activeren';
+        btn.disabled = false; btn.textContent = 'Kluis aanmaken';
         alert('Er ging iets mis bij het activeren van de kluis. Probeer opnieuw.');
+      }
+    });
+  }
+
+  // Sleutelcode opgeslagen bevestiging
+  const vkKeySavedBtn = document.getElementById('vk-key-saved-btn');
+  if (vkKeySavedBtn) {
+    vkKeySavedBtn.addEventListener('click', () => {
+      ui.vaultKeyToShow = null;
+      ui.vaultState = 'unlocked';
+      render();
+    });
+  }
+
+  // Vault unlock op nieuw apparaat (Fragment A invoeren)
+  const vkUnlockForm = document.getElementById('vk-unlock-form');
+  if (vkUnlockForm) {
+    vkUnlockForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const input = (document.getElementById('vk-frag-a-input').value || '').trim();
+      const errEl = document.getElementById('vk-unlock-err');
+      errEl.style.display = 'none';
+      const btn = vkUnlockForm.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Even geduld…';
+      try {
+        const fragA = b64ToU8(input);
+        const { data, error } = await supabase.from('vault_data')
+          .select('fragment_b, encrypted_blob, claim_token').eq('user_id', state.account.id).single();
+        if (error || !data) throw new Error('Geen vault gevonden');
+        const fragB = b64ToU8(data.fragment_b);
+        const rawK  = sssReconstruct(1, fragA, 2, fragB);
+        const key   = await vkImportKey(rawK);
+        const plain = await vkDec(key, data.encrypted_blob);
+        const snap  = JSON.parse(plain);
+        // Opslaan in localStorage voor dit apparaat
+        localStorage.setItem(VK_FRAG_A, input);
+        ui.vaultKey   = key;
+        ui.vaultData  = snap;
+        ui.vaultState = 'unlocked';
+        localStorage.setItem(VK_DATA_LS, data.encrypted_blob);
+        render();
+      } catch {
+        errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Kluis openen';
       }
     });
   }
@@ -2638,7 +2759,8 @@ function wireEvents() {
     // het contact zelf gewoon opgeslagen; de gebruiker ziet de preview-modal als bevestiging.
     // supabase-js stuurt automatisch het JWT van de ingelogde gebruiker mee als Authorization-
     // header (vereist, want deze Edge Function draait met verify_jwt: true).
-    supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id } })
+    const _fragC = localStorage.getItem(VK_FRAG_C) || null;
+    supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id, fragment_c: _fragC } })
       .catch(err => console.error('send-contact-invite aanroep mislukt', err));
   });
   } // end if (contactForm)

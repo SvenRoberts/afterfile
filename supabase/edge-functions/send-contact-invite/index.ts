@@ -1,9 +1,7 @@
-// Edge Function: send-contact-invite
-// Aanroep: rechtstreeks vanuit app.js, vlak na het aanmaken van een contact (ingelogde
-// gebruiker). verify_jwt staat aan (standaard) — Supabase controleert dus al dat de aanroep een
-// geldig JWT meebrengt; deze functie maakt vervolgens zelf een Supabase-client met dat JWT, zodat
-// RLS ("Eigen contacten beheren": auth.uid() = account_id) garandeert dat iemand alleen een
-// uitnodiging kan laten versturen voor een contact dat echt bij zijn/haar eigen account hoort.
+// Edge Function: send-contact-invite (v16)
+// Aanroep: rechtstreeks vanuit app.js, vlak na het aanmaken van een contact.
+// Accepteert optioneel fragment_c uit localStorage van de client.
+// Fragment C wordt NOOIT opgeslagen -- alleen transiënt doorgestuurd per e-mail aan contact.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
@@ -25,14 +23,7 @@ async function sendEmail(to: string, subject: string, html: string, text: string
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: FROM_ADDRESS,
-      reply_to: REPLY_TO,
-      to,
-      subject,
-      html,
-      text,
-    }),
+    body: JSON.stringify({ from: FROM_ADDRESS, reply_to: REPLY_TO, to, subject, html, text }),
   });
   if (!res.ok) throw new Error(`Resend-fout (${res.status}): ${await res.text()}`);
 }
@@ -66,7 +57,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   try {
-    const { contactId } = await req.json();
+    const body = await req.json();
+    const { contactId, fragment_c } = body;
     if (!contactId) return json({ error: "contactId ontbreekt" }, 400);
 
     const authHeader = req.headers.get("Authorization") || "";
@@ -109,11 +101,28 @@ Deno.serve(async (req: Request) => {
       .map((t) => `<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#5B6172;">• ${t}</p>`)
       .join("");
 
+    // Fragment C: alleen indien meegegeven door client (uit localStorage)
+    // NOOIT opgeslagen in de database -- alleen transiënt doorgestuurd.
+    const fragCBlock = fragment_c ? `
+      <div style="margin:20px 0;padding:16px 20px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#0F1222;">Jouw persoonlijke kluiscode</p>
+        <p style="margin:0 0 10px;font-size:13px;line-height:1.5;color:#5B6172;">
+          ${escapeHtml(ownerName)} heeft je ook aangewezen als kluiscontact. Bewaar de onderstaande code veilig --
+          je hebt hem nodig als ${escapeHtml(ownerName)} overlijdt en jij de kluisinhoud wilt openen.
+        </p>
+        <div style="font-family:monospace;font-size:13px;word-break:break-all;color:#1e293b;background:#fff;border:1px dashed #cbd5e1;border-radius:6px;padding:12px 16px;">
+          ${escapeHtml(fragment_c)}
+        </div>
+        <p style="margin:10px 0 0;font-size:12px;color:#9AA1B0;">Bewaar deze code in je wachtwoordmanager of druk hem af.</p>
+      </div>
+    ` : '';
+
     const bodyHtml = `
       <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
         <strong style="color:#0F1222;">${escapeHtml(ownerName)}</strong> heeft je toegevoegd als vertrouwd contact op AfterFile, een dienst voor het veilig vastleggen en overdragen van digitale nalatenschap.
       </p>
       ${roleHtml}
+      ${fragCBlock}
       <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#9AA1B0;">
         Heb je hier vragen over? Neem dan rechtstreeks contact op met ${escapeHtml(ownerName)}, of stuur een e-mail naar info@afterfile.nl.
       </p>
@@ -125,7 +134,7 @@ Deno.serve(async (req: Request) => {
       `AfterFile is een dienst voor het veilig vastleggen en overdragen van digitale nalatenschap.`,
       ``,
       plainRoleItems,
-      ``,
+      fragment_c ? `\nJouw persoonlijke kluiscode:\n${fragment_c}\nBewaar hem veilig in je wachtwoordmanager of op papier.\n` : '',
       `Heb je hier vragen over? Neem dan rechtstreeks contact op met ${ownerName}, of stuur een e-mail naar info@afterfile.nl.`,
       ``,
       `-- AfterFile (afterfile.nl)`,

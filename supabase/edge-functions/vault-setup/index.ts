@@ -31,6 +31,9 @@ ${bodyHtml}
 </body></html>`;
 }
 
+// v5: Fragment C wordt NOOIT ontvangen of opgeslagen.
+// Alleen fragment_b en encrypted_blob worden in vault_data bewaard.
+// De gebruiker ontvangt Fragment B per e-mail als off-device back-up.
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders });
@@ -43,14 +46,14 @@ Deno.serve(async (req: Request) => {
   const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
   if (authErr || !user) return new Response('Unauthorized', { status: 401, headers: corsHeaders });
 
-  const { fragment_b, fragment_c, encrypted_blob, contact_email, user_name } = await req.json();
-  if (!fragment_b || !fragment_c || !encrypted_blob || !contact_email) {
+  const { fragment_b, encrypted_blob, user_name } = await req.json();
+  if (!fragment_b || !encrypted_blob) {
     return new Response('Missing fields', { status: 400, headers: corsHeaders });
   }
 
   const { data: vaultRow, error: dbErr } = await supabase
     .from('vault_data')
-    .upsert({ user_id: user.id, contact_email, fragment_b, encrypted_blob }, { onConflict: 'user_id' })
+    .upsert({ user_id: user.id, fragment_b, encrypted_blob }, { onConflict: 'user_id' })
     .select('claim_token')
     .single();
 
@@ -60,30 +63,16 @@ Deno.serve(async (req: Request) => {
   }
 
   const claimToken = vaultRow.claim_token;
+  const displayName = user_name || 'je';
 
-  // E-mail naar kluiscontact: bewaar jouw persoonlijke code (Fragment C)
-  const contactBody = `
-    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
-      <strong style="color:#0F1222;">${user_name}</strong> heeft je aangewezen als kluiscontact in AfterFile.
-      Als er ooit iets met ${user_name} gebeurt, kun jij met de onderstaande persoonlijke code toegang krijgen tot de kluisinhoud.
-    </p>
-    <p style="margin:0 0 12px;font-size:14px;color:#5B6172;">Bewaar deze code veilig, bijvoorbeeld in je wachtwoordmanager of geprint op papier:</p>
-    <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:16px 24px;margin:16px 0;font-family:monospace;font-size:14px;word-break:break-all;color:#1e293b;">
-      ${fragment_c}
-    </div>
-    <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#9AA1B0;">
-      Je ontvangt een aparte activeringsmail van AfterFile als deze code gebruikt kan worden.
-      Heb je vragen? Stuur een e-mail naar info@afterfile.nl.
-    </p>
-  `;
-
-  // E-mail naar gebruiker zelf: jouw herstelcode (Fragment B als off-device backup)
+  // E-mail naar gebruiker: Fragment B als off-device back-up herstelcode
   const userBody = `
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
-      Je AfterFile-kluis is aangemaakt. Bewaar onderstaande herstelcode op een veilige plek,
+      De AfterFile-kluis van <strong style="color:#0F1222;">${displayName}</strong> is aangemaakt.
+      Bewaar onderstaande herstelcode op een veilige plek,
       zodat je ook op een nieuw apparaat toegang kunt krijgen tot je kluis.
     </p>
-    <p style="margin:0 0 12px;font-size:14px;color:#5B6172;">Bewaar deze code in je wachtwoordmanager of druk hem af en leg hem in een kluis:</p>
+    <p style="margin:0 0 12px;font-size:14px;color:#5B6172;">Bewaar deze code in je wachtwoordmanager of druk hem af en leg hem apart:</p>
     <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:16px 24px;margin:16px 0;font-family:monospace;font-size:14px;word-break:break-all;color:#1e293b;">
       ${fragment_b}
     </div>
@@ -93,26 +82,16 @@ Deno.serve(async (req: Request) => {
     </p>
   `;
 
-  const emails = [
-    {
-      to: contact_email,
-      subject: `${user_name} heeft je aangewezen als kluiscontact bij AfterFile`,
-      html: emailShell('Je bent aangewezen als kluiscontact', contactBody)
-    },
-    {
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'AfterFile <noreply@afterfile.nl>',
       to: user.email!,
       subject: 'Jouw AfterFile-kluisherstelcode',
       html: emailShell('Jouw kluisherstelcode', userBody)
-    }
-  ];
-
-  for (const mail of emails) {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: 'AfterFile <noreply@afterfile.nl>', to: mail.to, subject: mail.subject, html: mail.html })
-    });
-  }
+    })
+  });
 
   return new Response(JSON.stringify({ ok: true, claim_token: claimToken }), {
     headers: { 'Content-Type': 'application/json', ...corsHeaders }
