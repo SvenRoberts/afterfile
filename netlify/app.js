@@ -1550,7 +1550,7 @@ function renderFaqPage() {
   `).join('');
   return `
     ${pageHeader({ kicker: 'FAQ', title: 'Veelgestelde vragen.' })}
-    <div class="faq-list" style="max-width:680px;">${faqHtml}</div>
+    <div class="faq-list" style="max-width:680px;margin-left:0;">${faqHtml}</div>
     <p style="margin-top:32px;font-size:14px;color:var(--color-text-muted);">Staat je vraag er niet bij? Mail naar <a href="mailto:info@afterfile.nl">info@afterfile.nl</a>.</p>
   `;
 }
@@ -1862,26 +1862,38 @@ function renderAssets() {
       </div>
     ` : '';
     return `
-      ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div></div>
-      ${pickerHtml}
-      ${listHtml}
-      ${!ui.addingAsset ? `
-        <div style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <button type="button" class="btn btn-primary" style="width:auto;" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button>
-          <button type="button" class="btn btn-ghost" style="color:var(--color-text-muted);border-color:var(--color-border);" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
-        </div>` : ''}
+      <div class="vault-active">
+        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
+        <div class="vault-statusbar">
+          <span class="vault-status-dot"></span>
+          <span>Kluis ontgrendeld</span>
+          <span class="vault-enc-tag">AES-256 · Shamir 2/3</span>
+        </div>
+        ${pickerHtml}
+        ${listHtml}
+        ${!ui.addingAsset ? `
+          <div style="margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <button type="button" class="btn btn-primary" style="width:auto;" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button>
+            <button type="button" class="vault-leave-btn" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+          </div>` : ''}
+      </div>
     `;
   } else {
     // No assets yet: show tile grid immediately to encourage first add
     return `
-      ${pageHeader({ kicker: 'Bezittingen', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div></div>
-      ${formHtml}
-      ${typeGroups}
-      <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
-      <div style="margin-top:24px;text-align:right;">
-        <button type="button" class="btn btn-ghost" style="color:var(--color-text-muted);border-color:var(--color-border);" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+      <div class="vault-active">
+        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
+        <div class="vault-statusbar">
+          <span class="vault-status-dot"></span>
+          <span>Kluis ontgrendeld</span>
+          <span class="vault-enc-tag">AES-256 · Shamir 2/3</span>
+        </div>
+        ${formHtml}
+        ${typeGroups}
+        <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;">
+          <button type="button" class="vault-leave-btn" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+        </div>
       </div>
     `;
   }
@@ -2919,4 +2931,4 @@ function wireEvents() {
     });
   });
 
-  document.querySelectorAll('[data-action="toggle-sign
+  document.querySelectorAll('[data-acti

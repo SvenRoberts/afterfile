@@ -1289,6 +1289,168 @@ footer.site-footer a:hover { color: var(--color-primary); }
 }
 
 /* ================================================================
+   VAULT ACTIVE — dark, high-tech shell voor ontgrendelde kluis
+   ================================================================ */
+.vault-active {
+  background: #0B1120;
+  border-radius: 16px;
+  padding: 32px 32px 40px;
+  color: #CBD5E1;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,201,167,0.025) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,201,167,0.025) 40px);
+}
+
+/* Status bar */
+.vault-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 10px 16px;
+  background: rgba(0,201,167,0.07);
+  border: 1px solid rgba(0,201,167,0.18);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #00C9A7;
+}
+.vault-status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #00C9A7;
+  flex: none;
+  box-shadow: 0 0 0 0 rgba(0,201,167,0.4);
+  animation: vault-pulse 2.2s infinite;
+}
+@keyframes vault-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0,201,167,0.5); }
+  70%  { box-shadow: 0 0 0 7px rgba(0,201,167,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,201,167,0); }
+}
+.vault-enc-tag {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(148,163,184,0.45);
+  font-family: monospace;
+}
+
+/* Page header */
+.vault-active .page-header { margin-bottom: 24px; }
+.vault-active .page-header .kicker { color: #00C9A7; }
+.vault-active .page-header h1 { color: #F1F5F9; }
+.vault-active .page-header p { color: #94A3B8; }
+
+/* Category headings */
+.vault-active .type-group h3 { color: rgba(148,163,184,0.45); }
+
+/* Type tiles in picker */
+.vault-active .type-tile {
+  background: #111C30;
+  border-color: rgba(100,116,139,0.25);
+  color: #94A3B8;
+}
+.vault-active .type-tile:hover {
+  border-color: #00C9A7;
+  background: #162030;
+  color: #E2E8F0;
+}
+.vault-active .type-tile.selected {
+  border-color: #00C9A7;
+  background: rgba(0,201,167,0.09);
+  color: #00C9A7;
+}
+.vault-active .tile-icon {
+  background: rgba(0,201,167,0.09);
+  color: #00C9A7;
+}
+
+/* Asset picker panel */
+.vault-active .asset-picker-panel {
+  background: #0D1829;
+  border-color: rgba(0,201,167,0.14);
+}
+
+/* Item cards */
+.vault-active .item-card {
+  background: #0F1B2D;
+  border: 1px solid rgba(100,116,139,0.18);
+  border-left: 3px solid rgba(0,201,167,0.35);
+}
+.vault-active .item-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+.vault-active .item-card h4 { color: #F1F5F9; }
+.vault-active .item-card .meta-row { color: #64748B; }
+.vault-active .item-card .meta-row strong { color: #94A3B8; }
+.vault-active .item-tag {
+  background: rgba(0,201,167,0.1);
+  color: #00C9A7;
+}
+.vault-active .btn-danger-ghost { color: #475569; }
+.vault-active .btn-danger-ghost:hover { color: #F87171; background: rgba(239,68,68,0.1); }
+
+/* Empty state */
+.vault-active .empty-state { color: #334155; border-color: rgba(100,116,139,0.12); }
+
+/* Form fields */
+.vault-active .field label { color: #94A3B8; }
+.vault-active .field input,
+.vault-active .field textarea,
+.vault-active .field select {
+  background: #0D1829;
+  border-color: rgba(100,116,139,0.28);
+  color: #E2E8F0;
+}
+.vault-active .field input:focus,
+.vault-active .field textarea:focus,
+.vault-active .field select:focus {
+  border-color: #00C9A7;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,201,167,0.12);
+}
+.vault-active .field input::placeholder,
+.vault-active .field textarea::placeholder { color: #334155; }
+
+/* Primary button → teal in vault */
+.vault-active .btn-primary {
+  background: #00C9A7;
+  border-color: #00C9A7;
+  color: #0B1120;
+  font-weight: 700;
+}
+.vault-active .btn-primary:hover { background: #00B394; border-color: #00B394; }
+
+/* Ghost / cancel button */
+.vault-active .btn-ghost {
+  color: #475569;
+  border-color: rgba(100,116,139,0.25);
+  background: transparent;
+}
+.vault-active .btn-ghost:hover { color: #94A3B8; border-color: rgba(100,116,139,0.5); }
+
+/* Kluis verlaten button */
+.vault-leave-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(100,116,139,0.25);
+  background: transparent;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.vault-leave-btn:hover {
+  border-color: rgba(239,68,68,0.35);
+  color: #F87171;
+  background: rgba(239,68,68,0.06);
+}
+
+/* ================================================================
    ONBOARDING WIZARD
    ================================================================ */
 .ob-wrap {
