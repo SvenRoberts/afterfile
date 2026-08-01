@@ -1,4 +1,4 @@
-// AfterFile app.js — build 2026-08-01 09:43:48
+// AfterFile app.js — build 2026-08-01 09:46:35
 // AfterFile — webapp met een echte Supabase-backend (database + login via magic link, geen
 // wachtwoord). Accountgegevens (account, bezittingen, contacten, instructies, persoonsgegevens)
 // leven in Supabase, niet meer alleen in deze browser. De Beheer-pagina en de "meld een
@@ -904,7 +904,7 @@ function renderLanding() {
     'Leg duidelijke instructies vast',
     'Eén klik voor je Legacy Report (PDF)',
     'Alleen geverifieerde vrijgave, nooit automatisch',
-    'Je sleutel in drie stukken — niemand heeft er ooit genoeg alleen'
+    'Je sleutel in drie stukken, niemand heeft er ooit genoeg alleen'
   ];
   const checkListHtml = checks.map(c => `<li>${iconSvg('check', 16)}<span>${esc(c)}</span></li>`).join('');
 
@@ -1908,7 +1908,7 @@ function renderContactInviteModal() {
     <div class="invite-modal-overlay" data-action="close-invite-preview"></div>
     <div class="invite-modal" role="dialog" aria-modal="true" aria-label="Voorbeeld e-mail aan vertrouwd contact">
       <div class="invite-modal-top">
-        <span>Contact opgeslagen — zo zou de e-mail eruitzien</span>
+        <span>Contact opgeslagen, zo zou de e-mail eruitzien</span>
         <button type="button" class="invite-modal-close" data-action="close-invite-preview" aria-label="Sluiten">${iconSvg('x', 16)}</button>
       </div>
       <div class="invite-mock">
@@ -2140,7 +2140,7 @@ function renderInstructions() {
     </div>
     <div class="instruction-tip">
       ${iconSvg('key', 15)}
-      <span><strong>Vergeet je wachtwoordmanager niet.</strong> Vermeld welke app je gebruikt (bijv. 1Password of Bitwarden) en waar je masterkey of emergency kit te vinden is — bij de notaris, in een kluis of in een envelop. AfterFile bewaart zelf nooit wachtwoorden.</span>
+      <span><strong>Vergeet je wachtwoordmanager niet.</strong> Vermeld welke app je gebruikt (bijv. 1Password of Bitwarden) en waar je masterkey of emergency kit te vinden is, bij de notaris, in een kluis of in een envelop. AfterFile bewaart zelf nooit wachtwoorden.</span>
     </div>
 
   `;
