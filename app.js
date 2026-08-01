@@ -1,4 +1,4 @@
-// AfterFile app.js — build 2026-08-01 09:32:35
+// AfterFile app.js — build 2026-08-01 09:39:18
 // AfterFile — webapp met een echte Supabase-backend (database + login via magic link, geen
 // wachtwoord). Accountgegevens (account, bezittingen, contacten, instructies, persoonsgegevens)
 // leven in Supabase, niet meer alleen in deze browser. De Beheer-pagina en de "meld een
@@ -132,7 +132,7 @@ const RELATIONSHIP_SUGGESTIONS = ['Partner', 'Kind', 'Executeur', 'Vriend(in)'];
 // gedeeld met de contacten met de rol "inform".
 const WAITING_PERIOD_DAYS = 30;
 
-const TRUST_LINE = 'AfterFile bewaart nooit wachtwoorden, private keys of herstelcodes.';
+const TRUST_LINE = 'Je kluis heeft drie stukjes sleutel. Jij hebt er één, AfterFile één, jouw contact één. Twee stuks samen zijn genoeg.';
 
 const LAUNCH_OFFER_MONTHS = 6;
 
@@ -187,7 +187,7 @@ const SUPABASE_URL = 'https://prkwfuiadjfpdmcorfas.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 
 // ============================================================
-// VAULT — Shamir Secret Sharing 2-van-3 + AES-256-GCM
+// VAULT — driedelige sleutelsplitsing + AES-256-GCM
 // Fragment A: localStorage  |  B: Supabase  |  C: email contact
 // Elke 2 van 3 fragmenten reconstrueren sleutel K
 // ============================================================
@@ -216,7 +216,7 @@ function gfInv(a) {
   return gfMul(r, x);
 }
 
-// ── Shamir 2-van-3 split/reconstruct ──
+// ── Driedelige splitsing (2 van 3 genoeg) ──
 function sssShare(secret) {
   // secret = Uint8Array; geeft [s1,s2,s3] terug (x=1,2,3)
   const rand = crypto.getRandomValues(new Uint8Array(secret.length));
@@ -904,7 +904,7 @@ function renderLanding() {
     'Leg duidelijke instructies vast',
     'Eén klik voor je Legacy Report (PDF)',
     'Alleen geverifieerde vrijgave, nooit automatisch',
-    'Wij zien nooit wachtwoorden of private keys'
+    'Je sleutel in drie stukken — niemand heeft er ooit genoeg alleen'
   ];
   const checkListHtml = checks.map(c => `<li>${iconSvg('check', 16)}<span>${esc(c)}</span></li>`).join('');
 
@@ -925,7 +925,7 @@ function renderLanding() {
 
   const faqs = [
     { q: 'Wat is AfterFile?', a: 'AfterFile is een veilige, persoonlijke plek om je digitale nalatenschap te regelen: je bezittingen, accounts en instructies vastgelegd voor de mensen die je vertrouwt, voor het moment dat jij dat zelf niet meer kan.' },
-    { q: 'Slaat AfterFile mijn wachtwoorden op?', a: 'Nee. AfterFile slaat nooit wachtwoorden, private keys of herstelcodes op. Je legt vast wát er is en waar het te vinden is, niet hoe je ergens inlogt.' },
+    { q: 'Hoe werkt de beveiliging van mijn gegevens?', a: 'Stel je voor: je sleutel wordt in drie stukjes geknipt. Stuk A blijft op jouw apparaat. Stuk B bewaren wij bij AfterFile. Stuk C sturen we naar het contact dat jij aanwijst. Om de kluis te openen heb je twee van die drie stukjes nodig — maar nooit alle drie tegelijk. Zolang je leeft opent jouw apparaat (A) samen met AfterFile (B) de kluis automatisch als je inlogt. Kom je er niet meer? Dan stuurt AfterFile stuk B naar jouw contact. Dat contact combineert B met hun eigen stuk C — en ziet alles. Jouw apparaat is dan niet meer nodig. Niemand kan de kluis alleen openen: niet AfterFile, niet jouw contact, en ook een hacker die één stukje steelt heeft er niks aan.' },
     { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.' },
     { q: 'Hoe meldt een vertrouwd contact een overlijden?', a: 'Via de link "Voor Naasten" in de menubalk. Daar vult het contact de naam en het e-mailadres in waarmee de overledene bij AfterFile bekend was, samen met zijn of haar eigen naam en contactgegevens, zodat dit gecontroleerd kan worden.' },
     { q: 'Kan ik op elk moment opzeggen?', a: 'Ja. Je kunt je abonnement op elk moment stopzetten. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.' },
@@ -988,9 +988,9 @@ function renderLanding() {
               <p>Al je gegevens worden versleuteld opgeslagen en verzonden, op servers binnen de EU.</p>
             </div>
             <div class="security-card">
-              <div class="card-icon">${iconSvg('key-off', 18)}</div>
-              <h3>Nooit wachtwoorden of keys</h3>
-              <p>We vragen er nooit om en bewaren ze ook nooit: geen wachtwoorden, private keys of herstelcodes.</p>
+              <div class="card-icon">${iconSvg('lock', 18)}</div>
+              <h3>Drie stukjes sleutel, niemand heeft er genoeg alleen</h3>
+              <p>Jouw apparaat heeft stuk A. AfterFile heeft stuk B. Jouw contact krijgt stuk C. Twee stuks samen openen de kluis. Eén stuk alleen doet niks.</p>
             </div>
             <div class="security-card">
               <div class="card-icon">${iconSvg('eye-off', 18)}</div>
