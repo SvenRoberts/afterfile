@@ -203,9 +203,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 // Elke 2 van 3 fragmenten reconstrueren sleutel K
 // ============================================================
 const VK_FRAG_A  = 'af_v_fragA';   // localStorage: fragment A (base64)
+const VK_FRAG_C  = 'af_v_fragC';   // localStorage: fragment C (base64) — voor kluiscontact
 const VK_BLOB_ID = 'af_v_blobId';  // localStorage: vault_data id (voor auto-unlock)
 const VK_DATA_LS  = 'af_v_data';    // localStorage: cache van ontsleutelde data
-const VK_CONTACT  = 'af_v_contact';  // localStorage: email kluiscontact
+const VK_CONTACT  = 'af_v_contact';  // localStorage: email kluiscontact (legacy)
 
 // ── GF(256) aritmetiek (onherleidbaar poly 0x11b) ──
 function gfMul(a, b) {
@@ -338,7 +339,8 @@ async function vkInit() {
     return;
   }
   const ok = await vkAutoUnlock();
-  if (!ok) { ui.vaultState = 'setup'; state.vaultContactEmail = ''; }
+  // Auto-unlock mislukt maar fragA bestaat nog → apparaat herkend, handmatig ontgrendelen
+  if (!ok) { ui.vaultState = 'locked'; }
   render();
 }
 
@@ -538,6 +540,18 @@ function maybeStartCheckout(session) {
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
+
+// Lees view= uit de URL-hash zodat publieke pagina's (bijv. vault-claim) direct laden.
+// Voorbeeld: https://afterfile.nl#view=vault-claim?token=abc → state.view = 'vault-claim'
+(function parseHashView() {
+  const hash = window.location.hash.slice(1); // alles na '#'
+  if (!hash) return;
+  const beforeQ = hash.split('?')[0];          // "view=vault-claim"
+  const p = new URLSearchParams(beforeQ);
+  const v = p.get('view');
+  if (v) state.view = v;
+})();
+
 let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
@@ -807,6 +821,7 @@ function render() {
     else if (state.view === 'waitlist') html = renderWaitlist();
     else if (state.view === 'partner') html = renderPartner();
     else if (state.view === 'death-report') html = renderDeathReport();
+    else if (state.view === 'vault-claim') html = renderVaultClaim();
     else html = renderLanding();
   } else {
     if (state.view === 'assets' && !personalInfoComplete()) {
@@ -1695,27 +1710,15 @@ function renderAssets() {
       </div>`;
   }
   if (ui.vaultState === 'setup') {
-    const contacts = (state.contacts || []).filter(c => c.email);
-    const opts = contacts.map(c => `<option value="${esc(c.email)}">${esc(c.name)} (${esc(c.email)})</option>`).join('');
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Activeer je kluis.' })}
       <div class="vault-gate-card">
         ${iconSvg('lock', 28)}
         <h3>Stel je kluis in om bezittingen te bewaren</h3>
-        <p>Kies een vertrouwd contact dat jouw kluis kan openen als er iets met jou gebeurt. Je ontvangt daarna een persoonlijke sleutelcode die je zelf bewaart.</p>
-        ${contacts.length === 0
-          ? `<p class="vault-gate-warn">${iconSvg('info', 14)} Voeg eerst een contact met e-mailadres toe via de Contacten-pagina.</p>`
-          : `<form id="vk-setup-form" class="vault-setup-form">
-              <div class="field">
-                <label for="vk-contact-select">Kluiscontact</label>
-                <select id="vk-contact-select">
-                  <option value="">Kies een contactpersoon…</option>
-                  ${opts}
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary">Kluis aanmaken</button>
-            </form>`
-        }
+        <p>Je ontvangt een persoonlijke sleutelcode die je zelf bewaart. Contactpersonen ontvangen hun kluiscode automatisch wanneer je ze toevoegt via de Contacten-pagina.</p>
+        <form id="vk-setup-form" class="vault-setup-form">
+          <button type="submit" class="btn btn-primary">Kluis aanmaken</button>
+        </form>
       </div>`;
   }
   if (ui.vaultState === 'locked') {
@@ -2380,8 +2383,6 @@ function wireEvents() {
   if (vkSetupForm) {
     vkSetupForm.addEventListener('submit', async e => {
       e.preventDefault();
-      const contactEmail = document.getElementById('vk-contact-select').value;
-      if (!contactEmail) return;
       const btn = vkSetupForm.querySelector('button[type="submit"]');
       btn.disabled = true; btn.textContent = 'Even geduld...';
 
@@ -2399,10 +2400,6 @@ function wireEvents() {
       };
       const blob = await vkEnc(key, JSON.stringify(snapshot));
 
-      localStorage.setItem(VK_FRAG_A, u8ToB64(fragA));
-      localStorage.setItem(VK_CONTACT, contactEmail);
-      state.vaultContactEmail = contactEmail;
-
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
       const res = await fetch(`${SUPABASE_URL}/functions/v1/vault-setup`, {
@@ -2410,14 +2407,16 @@ function wireEvents() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           fragment_b: u8ToB64(fragB),
-          fragment_c: u8ToB64(fragC),
           encrypted_blob: blob,
-          contact_email: contactEmail,
           user_name: state.personalInfo?.fullName || state.account?.email || 'AfterFile gebruiker'
         })
       });
 
       if (res.ok) {
+        // Pas na server-bevestiging opslaan: fragA en fragB blijven altijd in sync.
+        // Schrijven vóór de API-call veroorzaakte een mismatch waardoor auto-unlock altijd faalde.
+        localStorage.setItem(VK_FRAG_A, u8ToB64(fragA));
+        localStorage.setItem(VK_FRAG_C, u8ToB64(fragC));
         ui.vaultKey      = key;
         ui.vaultData     = snapshot;
         ui.vaultKeyToShow = u8ToB64(fragA);
@@ -2954,7 +2953,7 @@ function wireEvents() {
       return;
     }
 
-    state.waitlist = state.waitlist || [];
+     state.waitlist = state.waitlist || [];
     state.waitlist.push({ id: Math.random().toString(36).slice(2), name, email, createdAt: new Date().toISOString() });
     ui.waitlistJoined = true;
     saveLocalDemoState();

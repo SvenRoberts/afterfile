@@ -31,9 +31,9 @@ ${bodyHtml}
 </body></html>`;
 }
 
-// v5: Fragment C wordt NOOIT ontvangen of opgeslagen.
-// Alleen fragment_b en encrypted_blob worden in vault_data bewaard.
-// De gebruiker ontvangt Fragment B per e-mail als off-device back-up.
+// v8: Vault setup zonder contactpersoon. Fragment B → gebruiker (herstelcode).
+// Fragment C wordt opgeslagen in de browser (localStorage) en per contact verstuurd
+// via de send-contact-invite Edge Function wanneer de gebruiker een contact toevoegt.
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders });
@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: vaultRow, error: dbErr } = await supabase
     .from('vault_data')
-    .upsert({ user_id: user.id, fragment_b, encrypted_blob }, { onConflict: 'user_id' })
+    .upsert({ user_id: user.id, fragment_b, encrypted_blob, contact_email: '' }, { onConflict: 'user_id' })
     .select('claim_token')
     .single();
 
@@ -65,7 +65,7 @@ Deno.serve(async (req: Request) => {
   const claimToken = vaultRow.claim_token;
   const displayName = user_name || 'je';
 
-  // E-mail naar gebruiker: Fragment B als off-device back-up herstelcode
+  // E-mail → gebruiker: Fragment B als off-device herstelcode
   const userBody = `
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
       De AfterFile-kluis van <strong style="color:#0F1222;">${displayName}</strong> is aangemaakt.
