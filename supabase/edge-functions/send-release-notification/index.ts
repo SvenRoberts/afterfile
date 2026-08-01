@@ -44,7 +44,7 @@ function emailShell(title: string, bodyHtml: string) {
 ${bodyHtml}
 </td></tr>
 <tr><td style="padding:0 36px 28px;">
-<p style="margin:0;font-size:12px;line-height:1.6;color:#9AA1B0;">AfterFile — jouw digitale nalatenschap, veilig geregeld.</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#9AA1B0;">AfterFile, jouw digitale nalatenschap veilig geregeld.</p>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;
@@ -110,7 +110,7 @@ Deno.serve(async (req: Request) => {
               (a) =>
                 `<p style="margin:0 0 10px;font-size:14px;color:#5B6172;">• <strong style="color:#0F1222;">${escapeHtml(
                   (a.name as string) || (a.type_label as string) || "Bezitting"
-                )}</strong>${a.location ? ` — ${escapeHtml(a.location as string)}` : ""}${
+                )}</strong>${a.location ? `, ${escapeHtml(a.location as string)}` : ""}${
                   a.notes ? `<br/><span style="color:#9AA1B0;">${escapeHtml(a.notes as string)}</span>` : ""
                 }</p>`
             )

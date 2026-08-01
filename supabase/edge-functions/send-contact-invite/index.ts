@@ -46,7 +46,7 @@ function emailShell(title: string, bodyHtml: string) {
 ${bodyHtml}
 </td></tr>
 <tr><td style="padding:0 36px 28px;">
-<p style="margin:0;font-size:12px;line-height:1.6;color:#9AA1B0;">AfterFile — jouw digitale nalatenschap, veilig geregeld.</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#9AA1B0;">AfterFile, jouw digitale nalatenschap veilig geregeld.</p>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;

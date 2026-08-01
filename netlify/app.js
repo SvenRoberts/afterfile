@@ -1923,7 +1923,7 @@ function renderContactInviteModal() {
           ${rolesParas.map(p => `<p>${p}</p>`).join('')}
           <p>${esc(TRUST_LINE)}</p>
         </div>
-        <div class="invite-mock-footnote">Dit is een voorbeeld in deze demo: er wordt geen echte e-mail verzonden.</div>
+        <div class="invite-mock-footnote">Zo ziet de uitnodigingsmail eruit die wordt verstuurd.</div>
       </div>
       <div class="invite-modal-actions">
         <button type="button" class="btn btn-secondary btn-sm" data-action="close-invite-preview">Sluiten</button>

@@ -10,7 +10,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const FROM_ADDRESS = "AfterFile <noreply@afterfile.nl>"; // pas aan naar je geverifieerde Resend-afzender indien anders
+const FROM_ADDRESS = "AfterFile <info@afterfile.nl>";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -45,7 +45,7 @@ function emailShell(title: string, bodyHtml: string, accent = "#C0392B") {
 ${bodyHtml}
 </td></tr>
 <tr><td style="padding:0 36px 28px;">
-<p style="margin:0;font-size:12px;line-height:1.6;color:#9AA1B0;">AfterFile — jouw digitale nalatenschap, veilig geregeld.</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#9AA1B0;">AfterFile, jouw digitale nalatenschap veilig geregeld.</p>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;
