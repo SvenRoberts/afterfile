@@ -1,4 +1,4 @@
-// AfterFile app.js — build 2026-07-28 21:35:28
+// AfterFile app.js — build 2026-08-01 09:32:35
 // AfterFile — webapp met een echte Supabase-backend (database + login via magic link, geen
 // wachtwoord). Accountgegevens (account, bezittingen, contacten, instructies, persoonsgegevens)
 // leven in Supabase, niet meer alleen in deze browser. De Beheer-pagina en de "meld een
@@ -290,7 +290,13 @@ async function vkAutoUnlock() {
   try {
     const { data, error } = await supabase
       .from('vault_data').select('fragment_b, encrypted_blob').eq('user_id', state.account.id).single();
-    if (error || !data) return false;
+    if (error || !data) {
+      // Supabase heeft geen vault_data meer — localStorage opruimen
+      localStorage.removeItem(VK_FRAG_A);
+      localStorage.removeItem(VK_CONTACT);
+      localStorage.removeItem(VK_DATA_LS);
+      return false;
+    }
     const fragA = b64ToU8(fragAb64);
     const fragB = b64ToU8(data.fragment_b);
     const rawK  = sssReconstruct(1, fragA, 2, fragB);
@@ -312,7 +318,7 @@ async function vkInit() {
   const hasFragA = !!localStorage.getItem(VK_FRAG_A);
   if (!hasFragA) { ui.vaultState = 'setup'; return; }
   const ok = await vkAutoUnlock();
-  if (!ok) ui.vaultState = 'setup'; // fragment A er, maar geen server-data → opnieuw setup
+  if (!ok) { ui.vaultState = 'setup'; state.vaultContactEmail = ''; }
 }
 
 // ── Vault vergrendelen ──
@@ -1534,7 +1540,7 @@ function renderAccountMenu(activeView) {
   return `
     <div class="account-menu ${open ? 'open' : ''}">
       <button type="button" class="account-menu-trigger" data-action="toggle-account-menu">
-        <span class="nav-account-name">${esc(state.account.name)}</span>
+        <span class="nav-account-name">${esc(getFirstName())}</span>
         ${iconSvg('chevron-down', 16)}
       </button>
       ${open ? `
@@ -1645,7 +1651,7 @@ function renderDashboard() {
     ${completionCardHtml}
 
     ${(() => {
-      const hasFragA = !!localStorage.getItem(VK_FRAG_A);
+      const hasFragA = ui.vaultState === 'unlocked';
       const vaultContact = state.vaultContactEmail || '';
       const contacts = (state.contacts || []).filter(c => c.email);
       if (!hasFragA) {
