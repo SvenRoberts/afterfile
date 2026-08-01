@@ -1863,40 +1863,18 @@ function renderAssets() {
     ` : '';
     return `
       <style>
-        @keyframes vp{0%{box-shadow:0 0 0 0 rgba(0,201,167,.5)}70%{box-shadow:0 0 0 7px rgba(0,201,167,0)}100%{box-shadow:0 0 0 0 rgba(0,201,167,0)}}
-        .va .page-header .kicker{color:#00C9A7!important}
-        .va .page-header h1{color:#F1F5F9!important}
-        .va .page-header p{color:#94A3B8!important}
-        .va .type-group h3{color:rgba(148,163,184,.4)!important}
-        .va .type-tile{background:#111C30!important;border-color:rgba(100,116,139,.25)!important;color:#94A3B8!important}
-        .va .type-tile:hover{border-color:#00C9A7!important;background:#162030!important;color:#E2E8F0!important}
-        .va .type-tile.selected{border-color:#00C9A7!important;background:rgba(0,201,167,.09)!important;color:#00C9A7!important}
-        .va .tile-icon{background:rgba(0,201,167,.09)!important;color:#00C9A7!important}
-        .va .asset-picker-panel{background:#0D1829!important;border-color:rgba(0,201,167,.14)!important}
-        .va .item-card{background:#0F1B2D!important;border:1px solid rgba(100,116,139,.18)!important;border-left:3px solid rgba(0,201,167,.35)!important}
-        .va .item-card h4{color:#F1F5F9!important}
-        .va .item-card .meta-row{color:#64748B!important}
-        .va .item-card .meta-row strong{color:#94A3B8!important}
-        .va .item-tag{background:rgba(0,201,167,.1)!important;color:#00C9A7!important}
-        .va .btn-danger-ghost{color:#475569!important}
-        .va .btn-danger-ghost:hover{color:#F87171!important;background:rgba(239,68,68,.1)!important}
-        .va .btn-primary{background:#00C9A7!important;border-color:#00C9A7!important;color:#0B1120!important;font-weight:700!important}
-        .va .btn-primary:hover{background:#00B394!important;border-color:#00B394!important}
-        .va .btn-ghost{color:#475569!important;border-color:rgba(100,116,139,.25)!important;background:transparent!important}
-        .va .field label{color:#94A3B8!important}
-        .va .field input,.va .field textarea,.va .field select{background:#0D1829!important;border-color:rgba(100,116,139,.28)!important;color:#E2E8F0!important}
-        .va .field input:focus,.va .field textarea:focus,.va .field select:focus{border-color:#00C9A7!important;box-shadow:0 0 0 3px rgba(0,201,167,.12)!important;outline:none!important}
-        .va .empty-state{color:#334155!important;border-color:rgba(100,116,139,.12)!important}
-        .vlb{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:1px solid rgba(100,116,139,.25);background:transparent;color:#475569;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
-        .vlb:hover{border-color:rgba(239,68,68,.35)!important;color:#F87171!important;background:rgba(239,68,68,.06)!important}
+        @keyframes vp{0%{box-shadow:0 0 0 0 rgba(47,93,217,.4)}70%{box-shadow:0 0 0 6px rgba(47,93,217,0)}100%{box-shadow:0 0 0 0 rgba(47,93,217,0)}}
+        .va .item-card{border-left:3px solid rgba(47,93,217,.3)!important}
+        .vlb{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:1px solid var(--color-border);background:transparent;color:var(--color-text-muted);font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+        .vlb:hover{border-color:rgba(220,38,38,.3);color:#DC2626;background:rgba(220,38,38,.05)}
         .vsd{animation:vp 2.2s infinite}
       </style>
-      <div class="va" style="background:#0B1120;border-radius:16px;padding:32px 32px 40px;color:#CBD5E1;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px);">
+      <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
         ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(0,201,167,.07);border:1px solid rgba(0,201,167,.18);border-radius:8px;font-size:13px;font-weight:600;color:#00C9A7;">
-          <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#00C9A7;flex:none;display:inline-block;"></span>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
+          <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(148,163,184,.45);font-family:monospace;">AES-256 · Shamir 2/3</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--color-text-faint);font-family:monospace;">AES-256 · Shamir 2/3</span>
         </div>
         ${pickerHtml}
         ${listHtml}
@@ -1910,12 +1888,12 @@ function renderAssets() {
   } else {
     // No assets yet: show tile grid immediately to encourage first add
     return `
-      <div class="va" style="background:#0B1120;border-radius:16px;padding:32px 32px 40px;color:#CBD5E1;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px);">
+      <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
         ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(0,201,167,.07);border:1px solid rgba(0,201,167,.18);border-radius:8px;font-size:13px;font-weight:600;color:#00C9A7;">
-          <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#00C9A7;flex:none;display:inline-block;"></span>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
+          <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(148,163,184,.45);font-family:monospace;">AES-256 · Shamir 2/3</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--color-text-faint);font-family:monospace;">AES-256 · Shamir 2/3</span>
         </div>
         ${formHtml}
         ${typeGroups}
