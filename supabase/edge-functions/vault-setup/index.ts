@@ -51,9 +51,18 @@ Deno.serve(async (req: Request) => {
     return new Response('Missing fields', { status: 400, headers: corsHeaders });
   }
 
+  // Eerst controleren of er al een kluis bestaat — één kluis per gebruiker, nooit overschrijven.
+  const { data: existing } = await supabase
+    .from('vault_data').select('user_id').eq('user_id', user.id).maybeSingle();
+  if (existing) {
+    return new Response(JSON.stringify({ error: 'vault_already_exists' }), {
+      status: 409, headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+
   const { data: vaultRow, error: dbErr } = await supabase
     .from('vault_data')
-    .upsert({ user_id: user.id, fragment_b, encrypted_blob, contact_email: '' }, { onConflict: 'user_id' })
+    .insert({ user_id: user.id, fragment_b, encrypted_blob, contact_email: '' })
     .select('claim_token')
     .single();
 
