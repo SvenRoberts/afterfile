@@ -331,13 +331,15 @@ async function vkInit() {
     // Check of er al een kluis bestaat in de DB (= ander apparaat, niet eerste setup)
     if (supabase && state.account) {
       const { data } = await supabase.from('vault_data').select('id').eq('user_id', state.account.id).maybeSingle();
-      if (data) { ui.vaultState = 'locked'; return; }
+      if (data) { ui.vaultState = 'locked'; render(); return; }
     }
     ui.vaultState = 'setup';
+    render();
     return;
   }
   const ok = await vkAutoUnlock();
   if (!ok) { ui.vaultState = 'setup'; state.vaultContactEmail = ''; }
+  render();
 }
 
 // ── Vault vergrendelen ──
@@ -468,10 +470,13 @@ async function applySession(session) {
     state.personalInfo = defaultState().personalInfo;
     state.checkins = { status: 'active', waitingStartedAt: null };
     state.completedAt = null;
+    ui.vaultState = 'loading';
   }
   if (state.account && ['landing', 'signup', 'waitlist'].includes(state.view)) state.view = 'dashboard';
   if (!state.account && ['dashboard', 'gegevens', 'assets', 'contacts', 'instructions', 'report', 'admin'].includes(state.view)) state.view = 'landing';
   render();
+  // Start vault initialisatie na render (async — vkInit roept zelf render() aan als klaar)
+  if (state.account) vkInit();
 }
 
 // Stuurt de gebruiker naar de Stripe-hosted Checkout-pagina voor het gekozen betaalde plan.
