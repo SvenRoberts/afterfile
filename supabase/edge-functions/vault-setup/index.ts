@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
     </p>
     <p style="margin:0 0 12px;font-size:14px;color:#5B6172;">Bewaar deze code in je wachtwoordmanager of druk hem af en leg hem in een kluis:</p>
     <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:16px 24px;margin:16px 0;font-family:monospace;font-size:14px;word-break:break-all;color:#1e293b;">
-      ${fragment_c}
+      ${fragment_b}
     </div>
     <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#9AA1B0;">
       Dit is een back-up van je kluissleutel. Bewaar hem apart van je apparaat.
