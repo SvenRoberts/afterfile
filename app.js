@@ -1870,11 +1870,10 @@ function renderAssets() {
         .vsd{animation:vp 2.2s infinite}
       </style>
       <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
-        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
+        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: '' })}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--color-text-faint);font-family:monospace;">AES-256 · Shamir 2/3</span>
         </div>
         ${pickerHtml}
         ${listHtml}
@@ -1889,11 +1888,10 @@ function renderAssets() {
     // No assets yet: show tile grid immediately to encourage first add
     return `
       <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
-        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
+        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies een categorie en voeg je eerste bezitting toe.' })}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--color-text-faint);font-family:monospace;">AES-256 · Shamir 2/3</span>
         </div>
         ${formHtml}
         ${typeGroups}
