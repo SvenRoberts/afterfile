@@ -132,7 +132,7 @@ const RELATIONSHIP_SUGGESTIONS = ['Partner', 'Kind', 'Executeur', 'Vriend(in)'];
 // gedeeld met de contacten met de rol "inform".
 const WAITING_PERIOD_DAYS = 30;
 
-const TRUST_LINE = 'Je kluis heeft drie stukjes sleutel. Jij hebt er één, AfterFile één, jouw contact één. Twee stuks samen zijn genoeg.';
+const TRUST_LINE = 'Jouw digitale nalatenschap veilig geregeld.';
 
 const LAUNCH_OFFER_MONTHS = 6;
 
@@ -1474,7 +1474,6 @@ function renderAccountMenu(activeView) {
         <div class="account-menu-overlay"></div>
         <div class="account-menu-panel">
           ${menuLink('gegevens', 'Mijn gegevens')}
-          ${menuLink('instructions', 'Instructies')}
           ${menuLink('report', 'Rapport')}
           ${state.account && state.account.role === 'owner' ? menuLink('admin', 'Beheer') : ''}
           <div class="account-menu-divider"></div>
@@ -1605,14 +1604,7 @@ function renderDashboard() {
         <div class="count">${c} <span class="unit">toegevoegd</span></div>
         <a class="card-link" href="#" data-nav="contacts">Contact toevoegen →</a>
       </div>
-      <div class="dash-card">
-        <div class="dash-card-top">
-          <div class="dash-card-title"><span class="card-icon">${iconSvg('file-text', 17)}</span><h3>Instructies</h3></div>
-          <span class="check ${hasInstr ? 'done' : ''}">${hasInstr ? iconSvg('check', 12) : ''}</span>
-        </div>
-        <div class="count" style="font-size:18px;">${hasInstr ? 'Geschreven' : 'Nog niet geschreven'}</div>
-        <a class="card-link" href="#" data-nav="instructions">${hasInstr ? 'Instructies bewerken →' : 'Instructies schrijven →'}</a>
-      </div>
+
     </div>
   `;
 }
