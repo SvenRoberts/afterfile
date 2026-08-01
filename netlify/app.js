@@ -807,7 +807,7 @@ function pageHeader(opts) {
     <div class="page-header">
       <span class="kicker">${esc(kicker)}</span>
       <h1>${title}</h1>
-      <p>${sub}</p>
+      ${sub ? `<p>${sub}</p>` : ''}
     </div>
   `;
 }
