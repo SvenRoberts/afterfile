@@ -2962,4 +2962,9 @@ function wireEvents() {
 
     fetch('/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' 
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'form-name': 'waitlist', name, email }).toString(),
+    }).catch(() => { /* stille fallback, lokale wachtlijst-weergave blijft werken */ });
+  });
+}
+})();
