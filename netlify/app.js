@@ -1862,37 +1862,66 @@ function renderAssets() {
       </div>
     ` : '';
     return `
-      <div class="vault-active">
+      <style>
+        @keyframes vp{0%{box-shadow:0 0 0 0 rgba(0,201,167,.5)}70%{box-shadow:0 0 0 7px rgba(0,201,167,0)}100%{box-shadow:0 0 0 0 rgba(0,201,167,0)}}
+        .va .page-header .kicker{color:#00C9A7!important}
+        .va .page-header h1{color:#F1F5F9!important}
+        .va .page-header p{color:#94A3B8!important}
+        .va .type-group h3{color:rgba(148,163,184,.4)!important}
+        .va .type-tile{background:#111C30!important;border-color:rgba(100,116,139,.25)!important;color:#94A3B8!important}
+        .va .type-tile:hover{border-color:#00C9A7!important;background:#162030!important;color:#E2E8F0!important}
+        .va .type-tile.selected{border-color:#00C9A7!important;background:rgba(0,201,167,.09)!important;color:#00C9A7!important}
+        .va .tile-icon{background:rgba(0,201,167,.09)!important;color:#00C9A7!important}
+        .va .asset-picker-panel{background:#0D1829!important;border-color:rgba(0,201,167,.14)!important}
+        .va .item-card{background:#0F1B2D!important;border:1px solid rgba(100,116,139,.18)!important;border-left:3px solid rgba(0,201,167,.35)!important}
+        .va .item-card h4{color:#F1F5F9!important}
+        .va .item-card .meta-row{color:#64748B!important}
+        .va .item-card .meta-row strong{color:#94A3B8!important}
+        .va .item-tag{background:rgba(0,201,167,.1)!important;color:#00C9A7!important}
+        .va .btn-danger-ghost{color:#475569!important}
+        .va .btn-danger-ghost:hover{color:#F87171!important;background:rgba(239,68,68,.1)!important}
+        .va .btn-primary{background:#00C9A7!important;border-color:#00C9A7!important;color:#0B1120!important;font-weight:700!important}
+        .va .btn-primary:hover{background:#00B394!important;border-color:#00B394!important}
+        .va .btn-ghost{color:#475569!important;border-color:rgba(100,116,139,.25)!important;background:transparent!important}
+        .va .field label{color:#94A3B8!important}
+        .va .field input,.va .field textarea,.va .field select{background:#0D1829!important;border-color:rgba(100,116,139,.28)!important;color:#E2E8F0!important}
+        .va .field input:focus,.va .field textarea:focus,.va .field select:focus{border-color:#00C9A7!important;box-shadow:0 0 0 3px rgba(0,201,167,.12)!important;outline:none!important}
+        .va .empty-state{color:#334155!important;border-color:rgba(100,116,139,.12)!important}
+        .vlb{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:1px solid rgba(100,116,139,.25);background:transparent;color:#475569;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+        .vlb:hover{border-color:rgba(239,68,68,.35)!important;color:#F87171!important;background:rgba(239,68,68,.06)!important}
+        .vsd{animation:vp 2.2s infinite}
+      </style>
+      <div class="va" style="background:#0B1120;border-radius:16px;padding:32px 32px 40px;color:#CBD5E1;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px);">
         ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-        <div class="vault-statusbar">
-          <span class="vault-status-dot"></span>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(0,201,167,.07);border:1px solid rgba(0,201,167,.18);border-radius:8px;font-size:13px;font-weight:600;color:#00C9A7;">
+          <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#00C9A7;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
-          <span class="vault-enc-tag">AES-256 · Shamir 2/3</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(148,163,184,.45);font-family:monospace;">AES-256 · Shamir 2/3</span>
         </div>
         ${pickerHtml}
         ${listHtml}
         ${!ui.addingAsset ? `
           <div style="margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
             <button type="button" class="btn btn-primary" style="width:auto;" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button>
-            <button type="button" class="vault-leave-btn" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+            <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
           </div>` : ''}
       </div>
     `;
   } else {
     // No assets yet: show tile grid immediately to encourage first add
     return `
-      <div class="vault-active">
+      <div class="va" style="background:#0B1120;border-radius:16px;padding:32px 32px 40px;color:#CBD5E1;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,201,167,.025) 40px);">
         ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-        <div class="vault-statusbar">
-          <span class="vault-status-dot"></span>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(0,201,167,.07);border:1px solid rgba(0,201,167,.18);border-radius:8px;font-size:13px;font-weight:600;color:#00C9A7;">
+          <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#00C9A7;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
-          <span class="vault-enc-tag">AES-256 · Shamir 2/3</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(148,163,184,.45);font-family:monospace;">AES-256 · Shamir 2/3</span>
         </div>
         ${formHtml}
         ${typeGroups}
         <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
         <div style="margin-top:24px;display:flex;justify-content:flex-end;">
-          <button type="button" class="vault-leave-btn" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+          <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
         </div>
       </div>
     `;
@@ -2842,93 +2871,4 @@ function wireEvents() {
   });
 
   const personalInfoForm = document.getElementById('personal-info-form');
-  if (personalInfoForm) personalInfoForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const wasComplete = personalInfoComplete();
-    const fd = new FormData(personalInfoForm);
-    const info = {
-      fullName: (fd.get('fullName') || '').trim(),
-      street: (fd.get('street') || '').trim(),
-      postalCode: (fd.get('postalCode') || '').trim(),
-      city: (fd.get('city') || '').trim(),
-      birthDate: toIsoDate((fd.get('birthDate') || '').trim()),
-      phone: (fd.get('phone') || '').trim(),
-    };
-    const { error } = await supabase.from('profiles').update({
-      full_name: info.fullName, street: info.street, postal_code: info.postalCode,
-      city: info.city, birth_date: info.birthDate, phone: info.phone,
-    }).eq('id', state.account.id);
-    if (error) { flashToast('Opslaan is niet gelukt, probeer het opnieuw.'); return; }
-    state.personalInfo = info;
-    // Eerste keer dat de gegevens compleet zijn: ga automatisch door naar Bezittingen,
-    // in plaats van op dit formulier te blijven staan.
-    if (!wasComplete && personalInfoComplete()) state.view = 'assets';
-    syncCurrentSignupRecord();
-    saveLocalDemoState();
-    render();
-    flashToast('Gegevens opgeslagen');
-  });
-
-  const instrText = document.getElementById('instructions-text');
-  if (instrText) {
-    let debounceTimer;
-    instrText.addEventListener('input', () => {
-      state.instructions = instrText.value;
-      const indicator = document.getElementById('save-indicator');
-      if (indicator) indicator.textContent = 'Bezig met opslaan…';
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(async () => {
-        const { error } = await supabase.from('profiles').update({ instructions: state.instructions }).eq('id', state.account.id);
-        if (indicator) indicator.textContent = error ? 'Opslaan mislukt' : 'Opgeslagen';
-        syncCurrentSignupRecord();
-        saveLocalDemoState();
-      }, 600);
-    });
-  }
-
-  const downloadReportBtn = document.querySelector('[data-action="download-report-pdf"]');
-  if (downloadReportBtn) downloadReportBtn.addEventListener('click', () => downloadReportPDF());
-
-  document.querySelectorAll('[data-action="view-certificate"]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const path = btn.getAttribute('data-path');
-      const { data } = supabase.storage.from('death-certificates').getPublicUrl(path);
-      if (data?.publicUrl) window.open(data.publicUrl, '_blank');
-      else flashToast('Kon document-URL niet ophalen.');
-    });
-  });
-
-  document.querySelectorAll('[data-action="approve-death-report"]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.getAttribute('data-id');
-      if (!confirm('Weet je zeker dat je de informatie wilt vrijgeven? Dit stuurt direct een e-mail naar alle contacten met de rol "Informatie ontvangen".')) return;
-      btn.disabled = true; btn.textContent = 'Bezig…';
-      const { error } = await supabase.rpc('approve_death_report', { p_account_id: id });
-      if (error) {
-        flashToast('Vrijgave mislukt: ' + error.message);
-        btn.disabled = false; btn.textContent = 'Informatie vrijgeven';
-      } else {
-        flashToast('Informatie is vrijgegeven en e-mails zijn verstuurd.');
-        await loadSignups(); render();
-      }
-    });
-  });
-
-  const copyContactEmailsBtn = document.querySelector('[data-action="copy-contact-emails"]');
-  if (copyContactEmailsBtn) copyContactEmailsBtn.addEventListener('click', () => {
-    const emails = [...new Set(
-      (state.signups || []).flatMap(s => (s.contacts || []).map(c => (c.email || '').trim()).filter(Boolean))
-    )].join(', ');
-    navigator.clipboard.writeText(emails).then(() => flashToast('E-mailadressen gekopieerd.')).catch(() => flashToast('Kopiëren mislukt.'));
-  });
-
-  document.querySelectorAll('[data-action="toggle-faq"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = Number(btn.getAttribute('data-index'));
-      ui.openFaqIndex = ui.openFaqIndex === idx ? null : idx;
-      render();
-    });
-  });
-
-  document.querySelectorAll('[data-acti
+  if (personalInfoForm) personalInfoForm.addEventListener('submit',
