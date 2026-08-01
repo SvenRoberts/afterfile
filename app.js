@@ -1834,7 +1834,7 @@ function renderAssets() {
     ` : '';
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div></div>
+      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div><span style="margin-left:auto;display:flex;gap:8px;flex-shrink:0;"><button type="button" class="btn btn-ghost btn-sm" data-action="vk-leave">${iconSvg('arrow-left', 14)} Kluis verlaten</button><button type="button" class="btn btn-ghost btn-sm" data-action="vk-lock">${iconSvg('lock', 14)} Vergrendelen</button></span></div>
       ${pickerHtml}
       ${listHtml}
       ${!ui.addingAsset ? `<div style="margin-top:24px;"><button type="button" class="btn btn-primary" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button></div>` : ''}
@@ -1843,7 +1843,7 @@ function renderAssets() {
     // No assets yet: show tile grid immediately to encourage first add
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies wat je wilt toevoegen. We vragen alleen waar je het kunt vinden, nooit hoe je erbij kunt komen.' })}
-      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div></div>
+      <div class="trust-banner"><span class="lock">${iconSvg('lock', 17)}</span><div>Bezittingen, accounts en inloggegevens, alles op één plek. <strong>Veilig vastgelegd voor wie je lief zijn.</strong></div><span style="margin-left:auto;display:flex;gap:8px;flex-shrink:0;"><button type="button" class="btn btn-ghost btn-sm" data-action="vk-leave">${iconSvg('arrow-left', 14)} Kluis verlaten</button><button type="button" class="btn btn-ghost btn-sm" data-action="vk-lock">${iconSvg('lock', 14)} Vergrendelen</button></span></div>
       ${formHtml}
       ${typeGroups}
       <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
@@ -2442,6 +2442,20 @@ function wireEvents() {
       render();
     });
   }
+
+  // Kluis verlaten (naar dashboard, kluis blijft ontgrendeld in geheugen)
+  document.querySelectorAll('[data-action="vk-leave"]').forEach(btn => {
+    btn.addEventListener('click', () => navigate('dashboard'));
+  });
+
+  // Kluis vergrendelen (verwijdert Fragment A, forceert herbevestiging met code)
+  document.querySelectorAll('[data-action="vk-lock"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      localStorage.removeItem(VK_FRAG_A);
+      Object.assign(ui, { vaultKey: null, vaultData: null, vaultState: 'locked' });
+      render();
+    });
+  });
 
   // Vault unlock op nieuw apparaat (Fragment A invoeren)
   const vkUnlockForm = document.getElementById('vk-unlock-form');
