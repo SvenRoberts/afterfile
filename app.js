@@ -225,7 +225,7 @@ function gfInv(a) {
   let r = 1, x = a;
   // a^254 = a^-1 in GF(256)
   for (let i = 0; i < 7; i++) { r = gfMul(r, x); x = gfMul(x, x); }
-  return gfMul(r, x);
+  return gfMul(r, r); // a^127 * a^127 = a^254 = a^-1 (niet a^255)
 }
 
 // ── Driedelige splitsing (2 van 3 genoeg) ──
@@ -339,8 +339,11 @@ async function vkInit() {
     return;
   }
   const ok = await vkAutoUnlock();
-  // Auto-unlock mislukt maar fragA bestaat nog → apparaat herkend, handmatig ontgrendelen
-  if (!ok) { ui.vaultState = 'locked'; }
+  if (!ok) {
+    // vkAutoUnlock verwijdert VK_FRAG_A als er geen vault_data-rij in de DB is →
+    // dan setup tonen, niet locked (anders werkt handmatig ontgrendelen ook nooit).
+    ui.vaultState = localStorage.getItem(VK_FRAG_A) ? 'locked' : 'setup';
+  }
   render();
 }
 
@@ -2962,8 +2965,12 @@ function wireEvents() {
     fetch('/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ 'form-name': 'waitlist', name, email }).toString(),
-    }).catch(() => { /* stille fallback, lokale wachtlijst-weergave blijft werken */ });
+      body: new URLSearchParams(Object.assign({"form-name":"waitlist"},formData)).toString()
+    });
+  });
+}
+})();
+e fallback, lokale wachtlijst-weergave blijft werken */ });
   });
 }
 })();
