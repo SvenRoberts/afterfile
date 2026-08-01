@@ -2970,7 +2970,3 @@ function wireEvents() {
   });
 }
 })();
-e fallback, lokale wachtlijst-weergave blijft werken */ });
-  });
-}
-})();
