@@ -1910,35 +1910,47 @@ function renderAssets() {
 function renderContactInviteModal() {
   const c = ui.contactInvitePreview;
   if (!c) return '';
-  const accountFirst = getFirstName();
-  const contactFirst = (c.name || '').trim().split(' ')[0] || c.name;
+  const accountName = ((state.personalInfo || {}).fullName || '').trim() || (state.account && state.account.name) || '';
   const rolesParas = [];
   if ((c.roles || []).includes('verify')) {
-    rolesParas.push(`Jij hebt de rol "Helpen bevestigen": als ${esc(accountFirst)} komt te overlijden, kun jij dit op elk moment melden via de link "Overlijden melden" op de AfterFile-website. Daar vul je ${esc(accountFirst)}s naam en e-mailadres in, samen met je eigen contactgegevens ter verificatie.`);
+    rolesParas.push(`Je kunt een overlijden melden via de pagina "Overlijden melden" op afterfile.nl. Vul daar de naam en het e-mailadres van ${esc(accountName)} in, samen met je eigen gegevens ter verificatie.`);
   }
   if ((c.roles || []).includes('inform')) {
-    rolesParas.push(`Jij hebt de rol "Informatie ontvangen": zodra een overlijdensmelding is ingediend en door AfterFile geverifieerd, ontvang jij de gegevens die ${esc(accountFirst)} heeft vastgelegd, doorgaans binnen 1 werkdag.`);
+    rolesParas.push(`Zodra een overlijden is bevestigd en door AfterFile geverifieerd, ontvang je de gegevens die ${esc(accountName)} heeft vastgelegd.`);
   }
+  const fragC = localStorage.getItem(VK_FRAG_C);
+  const fragCHtml = fragC ? `
+    <div style="margin:16px 0;padding:14px 16px;background:#EEF2FC;border-left:3px solid #2F5DD9;border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#0F1222;">Jouw persoonlijke kluiscode</p>
+      <p style="margin:0 0 10px;font-size:12px;color:#5B6172;">
+        ${esc(accountName)} heeft je aangewezen als kluiscontact. Bewaar de onderstaande code veilig —
+        je hebt hem nodig om toegang te krijgen tot de kluisinhoud van ${esc(accountName)} als dat moment aanbreekt.
+      </p>
+      <div style="font-family:monospace;font-size:12px;word-break:break-all;background:#fff;border:1px dashed #c7d2fe;border-radius:4px;padding:10px 12px;color:#1e293b;">${esc(fragC)}</div>
+      <p style="margin:8px 0 0;font-size:11px;color:#9AA1B0;">
+        Bewaar deze code in je wachtwoordmanager of druk hem af.<br>
+        Als het zover is, ga je naar afterfile.nl en voer je de code in op de kluis-pagina van ${esc(accountName)}.
+      </p>
+    </div>` : '';
   return `
     <div class="invite-modal-overlay" data-action="close-invite-preview"></div>
     <div class="invite-modal" role="dialog" aria-modal="true" aria-label="Voorbeeld e-mail aan vertrouwd contact">
       <div class="invite-modal-top">
-        <span>Contact opgeslagen, zo zou de e-mail eruitzien</span>
+        <span>Contact opgeslagen — dit is de e-mail die verstuurd wordt</span>
         <button type="button" class="invite-modal-close" data-action="close-invite-preview" aria-label="Sluiten">${iconSvg('x', 16)}</button>
       </div>
       <div class="invite-mock">
         <div class="invite-mock-meta">
-          <p><strong>Van:</strong> AfterFile &lt;no-reply@afterfile.nl&gt;</p>
+          <p><strong>Van:</strong> AfterFile &lt;info@afterfile.nl&gt;</p>
           <p><strong>Aan:</strong> ${esc(c.email)}</p>
-          <p><strong>Onderwerp:</strong> Je bent toegevoegd als vertrouwd contact bij AfterFile</p>
+          <p><strong>Onderwerp:</strong> ${esc(accountName)} heeft je toegevoegd als vertrouwd contact op AfterFile</p>
         </div>
         <div class="invite-mock-body">
-          <p>Hoi ${esc(contactFirst)},</p>
-          <p>${esc(accountFirst)} heeft jou toegevoegd als vertrouwd contact bij AfterFile, een persoonlijke plek om belangrijke digitale zaken vast te leggen voor het moment dat dat nodig is.</p>
-          ${rolesParas.map(p => `<p>${p}</p>`).join('')}
-          <p>${esc(TRUST_LINE)}</p>
+          <p><strong>${esc(accountName)}</strong> heeft je toegevoegd als vertrouwd contact op <strong>AfterFile</strong>, een dienst voor het veilig vastleggen en overdragen van digitale nalatenschap.</p>
+          ${rolesParas.map(p => `<p>• ${p}</p>`).join('')}
+          ${fragCHtml}
+          <p style="font-size:12px;color:#9AA1B0;">Vragen? Neem contact op met ${esc(accountName)} of stuur een e-mail naar info@afterfile.nl.</p>
         </div>
-        <div class="invite-mock-footnote">Zo ziet de uitnodigingsmail eruit die wordt verstuurd.</div>
       </div>
       <div class="invite-modal-actions">
         <button type="button" class="btn btn-secondary btn-sm" data-action="close-invite-preview">Sluiten</button>
@@ -2892,21 +2904,4 @@ function wireEvents() {
   }
 
   const downloadReportBtn = document.querySelector('[data-action="download-report-pdf"]');
-  if (downloadReportBtn) downloadReportBtn.addEventListener('click', () => downloadReportPDF());
-
-  document.querySelectorAll('[data-action="view-certificate"]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const path = btn.getAttribute('data-path');
-      const { data } = supabase.storage.from('death-certificates').getPublicUrl(path);
-      if (data?.publicUrl) window.open(data.publicUrl, '_blank');
-      else flashToast('Kon document-URL niet ophalen.');
-    });
-  });
-
-  document.querySelectorAll('[data-action="approve-death-report"]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.getAttribute('data-id');
-      if (!confirm('Weet je zeker dat je de informatie wilt vrijgeven? Dit stuurt direct een e-mail naar alle contacten met de rol "Informatie ontvangen".')) return;
-      btn.disabled = true; btn.textContent = 'Bezig…';
-      const { error } = await supabase.rpc('approve_death
+  if (downloadReportBtn) downloadReportBtn.ad

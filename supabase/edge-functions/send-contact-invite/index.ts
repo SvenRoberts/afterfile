@@ -80,21 +80,21 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("name")
+      .select("full_name")
       .eq("id", userData.user.id)
       .maybeSingle();
-    const ownerName = profile?.name || "Iemand";
+    const ownerName = profile?.full_name || userData.user.email || "Iemand";
 
     const roles: string[] = contact.roles || [];
     const roleItems: string[] = [];
-    if (roles.includes("inform")) {
-      roleItems.push(
-        `Je ontvangt de door ${escapeHtml(ownerName)} vastgelegde gegevens zodra een overlijden is bevestigd en door AfterFile geverifieerd.`
-      );
-    }
     if (roles.includes("verify")) {
       roleItems.push(
-        `Je kunt, als dat nodig is, een overlijden melden via de pagina "Overlijden melden" op afterfile.nl.`
+        `Je kunt een overlijden melden via de pagina <a href="https://afterfile.nl" style="color:#2F5DD9;">"Overlijden melden"</a> op afterfile.nl. Vul daar de naam en het e-mailadres van ${escapeHtml(ownerName)} in, samen met je eigen gegevens ter verificatie.`
+      );
+    }
+    if (roles.includes("inform")) {
+      roleItems.push(
+        `Zodra een overlijden is bevestigd en door AfterFile geverifieerd, ontvang je de gegevens die ${escapeHtml(ownerName)} heeft vastgelegd.`
       );
     }
     const roleHtml = roleItems
@@ -104,38 +104,45 @@ Deno.serve(async (req: Request) => {
     // Fragment C: alleen indien meegegeven door client (uit localStorage)
     // NOOIT opgeslagen in de database -- alleen transiënt doorgestuurd.
     const fragCBlock = fragment_c ? `
-      <div style="margin:20px 0;padding:16px 20px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;">
-        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#0F1222;">Jouw persoonlijke kluiscode</p>
-        <p style="margin:0 0 10px;font-size:13px;line-height:1.5;color:#5B6172;">
-          ${escapeHtml(ownerName)} heeft je ook aangewezen als kluiscontact. Bewaar de onderstaande code veilig --
-          je hebt hem nodig als ${escapeHtml(ownerName)} overlijdt en jij de kluisinhoud wilt openen.
+      <div style="margin:24px 0;padding:20px 24px;background:#EEF2FC;border:1px solid rgba(47,93,217,.2);border-left:4px solid #2F5DD9;border-radius:8px;">
+        <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#0F1222;">Jouw persoonlijke kluiscode</p>
+        <p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:#5B6172;">
+          ${escapeHtml(ownerName)} heeft je aangewezen als kluiscontact. De onderstaande code is jouw deel van de versleutelde kluis.
+          Bewaar hem goed &mdash; je hebt hem nodig als ${escapeHtml(ownerName)} overlijdt en jij toegang wilt verlenen tot de kluisinhoud.
         </p>
-        <div style="font-family:monospace;font-size:13px;word-break:break-all;color:#1e293b;background:#fff;border:1px dashed #cbd5e1;border-radius:6px;padding:12px 16px;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:13px;word-break:break-all;color:#1e293b;background:#fff;border:1px dashed #c7d2fe;border-radius:6px;padding:14px 18px;letter-spacing:.02em;">
           ${escapeHtml(fragment_c)}
         </div>
-        <p style="margin:10px 0 0;font-size:12px;color:#9AA1B0;">Bewaar deze code in je wachtwoordmanager of druk hem af.</p>
+        <p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:#5B6172;">
+          <strong>Bewaar deze code in je wachtwoordmanager of druk hem af.</strong><br />
+          Als het zover is, ga je naar <a href="https://afterfile.nl" style="color:#2F5DD9;">afterfile.nl</a> en log je in op de kluis-pagina van ${escapeHtml(ownerName)}.
+          Daar voer je deze code in om toegang te krijgen.
+        </p>
       </div>
     ` : '';
 
     const bodyHtml = `
       <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
-        <strong style="color:#0F1222;">${escapeHtml(ownerName)}</strong> heeft je toegevoegd als vertrouwd contact op AfterFile, een dienst voor het veilig vastleggen en overdragen van digitale nalatenschap.
+        <strong style="color:#0F1222;">${escapeHtml(ownerName)}</strong> heeft je toegevoegd als vertrouwd contact op
+        <a href="https://afterfile.nl" style="color:#2F5DD9;">AfterFile</a>, een dienst voor het veilig vastleggen en
+        overdragen van digitale nalatenschap.
       </p>
       ${roleHtml}
       ${fragCBlock}
-      <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#9AA1B0;">
-        Heb je hier vragen over? Neem dan rechtstreeks contact op met ${escapeHtml(ownerName)}, of stuur een e-mail naar info@afterfile.nl.
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#9AA1B0;">
+        Vragen? Neem rechtstreeks contact op met ${escapeHtml(ownerName)}, of stuur een e-mail naar
+        <a href="mailto:info@afterfile.nl" style="color:#2F5DD9;">info@afterfile.nl</a>.
       </p>
     `;
 
-    const plainRoleItems = roleItems.map(t => `• ${t}`).join("\n");
+    const plainRoleItems = roleItems.map(t => `• ${t.replace(/<[^>]+>/g, '')}`).join("\n");
     const bodyText = [
-      `${ownerName} heeft je toegevoegd als vertrouwd contact op AfterFile.`,
+      `${ownerName} heeft je toegevoegd als vertrouwd contact op AfterFile (afterfile.nl).`,
       `AfterFile is een dienst voor het veilig vastleggen en overdragen van digitale nalatenschap.`,
       ``,
       plainRoleItems,
-      fragment_c ? `\nJouw persoonlijke kluiscode:\n${fragment_c}\nBewaar hem veilig in je wachtwoordmanager of op papier.\n` : '',
-      `Heb je hier vragen over? Neem dan rechtstreeks contact op met ${ownerName}, of stuur een e-mail naar info@afterfile.nl.`,
+      fragment_c ? `\nJouw persoonlijke kluiscode:\n${fragment_c}\n\nBewaar hem veilig in je wachtwoordmanager of op papier.\nAls het zover is, ga je naar afterfile.nl en voer je deze code in op de kluis-pagina van ${ownerName}.\n` : '',
+      `Vragen? Neem rechtstreeks contact op met ${ownerName}, of stuur een e-mail naar info@afterfile.nl.`,
       ``,
       `-- AfterFile (afterfile.nl)`,
     ].join("\n");
