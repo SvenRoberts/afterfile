@@ -857,12 +857,15 @@ function renderSiteFooter() {
         <span class="brand-mark" style="display:inline-flex;vertical-align:middle;">${logoMark(20)}</span>
         <span style="font-weight:600;letter-spacing:-0.01em;">AfterFile</span>
       </span>
-      <span class="site-footer-divider">·</span>
-      <span>${esc(TRUST_LINE)}</span>
-      <span class="site-footer-divider">·</span>
-      <a href="#" data-nav="privacy" style="color:inherit;">Privacyverklaring</a>
-      <span class="site-footer-divider">·</span>
-      <span>© ${new Date().getFullYear()} AfterFile</span>
+      <nav class="site-footer-links">
+        <span>${esc(TRUST_LINE)}</span>
+        <span class="site-footer-divider">·</span>
+        <a href="#" data-nav="privacy">Privacyverklaring</a>
+        <span class="site-footer-divider">·</span>
+        <a href="mailto:info@afterfile.nl">info@afterfile.nl</a>
+        <span class="site-footer-divider">·</span>
+        <span>© ${new Date().getFullYear()} AfterFile</span>
+      </nav>
     </div>
   </footer>`;
 }
@@ -1629,17 +1632,10 @@ function renderDashboard() {
     </div>
   ` : '';
   const currentPlan = PLANS.find(p => p.key === state.account.plan);
-  const currentPlanHtml = currentPlan ? `
-    <div class="current-plan-row">
-      <span class="badge-pill">${esc(currentPlan.name)}</span>
-      <span>jouw huidige abonnement</span>
-    </div>
-  ` : '';
+  const planBadge = currentPlan ? ` &thinsp;<span style="display:inline-flex;align-items:center;padding:2px 10px;background:var(--tint-blue);color:var(--color-primary-dark);border-radius:20px;font-size:12px;font-weight:600;vertical-align:middle;">${esc(currentPlan.name)}</span>` : '';
 
   return `
-    ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}`, sub: 'Dit is hoe je plan er vandaag voor staat.' })}
-
-    ${currentPlanHtml}
+    ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}`, sub: `Dit is hoe je plan er vandaag voor staat.${planBadge}` })}
 
     ${upgradeBannerHtml}
 

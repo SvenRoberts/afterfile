@@ -857,12 +857,15 @@ function renderSiteFooter() {
         <span class="brand-mark" style="display:inline-flex;vertical-align:middle;">${logoMark(20)}</span>
         <span style="font-weight:600;letter-spacing:-0.01em;">AfterFile</span>
       </span>
-      <span class="site-footer-divider">·</span>
-      <span>${esc(TRUST_LINE)}</span>
-      <span class="site-footer-divider">·</span>
-      <a href="#" data-nav="privacy" style="color:inherit;">Privacyverklaring</a>
-      <span class="site-footer-divider">·</span>
-      <span>© ${new Date().getFullYear()} AfterFile</span>
+      <nav class="site-footer-links">
+        <span>${esc(TRUST_LINE)}</span>
+        <span class="site-footer-divider">·</span>
+        <a href="#" data-nav="privacy">Privacyverklaring</a>
+        <span class="site-footer-divider">·</span>
+        <a href="mailto:info@afterfile.nl">info@afterfile.nl</a>
+        <span class="site-footer-divider">·</span>
+        <span>© ${new Date().getFullYear()} AfterFile</span>
+      </nav>
     </div>
   </footer>`;
 }
@@ -1629,17 +1632,10 @@ function renderDashboard() {
     </div>
   ` : '';
   const currentPlan = PLANS.find(p => p.key === state.account.plan);
-  const currentPlanHtml = currentPlan ? `
-    <div class="current-plan-row">
-      <span class="badge-pill">${esc(currentPlan.name)}</span>
-      <span>jouw huidige abonnement</span>
-    </div>
-  ` : '';
+  const planBadge = currentPlan ? ` &thinsp;<span style="display:inline-flex;align-items:center;padding:2px 10px;background:var(--tint-blue);color:var(--color-primary-dark);border-radius:20px;font-size:12px;font-weight:600;vertical-align:middle;">${esc(currentPlan.name)}</span>` : '';
 
   return `
-    ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}`, sub: 'Dit is hoe je plan er vandaag voor staat.' })}
-
-    ${currentPlanHtml}
+    ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}`, sub: `Dit is hoe je plan er vandaag voor staat.${planBadge}` })}
 
     ${upgradeBannerHtml}
 
@@ -2904,4 +2900,143 @@ function wireEvents() {
   }
 
   const downloadReportBtn = document.querySelector('[data-action="download-report-pdf"]');
-  if (downloadReportBtn) downloadReportBtn.ad
+  if (downloadReportBtn) downloadReportBtn.addEventListener('click', () => downloadReportPDF());
+
+  document.querySelectorAll('[data-action="view-certificate"]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const path = btn.getAttribute('data-path');
+      const { data } = supabase.storage.from('death-certificates').getPublicUrl(path);
+      if (data?.publicUrl) window.open(data.publicUrl, '_blank');
+      else flashToast('Kon document-URL niet ophalen.');
+    });
+  });
+
+  document.querySelectorAll('[data-action="approve-death-report"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      if (!confirm('Weet je zeker dat je de informatie wilt vrijgeven? Dit stuurt direct een e-mail naar alle contacten met de rol "Informatie ontvangen".')) return;
+      btn.disabled = true; btn.textContent = 'Bezig…';
+      const { error } = await supabase.rpc('approve_death_report', { p_account_id: id });
+      if (error) {
+        flashToast('Vrijgave mislukt: ' + error.message);
+        btn.disabled = false; btn.textContent = 'Informatie vrijgeven';
+      } else {
+        flashToast('Informatie is vrijgegeven en e-mails zijn verstuurd.');
+        await loadSignups(); render();
+      }
+    });
+  });
+
+  const copyContactEmailsBtn = document.querySelector('[data-action="copy-contact-emails"]');
+  if (copyContactEmailsBtn) copyContactEmailsBtn.addEventListener('click', () => {
+    const emails = [...new Set(
+      (state.signups || []).flatMap(s => (s.contacts || []).map(c => (c.email || '').trim()).filter(Boolean))
+    )].join(', ');
+    navigator.clipboard.writeText(emails).then(() => flashToast('E-mailadressen gekopieerd.')).catch(() => flashToast('Kopiëren mislukt.'));
+  });
+
+  document.querySelectorAll('[data-action="toggle-faq"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-index'));
+      ui.openFaqIndex = ui.openFaqIndex === idx ? null : idx;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="toggle-signup"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      ui.openSignupId = ui.openSignupId === id ? null : id;
+      render();
+    });
+  });
+
+  const deathReportForm = document.getElementById('death-report-form');
+  if (deathReportForm) deathReportForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(deathReportForm);
+    const deceasedName = (fd.get('deceasedName') || '').trim();
+    const deceasedEmail = (fd.get('deceasedEmail') || '').trim();
+    const relationship = (fd.get('relationship') || '').trim() || (fd.get('relationship-other') || '').trim();
+    const reporterName = (fd.get('reporterName') || '').trim();
+    const reporterEmail = (fd.get('reporterEmail') || '').trim();
+    const reporterPhone = (fd.get('reporterPhone') || '').trim();
+    const message = (fd.get('message') || '').trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errors = {};
+    if (!deceasedName) errors.deceasedName = true;
+    if (!emailPattern.test(deceasedEmail)) errors.deceasedEmail = true;
+    if (!reporterName) errors.reporterName = true;
+    if (!emailPattern.test(reporterEmail)) errors.reporterEmail = true;
+    if (Object.keys(errors).length) {
+      ui.deathReportErrors = errors;
+      ui.deathReportResult = null;
+      render();
+      setTimeout(() => { const el = document.getElementById('meld-overlijden'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 0);
+      return;
+    }
+    ui.deathReportErrors = null;
+    ui.deathReportSubmitting = true;
+    render();
+    ui.deathReportResult = await reportDeathViaSupabase({ deceasedName, deceasedEmail, relationship, reporterName, reporterEmail, reporterPhone, message });
+    ui.deathReportSubmitting = false;
+    render();
+    setTimeout(() => { const el = document.getElementById('meld-overlijden'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 0);
+  });
+
+  const drRelationshipSelect = document.getElementById('dr-relationship');
+  if (drRelationshipSelect) drRelationshipSelect.addEventListener('change', () => {
+    const otherInput = document.getElementById('dr-relationship-other');
+    if (!otherInput) return;
+    if (drRelationshipSelect.value === '') {
+      otherInput.style.display = 'block';
+      otherInput.focus();
+    } else {
+      otherInput.style.display = 'none';
+      otherInput.value = '';
+    }
+  });
+
+  const simDeathWaitBtn = document.querySelector('[data-action="sim-death-wait-elapsed"]');
+  if (simDeathWaitBtn) simDeathWaitBtn.addEventListener('click', () => simulateWaitingElapsedForSignup(simDeathWaitBtn.getAttribute('data-id')));
+
+  document.querySelectorAll('[data-action="close-invite-preview"]').forEach(el => {
+    el.addEventListener('click', () => { ui.contactInvitePreview = null; render(); });
+  });
+
+  const waitlistForm = document.getElementById('waitlist-form');
+  if (waitlistForm) waitlistForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = (document.getElementById('wl-name')?.value || '').trim();
+    const email = (document.getElementById('wl-email')?.value || '').trim();
+    ui.waitlistEmailError = '';
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ui.waitlistEmailError = 'Vul een geldig e-mailadres in.'; render(); return; }
+
+    if (!supabase) { flashToast('Supabase niet beschikbaar.'); return; }
+    const { data: isBypass } = await supabase.rpc('is_bypass_email', { check_email: email });
+    if (isBypass) {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { name: name || email.split('@')[0] } },
+      });
+      if (error) { ui.waitlistEmailError = 'Er ging iets mis bij het versturen van de inloglink.'; render(); return; }
+      ui.magicLinkSentTo = email;
+      render();
+      return;
+    }
+
+     state.waitlist = state.waitlist || [];
+    state.waitlist.push({ id: Math.random().toString(36).slice(2), name, email, createdAt: new Date().toISOString() });
+    ui.waitlistJoined = true;
+    saveLocalDemoState();
+    render();
+
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(Object.assign({"form-name":"waitlist"},formData)).toString()
+    });
+  });
+}
+})();
