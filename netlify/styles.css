@@ -475,7 +475,7 @@ main.page { flex: 1; padding: 48px 0 96px; }
 
 footer.site-footer {
   border-top: 1px solid var(--color-border);
-  padding: 20px 32px;
+  padding: 28px 32px;
   color: var(--color-text-faint);
   font-size: 13px;
   margin-top: auto;
@@ -486,27 +486,46 @@ footer.site-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 16px;
+}
+.site-footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .site-footer-brand {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 600;
+  gap: 7px;
+  font-weight: 700;
+  font-size: 14px;
   color: var(--color-text);
-  flex-shrink: 0;
+  line-height: 1;
 }
 .site-footer-brand .brand-mark { line-height: 0; }
+.site-footer-tagline {
+  font-size: 12px;
+  color: var(--color-text-faint);
+  padding-left: 2px;
+}
+.site-footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
 .site-footer-links {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+}
+.site-footer-copy {
+  font-size: 12px;
+  color: var(--color-text-faint);
 }
 .site-footer-divider { opacity: 0.3; user-select: none; }
-footer.site-footer a { color: var(--color-text-faint); text-decoration: none; }
-footer.site-footer a:hover { color: var(--color-primary); text-decoration: none; }
+footer.site-footer a { color: var(--color-text-muted); text-decoration: none; }
+footer.site-footer a:hover { color: var(--color-primary); }
 
 /* ---------- Auth card ---------- */
 .auth-wrap { display: flex; justify-content: center; padding-top: 40px; }

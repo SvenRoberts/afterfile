@@ -853,19 +853,21 @@ function render() {
 function renderSiteFooter() {
   return `<footer class="site-footer">
     <div class="site-footer-inner">
-      <span class="site-footer-brand">
-        <span class="brand-mark" style="display:inline-flex;vertical-align:middle;">${logoMark(20)}</span>
-        <span style="font-weight:600;letter-spacing:-0.01em;">AfterFile</span>
-      </span>
-      <nav class="site-footer-links">
-        <span>${esc(TRUST_LINE)}</span>
-        <span class="site-footer-divider">·</span>
-        <a href="#" data-nav="privacy">Privacyverklaring</a>
-        <span class="site-footer-divider">·</span>
-        <a href="mailto:info@afterfile.nl">info@afterfile.nl</a>
-        <span class="site-footer-divider">·</span>
-        <span>© ${new Date().getFullYear()} AfterFile</span>
-      </nav>
+      <div class="site-footer-left">
+        <span class="site-footer-brand">
+          <span class="brand-mark" style="display:inline-flex;vertical-align:middle;">${logoMark(20)}</span>
+          <span>AfterFile</span>
+        </span>
+        <span class="site-footer-tagline">${esc(TRUST_LINE)}</span>
+      </div>
+      <div class="site-footer-right">
+        <nav class="site-footer-links">
+          <a href="#" data-nav="privacy">Privacyverklaring</a>
+          <span class="site-footer-divider">·</span>
+          <a href="mailto:info@afterfile.nl">info@afterfile.nl</a>
+        </nav>
+        <span class="site-footer-copy">© ${new Date().getFullYear()} AfterFile</span>
+      </div>
     </div>
   </footer>`;
 }
