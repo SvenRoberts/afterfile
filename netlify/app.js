@@ -1724,57 +1724,67 @@ function renderPersonalInfo() {
 }
 
 function vaultDialSvg() {
-  const cx = 50, cy = 50; // 100×100 viewBox zodat knoppen niet afknippen
+  // Kluisdeur die open staat: rechts de ronde kluisopening (frame),
+  // links de deur die opengedraaid is (zijkant zichtbaar, foreshortened).
+  const fr = 25;           // straal van frame + deur
+  const fx = 60, fy = 50; // middelpunt kluisframe (rechts in canvas)
+  const sx = 0.5;          // x-foreshortening: deur staat ~60° open
+  const dx = fx - fr - fr * sx; // = 60-25-12.5 = 22.5: middelpunt deur
+  const dy = fy;
+  const rx = (fr * sx).toFixed(1); // = 12.5: x-straal van deurellips
+
+  // Spaken van het scheepsroer op de deur (handmatig foreshortened, geen groeptransform)
   let spokes = '', knobs = '';
   for (let i = 0; i < 8; i++) {
     const a = (i * 45 - 90) * Math.PI / 180;
-    const cos = Math.cos(a), sin = Math.sin(a);
-    // Spaak van hub tot net binnen de rand
-    spokes += `<line x1="${(cx+11*cos).toFixed(2)}" y1="${(cy+11*sin).toFixed(2)}" x2="${(cx+40*cos).toFixed(2)}" y2="${(cy+40*sin).toFixed(2)}" stroke="url(#sp-g)" stroke-width="3.8" stroke-linecap="round"/>`;
-    // Handgreep-knop aan het uiteinde (r=43 + straal 4.5 = 47.5 < 50 ✓)
-    const kx = (cx+43*cos).toFixed(2), ky = (cy+43*sin).toFixed(2);
-    knobs += `<circle cx="${kx}" cy="${ky}" r="4.5" fill="url(#kn-g)" stroke="rgba(255,255,255,.18)" stroke-width=".7"/>`;
-    // Glansje op knop
-    knobs += `<circle cx="${(cx+41.5*cos - sin*1.5).toFixed(2)}" cy="${(cy+41.5*sin + cos*1.5).toFixed(2)}" r="1.6" fill="rgba(255,255,255,.3)"/>`;
+    const c = Math.cos(a), s = Math.sin(a);
+    spokes += `<line x1="${(dx+8*c*sx).toFixed(2)}" y1="${(dy+8*s).toFixed(2)}" x2="${(dx+16*c*sx).toFixed(2)}" y2="${(dy+16*s).toFixed(2)}" stroke="#5A82F4" stroke-width="3" stroke-linecap="round"/>`;
+    knobs  += `<circle cx="${(dx+20*c*sx).toFixed(2)}" cy="${(dy+20*s).toFixed(2)}" r="2.8" fill="#2F5DD9" stroke="rgba(255,255,255,.25)" stroke-width=".7"/>`;
+    knobs  += `<circle cx="${(dx+19*c*sx).toFixed(2)}" cy="${(dy+19*s).toFixed(2)}" r="1.1" fill="rgba(255,255,255,.3)"/>`;
   }
+
   return `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
 <defs>
-  <radialGradient id="rim-g" cx="32%" cy="26%" r="72%">
+  <radialGradient id="frame-g" cx="35%" cy="28%" r="72%">
     <stop offset="0%"   stop-color="#5A80F0"/>
     <stop offset="100%" stop-color="#1A3AAB"/>
   </radialGradient>
-  <linearGradient id="sp-g" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%"   stop-color="#6A90F8"/>
-    <stop offset="50%"  stop-color="#2F5DD9"/>
-    <stop offset="100%" stop-color="#1A3AAB"/>
-  </linearGradient>
-  <radialGradient id="hub-g" cx="32%" cy="26%" r="65%">
-    <stop offset="0%"   stop-color="#4E74E8"/>
-    <stop offset="100%" stop-color="#122890"/>
-  </radialGradient>
-  <radialGradient id="kn-g" cx="32%" cy="28%" r="65%">
-    <stop offset="0%"   stop-color="#5A80F0"/>
-    <stop offset="100%" stop-color="#1A3AAB"/>
+  <radialGradient id="int-g" cx="50%" cy="40%" r="65%">
+    <stop offset="0%"   stop-color="rgba(200,220,255,0.55)"/>
+    <stop offset="70%"  stop-color="rgba(100,140,230,0.12)"/>
+    <stop offset="100%" stop-color="rgba(15,30,120,0.22)"/>
   </radialGradient>
 </defs>
-<!-- Slagschaduw -->
-<circle cx="${cx}" cy="${cy+3}" r="46" fill="rgba(20,40,120,0.2)"/>
-<!-- Buitenrand -->
-<circle cx="${cx}" cy="${cy}" r="35" fill="none" stroke="url(#rim-g)" stroke-width="7"/>
-<!-- Rand-glans -->
-<circle cx="${cx}" cy="${cy}" r="35" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
-<!-- Spaken -->
+
+<!-- Kluisopening: zacht glanzende binnenkant -->
+<circle cx="${fx}" cy="${fy}" r="${fr-1}" fill="url(#int-g)"/>
+<circle cx="${fx}" cy="${fy}" r="${fr-1}" fill="none" stroke="rgba(20,50,160,0.16)" stroke-width="4"/>
+
+<!-- Frame-schaduw + frame-ring -->
+<circle cx="${fx}" cy="${fy+2}" r="${fr+2}" fill="rgba(15,30,100,0.16)"/>
+<circle cx="${fx}" cy="${fy}"   r="${fr}"   fill="none" stroke="url(#frame-g)" stroke-width="8"/>
+<circle cx="${fx}" cy="${fy}"   r="${fr}"   fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+<circle cx="${fx}" cy="${fy}"   r="${fr-4}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+
+<!-- Scharnieren op de verbindingslijn deur↔frame (x=${fx-fr}=35) -->
+<rect x="${fx-fr-2}" y="${fy-16}" width="6" height="8" rx="1.5" fill="#1A3AAB" stroke="rgba(255,255,255,.2)" stroke-width=".8"/>
+<rect x="${fx-fr-2}" y="${fy+8}"  width="6" height="8" rx="1.5" fill="#1A3AAB" stroke="rgba(255,255,255,.2)" stroke-width=".8"/>
+<ellipse cx="${fx-fr+1}" cy="${fy-12}" rx="1.7" ry="1.1" fill="rgba(255,255,255,.28)"/>
+<ellipse cx="${fx-fr+1}" cy="${fy+12}" rx="1.7" ry="1.1" fill="rgba(255,255,255,.28)"/>
+
+<!-- Kluisdeur (opengedraaid — foreshortened ellips) -->
+<ellipse cx="${dx+1}" cy="${dy+2}" rx="${parseFloat(rx)+1}" ry="${fr+2}" fill="rgba(15,30,100,0.18)"/>
+<ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="#1A3BAF"/>
+<ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="none" stroke="#4A74EB" stroke-width="7"/>
+<ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+
+<!-- Scheepsroer op de deur -->
 ${spokes}
-<!-- Handgrepen -->
 ${knobs}
-<!-- Centerhub met open hangslot (kluis staat open) -->
-<circle cx="${cx}" cy="${cy}" r="10" fill="url(#hub-g)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-<!-- Slotbeugel: linkerarm omhoog + boog + rechterarm opengeslagen -->
-<path d="M${cx-2.5},${cy+1} L${cx-2.5},${cy-3.5} A2.5,2.5 0 0 1 ${cx+2.5},${cy-3.5} L${cx+5},${cy-7}" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.6" stroke-linecap="round"/>
-<!-- Slotlichaam -->
-<rect x="${cx-4}" y="${cy+1}" width="8" height="5.5" rx="1.4" fill="rgba(255,255,255,.88)"/>
-<!-- Sleutelgat -->
-<circle cx="${cx}" cy="${cy+3.8}" r="1.3" fill="rgba(26,58,171,.55)"/>
+
+<!-- Hub -->
+<ellipse cx="${dx}" cy="${dy}" rx="${(6.5*sx).toFixed(2)}" ry="6.5" fill="#0F2270" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+<ellipse cx="${dx}" cy="${dy}" rx="${(4*sx).toFixed(2)}"   ry="4"   fill="none"    stroke="rgba(255,255,255,.14)" stroke-width="1"/>
 </svg>`;
 }
 
