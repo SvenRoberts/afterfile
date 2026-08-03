@@ -1904,7 +1904,7 @@ function renderAssets() {
       <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
           <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: '' })}</div>
-          <div style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
+          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
@@ -1925,7 +1925,7 @@ function renderAssets() {
       <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
           <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies een categorie en voeg je eerste bezitting toe.' })}</div>
-          <div style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
+          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
