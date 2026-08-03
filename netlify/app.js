@@ -1723,68 +1723,140 @@ function renderPersonalInfo() {
   `;
 }
 
-function vaultDialSvg() {
-  // Kluisdeur die open staat: rechts de ronde kluisopening (frame),
-  // links de deur die opengedraaid is (zijkant zichtbaar, foreshortened).
-  const fr = 25;           // straal van frame + deur
-  const fx = 60, fy = 50; // middelpunt kluisframe (rechts in canvas)
-  const sx = 0.5;          // x-foreshortening: deur staat ~60° open
-  const dx = fx - fr - fr * sx; // = 60-25-12.5 = 22.5: middelpunt deur
-  const dy = fy;
-  const rx = (fr * sx).toFixed(1); // = 12.5: x-straal van deurellips
-
-  // Spaken van het scheepsroer op de deur (handmatig foreshortened, geen groeptransform)
-  let spokes = '', knobs = '';
-  for (let i = 0; i < 8; i++) {
-    const a = (i * 45 - 90) * Math.PI / 180;
-    const c = Math.cos(a), s = Math.sin(a);
-    spokes += `<line x1="${(dx+8*c*sx).toFixed(2)}" y1="${(dy+8*s).toFixed(2)}" x2="${(dx+16*c*sx).toFixed(2)}" y2="${(dy+16*s).toFixed(2)}" stroke="#5A82F4" stroke-width="3" stroke-linecap="round"/>`;
-    knobs  += `<circle cx="${(dx+20*c*sx).toFixed(2)}" cy="${(dy+20*s).toFixed(2)}" r="2.8" fill="#2F5DD9" stroke="rgba(255,255,255,.25)" stroke-width=".7"/>`;
-    knobs  += `<circle cx="${(dx+19*c*sx).toFixed(2)}" cy="${(dy+19*s).toFixed(2)}" r="1.1" fill="rgba(255,255,255,.3)"/>`;
-  }
-
-  return `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
+function vaultDialSvg(open = true) {
+  if (!open) {
+    // ── GESLOTEN kluisdeur ────────────────────────────────────────────────
+    const cx = 50, cy = 50;
+    let sw = '', kw = '';
+    for (let i = 0; i < 8; i++) {
+      const a = i * 45 * Math.PI / 180;
+      const c = Math.cos(a), s = Math.sin(a);
+      sw += `<line x1="${(cx+9*c).toFixed(1)}" y1="${(cy+9*s).toFixed(1)}" x2="${(cx+19*c).toFixed(1)}" y2="${(cy+19*s).toFixed(1)}" stroke="url(#sp-g)" stroke-width="3.2" stroke-linecap="round"/>`;
+      kw += `<circle cx="${(cx+23*c).toFixed(1)}" cy="${(cy+23*s).toFixed(1)}" r="3" fill="url(#kn-g)" stroke="rgba(255,255,255,.2)" stroke-width=".7"/>`;
+      kw += `<circle cx="${(cx+21.5*c).toFixed(1)}" cy="${(cy+21.5*s).toFixed(1)}" r="1.1" fill="rgba(255,255,255,.28)"/>`;
+    }
+    let bw = '';
+    [0, 90, 180, 270].forEach(deg => {
+      const a = deg * Math.PI / 180;
+      const bx = (cx + 44 * Math.cos(a)).toFixed(1);
+      const by = (cy + 44 * Math.sin(a)).toFixed(1);
+      bw += `<circle cx="${bx}" cy="${by}" r="3.8" fill="url(#bolt-g)" stroke="rgba(255,255,255,.15)" stroke-width=".8"/>`;
+      bw += `<circle cx="${bx}" cy="${(parseFloat(by)-1).toFixed(1)}" r="1.4" fill="rgba(255,255,255,.3)"/>`;
+    });
+    return `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
 <defs>
-  <radialGradient id="frame-g" cx="35%" cy="28%" r="72%">
-    <stop offset="0%"   stop-color="#5A80F0"/>
-    <stop offset="100%" stop-color="#1A3AAB"/>
+  <filter id="ds"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,10,80,.5)"/></filter>
+  <radialGradient id="wall-g" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#1C2468"/><stop offset="100%" stop-color="#0C1230"/>
   </radialGradient>
-  <radialGradient id="int-g" cx="50%" cy="40%" r="65%">
-    <stop offset="0%"   stop-color="rgba(200,220,255,0.55)"/>
-    <stop offset="70%"  stop-color="rgba(100,140,230,0.12)"/>
-    <stop offset="100%" stop-color="rgba(15,30,120,0.22)"/>
+  <radialGradient id="df-g" cx="32%" cy="25%" r="82%">
+    <stop offset="0%"   stop-color="#3050C8"/><stop offset="55%" stop-color="#172890"/><stop offset="100%" stop-color="#0B1458"/>
+  </radialGradient>
+  <linearGradient id="rim-g" x1="18%" y1="8%" x2="82%" y2="92%">
+    <stop offset="0%"   stop-color="#80A0FF"/><stop offset="22%" stop-color="#5070E0"/><stop offset="58%" stop-color="#2040B8"/><stop offset="100%" stop-color="#102490"/>
+  </linearGradient>
+  <linearGradient id="rim-hl" x1="100%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="rgba(255,255,255,0)"/><stop offset="38%" stop-color="rgba(255,255,255,.22)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+  </linearGradient>
+  <radialGradient id="di-g" cx="38%" cy="30%" r="70%">
+    <stop offset="0%"   stop-color="#2040C0"/><stop offset="100%" stop-color="#0C1568"/>
+  </radialGradient>
+  <radialGradient id="wr-g" cx="35%" cy="28%" r="70%">
+    <stop offset="0%"   stop-color="#4870E8"/><stop offset="100%" stop-color="#1530A8"/>
+  </radialGradient>
+  <linearGradient id="sp-g" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%"   stop-color="#6888F8"/><stop offset="100%" stop-color="#2040C8"/>
+  </linearGradient>
+  <radialGradient id="kn-g" cx="28%" cy="22%" r="68%">
+    <stop offset="0%"   stop-color="#6080F5"/><stop offset="100%" stop-color="#1A34B5"/>
+  </radialGradient>
+  <radialGradient id="bolt-g" cx="28%" cy="22%" r="70%">
+    <stop offset="0%"   stop-color="#7090FF"/><stop offset="100%" stop-color="#1A38C0"/>
+  </radialGradient>
+  <radialGradient id="hub-g" cx="30%" cy="24%" r="68%">
+    <stop offset="0%"   stop-color="#3858D8"/><stop offset="100%" stop-color="#091460"/>
   </radialGradient>
 </defs>
+<circle cx="${cx}" cy="${cy}" r="48" fill="url(#wall-g)"/>
+<circle cx="${cx}" cy="${cy}" r="42" fill="url(#df-g)" filter="url(#ds)"/>
+<circle cx="${cx}" cy="${cy}" r="37" fill="none" stroke="url(#rim-g)" stroke-width="10"/>
+<circle cx="${cx}" cy="${cy}" r="37" fill="none" stroke="url(#rim-hl)" stroke-width="10"/>
+<circle cx="${cx}" cy="${cy}" r="42" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+<circle cx="${cx}" cy="${cy}" r="32" fill="none" stroke="rgba(0,0,60,.35)" stroke-width="1.5"/>
+<circle cx="${cx}" cy="${cy}" r="33" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1"/>
+${bw}
+<circle cx="${cx}" cy="${cy}" r="27.5" fill="url(#di-g)"/>
+<circle cx="${cx}" cy="${cy}" r="27.5" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+<circle cx="${cx}" cy="${cy}" r="26.5" fill="none" stroke="rgba(0,0,60,.2)" stroke-width="1.5"/>
+<circle cx="${cx}" cy="${cy}" r="22.5" fill="none" stroke="url(#wr-g)" stroke-width="4.5"/>
+<circle cx="${cx}" cy="${cy}" r="22.5" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+${sw}${kw}
+<circle cx="${cx}" cy="${cy}" r="7" fill="url(#hub-g)" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+<circle cx="${cx}" cy="${cy}" r="4.2" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+<ellipse cx="${cx-1.8}" cy="${cy-2.2}" rx="2.4" ry="1.6" fill="rgba(255,255,255,.24)"/>
+</svg>`;
+  }
 
-<!-- Kluisopening: zacht glanzende binnenkant -->
-<circle cx="${fx}" cy="${fy}" r="${fr-1}" fill="url(#int-g)"/>
-<circle cx="${fx}" cy="${fy}" r="${fr-1}" fill="none" stroke="rgba(20,50,160,0.16)" stroke-width="4"/>
-
-<!-- Frame-schaduw + frame-ring -->
-<circle cx="${fx}" cy="${fy+2}" r="${fr+2}" fill="rgba(15,30,100,0.16)"/>
-<circle cx="${fx}" cy="${fy}"   r="${fr}"   fill="none" stroke="url(#frame-g)" stroke-width="8"/>
-<circle cx="${fx}" cy="${fy}"   r="${fr}"   fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
-<circle cx="${fx}" cy="${fy}"   r="${fr-4}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
-
-<!-- Scharnieren op de verbindingslijn deur↔frame (x=${fx-fr}=35) -->
-<rect x="${fx-fr-2}" y="${fy-16}" width="6" height="8" rx="1.5" fill="#1A3AAB" stroke="rgba(255,255,255,.2)" stroke-width=".8"/>
-<rect x="${fx-fr-2}" y="${fy+8}"  width="6" height="8" rx="1.5" fill="#1A3AAB" stroke="rgba(255,255,255,.2)" stroke-width=".8"/>
-<ellipse cx="${fx-fr+1}" cy="${fy-12}" rx="1.7" ry="1.1" fill="rgba(255,255,255,.28)"/>
-<ellipse cx="${fx-fr+1}" cy="${fy+12}" rx="1.7" ry="1.1" fill="rgba(255,255,255,.28)"/>
-
-<!-- Kluisdeur (opengedraaid — foreshortened ellips) -->
-<ellipse cx="${dx+1}" cy="${dy+2}" rx="${parseFloat(rx)+1}" ry="${fr+2}" fill="rgba(15,30,100,0.18)"/>
-<ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="#1A3BAF"/>
-<ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="none" stroke="#4A74EB" stroke-width="7"/>
+  // ── OPEN kluisdeur ────────────────────────────────────────────────────────
+  // Rechts: ronde kluisopening met lichtgloed. Links: deur opengedraaid (~63°).
+  const fr = 24, fx = 62, fy = 50, sx = 0.45;
+  const dx = fx - fr - fr * sx; // 62-24-10.8 = 27.2
+  const dy = fy;
+  const rx = (fr * sx).toFixed(1); // "10.8"
+  let sw = '', kw = '';
+  for (let i = 0; i < 8; i++) {
+    const a = i * 45 * Math.PI / 180;
+    const c = Math.cos(a), s = Math.sin(a);
+    sw += `<line x1="${(dx+7*c*sx).toFixed(1)}" y1="${(dy+7*s).toFixed(1)}" x2="${(dx+14*c*sx).toFixed(1)}" y2="${(dy+14*s).toFixed(1)}" stroke="#5878F5" stroke-width="2.5" stroke-linecap="round"/>`;
+    kw += `<circle cx="${(dx+17*c*sx).toFixed(1)}" cy="${(dy+17*s).toFixed(1)}" r="2.4" fill="#2F5DD9" stroke="rgba(255,255,255,.22)" stroke-width=".7"/>`;
+    kw += `<circle cx="${(dx+16*c*sx).toFixed(1)}" cy="${(dy+16*s).toFixed(1)}" r="1" fill="rgba(255,255,255,.3)"/>`;
+  }
+  return `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
+<defs>
+  <filter id="glow-f" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="ds2"><feDropShadow dx="-1" dy="2" stdDeviation="2.5" flood-color="rgba(0,10,80,.4)"/></filter>
+  <radialGradient id="int-g" cx="50%" cy="44%" r="55%">
+    <stop offset="0%"   stop-color="rgba(215,232,255,.95)"/><stop offset="35%" stop-color="rgba(140,180,255,.72)"/><stop offset="75%" stop-color="rgba(55,105,230,.28)"/><stop offset="100%" stop-color="rgba(20,50,180,.06)"/>
+  </radialGradient>
+  <linearGradient id="frim-g" x1="18%" y1="8%" x2="82%" y2="92%">
+    <stop offset="0%"   stop-color="#80A0FF"/><stop offset="25%" stop-color="#4A6AE0"/><stop offset="65%" stop-color="#2040B8"/><stop offset="100%" stop-color="#102490"/>
+  </linearGradient>
+  <radialGradient id="door-g" cx="62%" cy="28%" r="85%">
+    <stop offset="0%"   stop-color="#3A58D0"/><stop offset="60%" stop-color="#1A2A90"/><stop offset="100%" stop-color="#0C1458"/>
+  </radialGradient>
+  <linearGradient id="drim-g" x1="20%" y1="0%" x2="80%" y2="100%">
+    <stop offset="0%"   stop-color="#6080F8"/><stop offset="100%" stop-color="#1A30A8"/>
+  </linearGradient>
+  <radialGradient id="hub2-g" cx="35%" cy="28%" r="68%">
+    <stop offset="0%"   stop-color="#3858D8"/><stop offset="100%" stop-color="#091460"/>
+  </radialGradient>
+</defs>
+<!-- Kluisopening: lichtgloed -->
+<circle cx="${fx}" cy="${fy}" r="${fr}" fill="url(#int-g)" filter="url(#glow-f)"/>
+<circle cx="${fx}" cy="${fy}" r="${fr}" fill="url(#int-g)"/>
+<!-- Frame -->
+<circle cx="${fx}" cy="${fy+1.5}" r="${fr+1.5}" fill="rgba(0,5,40,.25)"/>
+<circle cx="${fx}" cy="${fy}"     r="${fr}"      fill="none" stroke="url(#frim-g)" stroke-width="8"/>
+<circle cx="${fx}" cy="${fy}"     r="${fr}"      fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+<circle cx="${fx}" cy="${fy}"     r="${fr-4}"    fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+<!-- Scharnieren (x=${fx-fr}=${fx-fr}) -->
+<rect x="${fx-fr-2.5}" y="${fy-15}" width="7" height="8" rx="1.8" fill="#162890" stroke="rgba(255,255,255,.24)" stroke-width=".8"/>
+<rect x="${fx-fr-2.5}" y="${fy+7}"  width="7" height="8" rx="1.8" fill="#162890" stroke="rgba(255,255,255,.24)" stroke-width=".8"/>
+<ellipse cx="${fx-fr+1}" cy="${fy-11}" rx="2.2" ry="1.4" fill="rgba(255,255,255,.38)"/>
+<ellipse cx="${fx-fr+1}" cy="${fy+11}" rx="2.2" ry="1.4" fill="rgba(255,255,255,.38)"/>
+<!-- Kluisdeur (opengedraaid ~63°) -->
+<ellipse cx="${(dx+1).toFixed(1)}" cy="${(dy+2).toFixed(1)}" rx="${(parseFloat(rx)+1.5).toFixed(1)}" ry="${fr+2}" fill="rgba(0,5,60,.3)" filter="url(#ds2)"/>
+<ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="url(#door-g)"/>
+<ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="none" stroke="url(#drim-g)" stroke-width="6.5"/>
 <ellipse cx="${dx}"   cy="${dy}"   rx="${rx}" ry="${fr}" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-
-<!-- Scheepsroer op de deur -->
-${spokes}
-${knobs}
-
+<!-- Wiel op de deur -->
+${sw}${kw}
 <!-- Hub -->
-<ellipse cx="${dx}" cy="${dy}" rx="${(6.5*sx).toFixed(2)}" ry="6.5" fill="#0F2270" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
-<ellipse cx="${dx}" cy="${dy}" rx="${(4*sx).toFixed(2)}"   ry="4"   fill="none"    stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+<ellipse cx="${dx}" cy="${dy}" rx="${(7*sx).toFixed(1)}" ry="7" fill="url(#hub2-g)" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+<ellipse cx="${dx}" cy="${dy}" rx="${(4*sx).toFixed(1)}" ry="4" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
 </svg>`;
 }
 
@@ -1808,7 +1880,7 @@ function renderAssets() {
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Activeer je kluis.' })}
       <div class="vault-gate-card">
-        ${iconSvg('lock', 28)}
+        <div style="pointer-events:none;user-select:none;margin-bottom:8px;">${vaultDialSvg(false)}</div>
         <h3>Stel je kluis in om bezittingen te bewaren</h3>
         <p>Je ontvangt een persoonlijke sleutelcode die je zelf bewaart. Contactpersonen ontvangen hun kluiscode automatisch wanneer je ze toevoegt via de Contacten-pagina.</p>
         <form id="vk-setup-form" class="vault-setup-form">
@@ -1820,7 +1892,7 @@ function renderAssets() {
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Voer je sleutelcode in.' })}
       <div class="vault-gate-card">
-        ${iconSvg('lock', 28)}
+        <div style="pointer-events:none;user-select:none;margin-bottom:8px;">${vaultDialSvg(false)}</div>
         <h3>Kluis vergrendeld</h3>
         <p>Je bent op een nieuw apparaat of de browser is gewist. Voer je persoonlijke sleutelcode in om toegang te krijgen tot je bezittingen.</p>
         <form id="vk-unlock-form" class="vault-setup-form">
