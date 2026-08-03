@@ -1723,6 +1723,40 @@ function renderPersonalInfo() {
   `;
 }
 
+function vaultDialSvg() {
+  const cx = 48, cy = 48;
+  let ticks = '';
+  for (let i = 0; i < 40; i++) {
+    const a = (i * 9 - 90) * Math.PI / 180;
+    const big = i % 10 === 0;
+    const x1 = (cx + 44 * Math.cos(a)).toFixed(2);
+    const y1 = (cy + 44 * Math.sin(a)).toFixed(2);
+    const x2 = (cx + (big ? 37 : 40) * Math.cos(a)).toFixed(2);
+    const y2 = (cy + (big ? 37 : 40) * Math.sin(a)).toFixed(2);
+    ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${big ? '#7B92B4' : 'rgba(123,146,180,.35)'}" stroke-width="${big ? 1.5 : 0.8}" stroke-linecap="round"/>`;
+  }
+  const nums = [[0,cx,cy-22],[10,cx+22,cy],[20,cx,cy+22],[30,cx-22,cy]]
+    .map(([n,x,y]) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-family="'Courier New',monospace" fill="#5A7099" font-weight="700">${n}</text>`)
+    .join('');
+  return `<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs>
+  <radialGradient id="vdg0" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#243A5C"/><stop offset="100%" stop-color="#0D1829"/></radialGradient>
+  <radialGradient id="vdg1" cx="38%" cy="30%" r="60%"><stop offset="0%" stop-color="#1A2A40"/><stop offset="100%" stop-color="#080F1C"/></radialGradient>
+  <radialGradient id="vdg2" cx="38%" cy="30%" r="60%"><stop offset="0%" stop-color="#3A4F6A"/><stop offset="100%" stop-color="#18253A"/></radialGradient>
+</defs>
+<circle cx="${cx}" cy="${cy + 2}" r="45" fill="rgba(0,0,0,0.15)"/>
+<circle cx="${cx}" cy="${cy}" r="46" fill="url(#vdg0)" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+<circle cx="${cx}" cy="${cy}" r="44.5" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="2"/>
+${ticks}
+<circle cx="${cx}" cy="${cy}" r="32" fill="url(#vdg1)" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+${nums}
+<line x1="${cx}" y1="${cy - 28}" x2="${cx}" y2="${cy - 20}" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+<circle cx="${cx}" cy="${cy}" r="8" fill="url(#vdg2)" stroke="rgba(255,255,255,.13)" stroke-width="1"/>
+<ellipse cx="${cx - 1.5}" cy="${cy - 2}" rx="2.5" ry="1.8" fill="rgba(255,255,255,.13)"/>
+<circle cx="${cx}" cy="${cy}" r="2.5" fill="#1A2A40"/>
+</svg>`;
+}
+
 function renderAssets() {
   // ── Vault gate ──
   if (ui.vaultState === 'loading') {
@@ -1868,7 +1902,10 @@ function renderAssets() {
         .vsd{animation:vp 2.2s infinite}
       </style>
       <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
-        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: '' })}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: '' })}</div>
+          <div style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
+        </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
@@ -1886,7 +1923,10 @@ function renderAssets() {
     // No assets yet: show tile grid immediately to encourage first add
     return `
       <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
-        ${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies een categorie en voeg je eerste bezitting toe.' })}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies een categorie en voeg je eerste bezitting toe.' })}</div>
+          <div style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
+        </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
