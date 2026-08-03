@@ -1725,28 +1725,14 @@ function renderPersonalInfo() {
 
 function vaultDialSvg(open = true) {
   const shackle = open
-    ? 'M30,52 L30,38 A20,20 0 0 1 70,38 L70,22'   // rechterarm open (omhoog)
-    : 'M30,52 L30,38 A20,20 0 0 1 70,38 L70,52';   // rechterarm dicht (in slot)
-  return `<svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
-<defs>
-  <radialGradient id="body-g" cx="35%" cy="28%" r="75%">
-    <stop offset="0%"   stop-color="#4A72EE"/>
-    <stop offset="100%" stop-color="#1A38C0"/>
-  </radialGradient>
-  <linearGradient id="shackle-g" x1="0%" y1="0%" x2="0%" y2="100%">
-    <stop offset="0%"   stop-color="#5A82F8"/>
-    <stop offset="100%" stop-color="#1A38C0"/>
-  </linearGradient>
-</defs>
-<!-- Beugel -->
-<path d="${shackle}" fill="none" stroke="url(#shackle-g)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-<!-- Slotlichaam -->
-<rect x="16" y="50" width="68" height="46" rx="10" fill="url(#body-g)"/>
-<!-- Lichtreflectie op lichaam -->
-<rect x="22" y="56" width="36" height="6" rx="3" fill="rgba(255,255,255,.18)"/>
-<!-- Sleutelgat -->
-<circle cx="50" cy="72" r="6" fill="rgba(0,0,60,.4)"/>
-<rect x="47" y="72" width="6" height="9" rx="2" fill="rgba(0,0,60,.4)"/>
+    ? 'M19,28 L19,22 Q19,12 28,12 Q37,12 37,22 L37,13'
+    : 'M19,28 L19,22 Q19,12 28,12 Q37,12 37,22 L37,28';
+  return `<svg width="72" height="72" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
+<circle cx="28" cy="28" r="28" fill="#2F5DD9"/>
+<path d="${shackle}" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="3.5" stroke-linecap="round"/>
+<rect x="15" y="26" width="26" height="18" rx="5" fill="rgba(255,255,255,.95)"/>
+<circle cx="28" cy="34" r="3" fill="#2F5DD9"/>
+<rect x="26.5" y="34" width="3" height="5" rx="1.2" fill="#2F5DD9"/>
 </svg>`;
 }
 
