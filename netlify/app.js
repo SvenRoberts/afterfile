@@ -1767,12 +1767,14 @@ function vaultDialSvg() {
 ${spokes}
 <!-- Handgrepen -->
 ${knobs}
-<!-- Centerhub -->
+<!-- Centerhub met open hangslot (kluis staat open) -->
 <circle cx="${cx}" cy="${cy}" r="10" fill="url(#hub-g)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-<!-- Hub detailring -->
-<circle cx="${cx}" cy="${cy}" r="6.5" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
-<!-- Hub glans -->
-<ellipse cx="${cx-2.5}" cy="${cy-2.8}" rx="3" ry="2" fill="rgba(255,255,255,.28)"/>
+<!-- Slotbeugel: linkerarm omhoog + boog + rechterarm opengeslagen -->
+<path d="M${cx-2.5},${cy+1} L${cx-2.5},${cy-3.5} A2.5,2.5 0 0 1 ${cx+2.5},${cy-3.5} L${cx+5},${cy-7}" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.6" stroke-linecap="round"/>
+<!-- Slotlichaam -->
+<rect x="${cx-4}" y="${cy+1}" width="8" height="5.5" rx="1.4" fill="rgba(255,255,255,.88)"/>
+<!-- Sleutelgat -->
+<circle cx="${cx}" cy="${cy+3.8}" r="1.3" fill="rgba(26,58,171,.55)"/>
 </svg>`;
 }
 
