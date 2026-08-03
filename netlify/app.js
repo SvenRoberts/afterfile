@@ -1725,35 +1725,68 @@ function renderPersonalInfo() {
 
 function vaultDialSvg() {
   const cx = 48, cy = 48;
+  // Kasseien-ribbels langs de buitenrand (grep-look)
+  let ridges = '';
+  for (let i = 0; i < 32; i++) {
+    const a = i * 11.25 * Math.PI / 180;
+    ridges += `<line x1="${(cx+45*Math.cos(a)).toFixed(2)}" y1="${(cy+45*Math.sin(a)).toFixed(2)}" x2="${(cx+47*Math.cos(a)).toFixed(2)}" y2="${(cy+47*Math.sin(a)).toFixed(2)}" stroke="rgba(0,0,0,.2)" stroke-width="0.9"/>`;
+  }
+  // 40 maatstreepjes: groot (elke 10), middel (elke 5), klein
   let ticks = '';
   for (let i = 0; i < 40; i++) {
     const a = (i * 9 - 90) * Math.PI / 180;
-    const big = i % 10 === 0;
-    const x1 = (cx + 44 * Math.cos(a)).toFixed(2);
-    const y1 = (cy + 44 * Math.sin(a)).toFixed(2);
-    const x2 = (cx + (big ? 37 : 40) * Math.cos(a)).toFixed(2);
-    const y2 = (cy + (big ? 37 : 40) * Math.sin(a)).toFixed(2);
-    ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${big ? '#7B92B4' : 'rgba(123,146,180,.35)'}" stroke-width="${big ? 1.5 : 0.8}" stroke-linecap="round"/>`;
+    const big = i % 10 === 0, med = i % 5 === 0 && !big;
+    const r2 = big ? 34 : med ? 37 : 41;
+    ticks += `<line x1="${(cx+44*Math.cos(a)).toFixed(2)}" y1="${(cy+44*Math.sin(a)).toFixed(2)}" x2="${(cx+r2*Math.cos(a)).toFixed(2)}" y2="${(cy+r2*Math.sin(a)).toFixed(2)}" stroke="${big?'#C8A030':med?'rgba(200,160,48,.6)':'rgba(200,160,48,.3)'}" stroke-width="${big?2:med?1.3:.8}" stroke-linecap="round"/>`;
   }
-  const nums = [[0,cx,cy-22],[10,cx+22,cy],[20,cx,cy+22],[30,cx-22,cy]]
-    .map(([n,x,y]) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-family="'Courier New',monospace" fill="#5A7099" font-weight="700">${n}</text>`)
+  // Cijfers op klassieke safe-posities (serif, goud)
+  const nums = [[0,cx,cy-27],[10,cx+27,cy],[20,cx,cy+27],[30,cx-27,cy]]
+    .map(([n,x,y]) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="Georgia,serif" fill="#C8A030" font-weight="700">${n}</text>`)
     .join('');
-  return `<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  return `<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
 <defs>
-  <radialGradient id="vdg0" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#243A5C"/><stop offset="100%" stop-color="#0D1829"/></radialGradient>
-  <radialGradient id="vdg1" cx="38%" cy="30%" r="60%"><stop offset="0%" stop-color="#1A2A40"/><stop offset="100%" stop-color="#080F1C"/></radialGradient>
-  <radialGradient id="vdg2" cx="38%" cy="30%" r="60%"><stop offset="0%" stop-color="#3A4F6A"/><stop offset="100%" stop-color="#18253A"/></radialGradient>
+  <radialGradient id="vdg-b" cx="30%" cy="24%" r="74%">
+    <stop offset="0%"   stop-color="#E0B84A"/>
+    <stop offset="28%"  stop-color="#A07820"/>
+    <stop offset="54%"  stop-color="#C49528"/>
+    <stop offset="78%"  stop-color="#7A5510"/>
+    <stop offset="100%" stop-color="#4A3008"/>
+  </radialGradient>
+  <radialGradient id="vdg-d" cx="30%" cy="24%" r="68%">
+    <stop offset="0%"   stop-color="#1C1408"/>
+    <stop offset="100%" stop-color="#060402"/>
+  </radialGradient>
+  <radialGradient id="vdg-h" cx="30%" cy="24%" r="65%">
+    <stop offset="0%"   stop-color="#D4A843"/>
+    <stop offset="50%"  stop-color="#8B6210"/>
+    <stop offset="100%" stop-color="#3D2508"/>
+  </radialGradient>
 </defs>
-<circle cx="${cx}" cy="${cy + 2}" r="45" fill="rgba(0,0,0,0.15)"/>
-<circle cx="${cx}" cy="${cy}" r="46" fill="url(#vdg0)" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
-<circle cx="${cx}" cy="${cy}" r="44.5" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="2"/>
+<!-- Slagschaduw -->
+<circle cx="${cx}" cy="${cy+3}" r="46" fill="rgba(0,0,0,0.22)"/>
+<!-- Messing bezel -->
+<circle cx="${cx}" cy="${cy}" r="46" fill="url(#vdg-b)" stroke="rgba(50,28,4,.55)" stroke-width="0.5"/>
+<!-- Glansrand boven-links -->
+<circle cx="${cx}" cy="${cy}" r="45" fill="none" stroke="rgba(255,232,120,.28)" stroke-width="1.5"/>
+<!-- Schaduwrand binnen -->
+<circle cx="${cx}" cy="${cy}" r="44" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="0.8"/>
+<!-- Ribbels buitenrand -->
+${ridges}
+<!-- Maatstreepjes -->
 ${ticks}
-<circle cx="${cx}" cy="${cy}" r="32" fill="url(#vdg1)" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+<!-- Donkere binnenschijf -->
+<circle cx="${cx}" cy="${cy}" r="32" fill="url(#vdg-d)" stroke="rgba(200,160,48,.3)" stroke-width="1"/>
+<!-- Cijfers -->
 ${nums}
-<line x1="${cx}" y1="${cy - 28}" x2="${cx}" y2="${cy - 20}" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
-<circle cx="${cx}" cy="${cy}" r="8" fill="url(#vdg2)" stroke="rgba(255,255,255,.13)" stroke-width="1"/>
-<ellipse cx="${cx - 1.5}" cy="${cy - 2}" rx="2.5" ry="1.8" fill="rgba(255,255,255,.13)"/>
-<circle cx="${cx}" cy="${cy}" r="2.5" fill="#1A2A40"/>
+<!-- Klassieke driehoekige aanwijzer bovenaan -->
+<polygon points="${cx},${cy-43} ${cx-3.5},${cy-37} ${cx+3.5},${cy-37}" fill="#C8A030" opacity="0.95"/>
+<!-- Middenknop -->
+<circle cx="${cx}" cy="${cy}" r="9" fill="url(#vdg-h)" stroke="rgba(200,160,48,.4)" stroke-width="1"/>
+<!-- Knopglans -->
+<ellipse cx="${cx-2}" cy="${cy-2.5}" rx="3" ry="2" fill="rgba(255,228,100,.2)"/>
+<!-- Centerschroef -->
+<circle cx="${cx}" cy="${cy}" r="2.5" fill="#1A0F02"/>
+<circle cx="${cx-.8}" cy="${cy-.8}" r=".9" fill="rgba(255,200,60,.3)"/>
 </svg>`;
 }
 
@@ -1901,10 +1934,10 @@ function renderAssets() {
         .vlb:hover{border-color:rgba(220,38,38,.3);color:#DC2626;background:rgba(220,38,38,.05)}
         .vsd{animation:vp 2.2s infinite}
       </style>
-      <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
+      <div class="va" style="border:2.5px solid transparent;border-radius:16px;padding:32px 32px 40px;background:linear-gradient(#FAFBFF,#F6F9FF) padding-box,linear-gradient(135deg,rgba(210,228,255,.97) 0%,rgba(47,93,217,.85) 14%,rgba(238,246,255,1) 29%,rgba(80,130,240,.38) 50%,rgba(225,238,255,.92) 68%,rgba(47,93,217,.75) 84%,rgba(200,222,255,.96) 100%) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 28px rgba(15,25,70,.09);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
           <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: '' })}</div>
-          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
+          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;pointer-events:none;user-select:none;">${vaultDialSvg()}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
@@ -1922,10 +1955,10 @@ function renderAssets() {
   } else {
     // No assets yet: show tile grid immediately to encourage first add
     return `
-      <div class="va" style="border:1.5px solid rgba(47,93,217,.18);border-radius:16px;padding:32px 32px 40px;background:#FAFBFF;">
+      <div class="va" style="border:2.5px solid transparent;border-radius:16px;padding:32px 32px 40px;background:linear-gradient(#FAFBFF,#F6F9FF) padding-box,linear-gradient(135deg,rgba(210,228,255,.97) 0%,rgba(47,93,217,.85) 14%,rgba(238,246,255,1) 29%,rgba(80,130,240,.38) 50%,rgba(225,238,255,.92) 68%,rgba(47,93,217,.75) 84%,rgba(200,222,255,.96) 100%) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 28px rgba(15,25,70,.09);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
           <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies een categorie en voeg je eerste bezitting toe.' })}</div>
-          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;">${vaultDialSvg()}</div>
+          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;pointer-events:none;user-select:none;">${vaultDialSvg()}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
