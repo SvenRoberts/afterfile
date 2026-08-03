@@ -1725,68 +1725,57 @@ function renderPersonalInfo() {
 
 function vaultDialSvg() {
   const cx = 48, cy = 48;
-  // Kasseien-ribbels langs de buitenrand (grep-look)
-  let ridges = '';
-  for (let i = 0; i < 32; i++) {
-    const a = i * 11.25 * Math.PI / 180;
-    ridges += `<line x1="${(cx+45*Math.cos(a)).toFixed(2)}" y1="${(cy+45*Math.sin(a)).toFixed(2)}" x2="${(cx+47*Math.cos(a)).toFixed(2)}" y2="${(cy+47*Math.sin(a)).toFixed(2)}" stroke="rgba(0,0,0,.2)" stroke-width="0.9"/>`;
+  // 8 spaken van het scheepsroer
+  let spokes = '', knobs = '';
+  for (let i = 0; i < 8; i++) {
+    const a = (i * 45 - 90) * Math.PI / 180;
+    const cos = Math.cos(a), sin = Math.sin(a);
+    // Spaak van hub tot voorbij de rand
+    spokes += `<line x1="${(cx+10*cos).toFixed(2)}" y1="${(cy+10*sin).toFixed(2)}" x2="${(cx+43*cos).toFixed(2)}" y2="${(cy+43*sin).toFixed(2)}" stroke="url(#sp-g)" stroke-width="3.8" stroke-linecap="round"/>`;
+    // Handgreep-knop aan het uiteinde
+    const kx = (cx+46*cos).toFixed(2), ky = (cy+46*sin).toFixed(2);
+    knobs += `<circle cx="${kx}" cy="${ky}" r="4.5" fill="url(#kn-g)" stroke="rgba(255,255,255,.13)" stroke-width=".6"/>`;
+    // Glansje op knop
+    knobs += `<circle cx="${(cx+44.5*cos - sin*1.5).toFixed(2)}" cy="${(cy+44.5*sin + cos*1.5).toFixed(2)}" r="1.5" fill="rgba(255,255,255,.22)"/>`;
   }
-  // 40 maatstreepjes: groot (elke 10), middel (elke 5), klein
-  let ticks = '';
-  for (let i = 0; i < 40; i++) {
-    const a = (i * 9 - 90) * Math.PI / 180;
-    const big = i % 10 === 0, med = i % 5 === 0 && !big;
-    const r2 = big ? 34 : med ? 37 : 41;
-    ticks += `<line x1="${(cx+44*Math.cos(a)).toFixed(2)}" y1="${(cy+44*Math.sin(a)).toFixed(2)}" x2="${(cx+r2*Math.cos(a)).toFixed(2)}" y2="${(cy+r2*Math.sin(a)).toFixed(2)}" stroke="${big?'#C8A030':med?'rgba(200,160,48,.6)':'rgba(200,160,48,.3)'}" stroke-width="${big?2:med?1.3:.8}" stroke-linecap="round"/>`;
-  }
-  // Cijfers op klassieke safe-posities (serif, goud)
-  const nums = [[0,cx,cy-27],[10,cx+27,cy],[20,cx,cy+27],[30,cx-27,cy]]
-    .map(([n,x,y]) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="Georgia,serif" fill="#C8A030" font-weight="700">${n}</text>`)
-    .join('');
   return `<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
 <defs>
-  <radialGradient id="vdg-b" cx="30%" cy="24%" r="74%">
-    <stop offset="0%"   stop-color="#E0B84A"/>
-    <stop offset="28%"  stop-color="#A07820"/>
-    <stop offset="54%"  stop-color="#C49528"/>
-    <stop offset="78%"  stop-color="#7A5510"/>
-    <stop offset="100%" stop-color="#4A3008"/>
+  <radialGradient id="rim-g" cx="32%" cy="26%" r="72%">
+    <stop offset="0%"   stop-color="#4E5F72"/>
+    <stop offset="100%" stop-color="#18222E"/>
   </radialGradient>
-  <radialGradient id="vdg-d" cx="30%" cy="24%" r="68%">
-    <stop offset="0%"   stop-color="#1C1408"/>
-    <stop offset="100%" stop-color="#060402"/>
+  <linearGradient id="sp-g" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%"   stop-color="#5A6E84"/>
+    <stop offset="50%"  stop-color="#2E3D4E"/>
+    <stop offset="100%" stop-color="#1C2A38"/>
+  </linearGradient>
+  <radialGradient id="hub-g" cx="32%" cy="26%" r="65%">
+    <stop offset="0%"   stop-color="#546070"/>
+    <stop offset="100%" stop-color="#1A2432"/>
   </radialGradient>
-  <radialGradient id="vdg-h" cx="30%" cy="24%" r="65%">
-    <stop offset="0%"   stop-color="#D4A843"/>
-    <stop offset="50%"  stop-color="#8B6210"/>
-    <stop offset="100%" stop-color="#3D2508"/>
+  <radialGradient id="kn-g" cx="32%" cy="28%" r="65%">
+    <stop offset="0%"   stop-color="#5C6E82"/>
+    <stop offset="100%" stop-color="#1C2A3A"/>
   </radialGradient>
 </defs>
 <!-- Slagschaduw -->
-<circle cx="${cx}" cy="${cy+3}" r="46" fill="rgba(0,0,0,0.22)"/>
-<!-- Messing bezel -->
-<circle cx="${cx}" cy="${cy}" r="46" fill="url(#vdg-b)" stroke="rgba(50,28,4,.55)" stroke-width="0.5"/>
-<!-- Glansrand boven-links -->
-<circle cx="${cx}" cy="${cy}" r="45" fill="none" stroke="rgba(255,232,120,.28)" stroke-width="1.5"/>
-<!-- Schaduwrand binnen -->
-<circle cx="${cx}" cy="${cy}" r="44" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="0.8"/>
-<!-- Ribbels buitenrand -->
-${ridges}
-<!-- Maatstreepjes -->
-${ticks}
-<!-- Donkere binnenschijf -->
-<circle cx="${cx}" cy="${cy}" r="32" fill="url(#vdg-d)" stroke="rgba(200,160,48,.3)" stroke-width="1"/>
-<!-- Cijfers -->
-${nums}
-<!-- Klassieke driehoekige aanwijzer bovenaan -->
-<polygon points="${cx},${cy-43} ${cx-3.5},${cy-37} ${cx+3.5},${cy-37}" fill="#C8A030" opacity="0.95"/>
-<!-- Middenknop -->
-<circle cx="${cx}" cy="${cy}" r="9" fill="url(#vdg-h)" stroke="rgba(200,160,48,.4)" stroke-width="1"/>
-<!-- Knopglans -->
-<ellipse cx="${cx-2}" cy="${cy-2.5}" rx="3" ry="2" fill="rgba(255,228,100,.2)"/>
-<!-- Centerschroef -->
-<circle cx="${cx}" cy="${cy}" r="2.5" fill="#1A0F02"/>
-<circle cx="${cx-.8}" cy="${cy-.8}" r=".9" fill="rgba(255,200,60,.3)"/>
+<circle cx="${cx}" cy="${cy+3}" r="48" fill="rgba(0,0,0,0.2)"/>
+<!-- Buitenrand (dikke ring) -->
+<circle cx="${cx}" cy="${cy}" r="38" fill="none" stroke="url(#rim-g)" stroke-width="7"/>
+<!-- Rand-glans boven -->
+<circle cx="${cx}" cy="${cy}" r="38" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1.2"/>
+<!-- Rand-schaduw binnen -->
+<circle cx="${cx}" cy="${cy}" r="38" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1" stroke-dasharray="none"/>
+<!-- Spaken -->
+${spokes}
+<!-- Handgrepen -->
+${knobs}
+<!-- Centerhub -->
+<circle cx="${cx}" cy="${cy}" r="10" fill="url(#hub-g)" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+<!-- Hub detailring -->
+<circle cx="${cx}" cy="${cy}" r="6.5" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+<!-- Hub glans -->
+<ellipse cx="${cx-2.2}" cy="${cy-2.5}" rx="2.8" ry="1.9" fill="rgba(255,255,255,.18)"/>
 </svg>`;
 }
 
