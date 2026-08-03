@@ -1724,58 +1724,55 @@ function renderPersonalInfo() {
 }
 
 function vaultDialSvg() {
-  const cx = 48, cy = 48;
-  // 8 spaken van het scheepsroer
+  const cx = 50, cy = 50; // 100×100 viewBox zodat knoppen niet afknippen
   let spokes = '', knobs = '';
   for (let i = 0; i < 8; i++) {
     const a = (i * 45 - 90) * Math.PI / 180;
     const cos = Math.cos(a), sin = Math.sin(a);
-    // Spaak van hub tot voorbij de rand
-    spokes += `<line x1="${(cx+10*cos).toFixed(2)}" y1="${(cy+10*sin).toFixed(2)}" x2="${(cx+43*cos).toFixed(2)}" y2="${(cy+43*sin).toFixed(2)}" stroke="url(#sp-g)" stroke-width="3.8" stroke-linecap="round"/>`;
-    // Handgreep-knop aan het uiteinde
-    const kx = (cx+46*cos).toFixed(2), ky = (cy+46*sin).toFixed(2);
-    knobs += `<circle cx="${kx}" cy="${ky}" r="4.5" fill="url(#kn-g)" stroke="rgba(255,255,255,.13)" stroke-width=".6"/>`;
+    // Spaak van hub tot net binnen de rand
+    spokes += `<line x1="${(cx+11*cos).toFixed(2)}" y1="${(cy+11*sin).toFixed(2)}" x2="${(cx+40*cos).toFixed(2)}" y2="${(cy+40*sin).toFixed(2)}" stroke="url(#sp-g)" stroke-width="3.8" stroke-linecap="round"/>`;
+    // Handgreep-knop aan het uiteinde (r=43 + straal 4.5 = 47.5 < 50 ✓)
+    const kx = (cx+43*cos).toFixed(2), ky = (cy+43*sin).toFixed(2);
+    knobs += `<circle cx="${kx}" cy="${ky}" r="4.5" fill="url(#kn-g)" stroke="rgba(255,255,255,.18)" stroke-width=".7"/>`;
     // Glansje op knop
-    knobs += `<circle cx="${(cx+44.5*cos - sin*1.5).toFixed(2)}" cy="${(cy+44.5*sin + cos*1.5).toFixed(2)}" r="1.5" fill="rgba(255,255,255,.22)"/>`;
+    knobs += `<circle cx="${(cx+41.5*cos - sin*1.5).toFixed(2)}" cy="${(cy+41.5*sin + cos*1.5).toFixed(2)}" r="1.6" fill="rgba(255,255,255,.3)"/>`;
   }
-  return `<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
+  return `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
 <defs>
   <radialGradient id="rim-g" cx="32%" cy="26%" r="72%">
-    <stop offset="0%"   stop-color="#4E5F72"/>
-    <stop offset="100%" stop-color="#18222E"/>
+    <stop offset="0%"   stop-color="#5A80F0"/>
+    <stop offset="100%" stop-color="#1A3AAB"/>
   </radialGradient>
   <linearGradient id="sp-g" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%"   stop-color="#5A6E84"/>
-    <stop offset="50%"  stop-color="#2E3D4E"/>
-    <stop offset="100%" stop-color="#1C2A38"/>
+    <stop offset="0%"   stop-color="#6A90F8"/>
+    <stop offset="50%"  stop-color="#2F5DD9"/>
+    <stop offset="100%" stop-color="#1A3AAB"/>
   </linearGradient>
   <radialGradient id="hub-g" cx="32%" cy="26%" r="65%">
-    <stop offset="0%"   stop-color="#546070"/>
-    <stop offset="100%" stop-color="#1A2432"/>
+    <stop offset="0%"   stop-color="#4E74E8"/>
+    <stop offset="100%" stop-color="#122890"/>
   </radialGradient>
   <radialGradient id="kn-g" cx="32%" cy="28%" r="65%">
-    <stop offset="0%"   stop-color="#5C6E82"/>
-    <stop offset="100%" stop-color="#1C2A3A"/>
+    <stop offset="0%"   stop-color="#5A80F0"/>
+    <stop offset="100%" stop-color="#1A3AAB"/>
   </radialGradient>
 </defs>
 <!-- Slagschaduw -->
-<circle cx="${cx}" cy="${cy+3}" r="48" fill="rgba(0,0,0,0.2)"/>
-<!-- Buitenrand (dikke ring) -->
-<circle cx="${cx}" cy="${cy}" r="38" fill="none" stroke="url(#rim-g)" stroke-width="7"/>
-<!-- Rand-glans boven -->
-<circle cx="${cx}" cy="${cy}" r="38" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1.2"/>
-<!-- Rand-schaduw binnen -->
-<circle cx="${cx}" cy="${cy}" r="38" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1" stroke-dasharray="none"/>
+<circle cx="${cx}" cy="${cy+3}" r="46" fill="rgba(20,40,120,0.2)"/>
+<!-- Buitenrand -->
+<circle cx="${cx}" cy="${cy}" r="35" fill="none" stroke="url(#rim-g)" stroke-width="7"/>
+<!-- Rand-glans -->
+<circle cx="${cx}" cy="${cy}" r="35" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
 <!-- Spaken -->
 ${spokes}
 <!-- Handgrepen -->
 ${knobs}
 <!-- Centerhub -->
-<circle cx="${cx}" cy="${cy}" r="10" fill="url(#hub-g)" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+<circle cx="${cx}" cy="${cy}" r="10" fill="url(#hub-g)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
 <!-- Hub detailring -->
-<circle cx="${cx}" cy="${cy}" r="6.5" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+<circle cx="${cx}" cy="${cy}" r="6.5" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
 <!-- Hub glans -->
-<ellipse cx="${cx-2.2}" cy="${cy-2.5}" rx="2.8" ry="1.9" fill="rgba(255,255,255,.18)"/>
+<ellipse cx="${cx-2.5}" cy="${cy-2.8}" rx="3" ry="2" fill="rgba(255,255,255,.28)"/>
 </svg>`;
 }
 
