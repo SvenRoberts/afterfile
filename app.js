@@ -1637,13 +1637,13 @@ function renderDashboard() {
 
   // Rij-helper — rechts altijd een actieknop, nooit statustekst
   const row = (icon, title, sub, nav, actionLabel, last = false) => `
-    <a href="#" data-nav="${nav}" style="display:flex;align-items:center;padding:13px 16px;gap:12px;text-decoration:none;${last ? '' : 'border-bottom:1px solid rgba(47,93,217,.12);'}background:#fff;">
-      <span style="color:#2F5DD9;display:flex;flex-shrink:0;">${iconSvg(icon, 15)}</span>
+    <a href="#" data-nav="${nav}" style="display:flex;align-items:center;padding:14px 16px;gap:12px;text-decoration:none;${last ? '' : 'border-bottom:1px solid rgba(47,93,217,.12);'}background:#fff;">
+      <span style="color:#2F5DD9;display:flex;flex-shrink:0;">${iconSvg(icon, 16)}</span>
       <span style="flex:1;min-width:0;">
-        <span style="display:block;font-size:13px;font-weight:600;color:#0F1222;">${title}</span>
-        <span style="display:block;font-size:11px;color:#9AAAC8;margin-top:1px;">${sub}</span>
+        <span style="display:block;font-size:14px;font-weight:600;color:#0F1222;">${title}</span>
+        <span style="display:block;font-size:12px;color:#9AAAC8;margin-top:2px;">${sub}</span>
       </span>
-      <span style="font-size:11.5px;font-weight:600;color:#2F5DD9;white-space:nowrap;flex-shrink:0;">${actionLabel} →</span>
+      <span style="font-size:12.5px;font-weight:600;color:#2F5DD9;white-space:nowrap;flex-shrink:0;">${actionLabel} →</span>
     </a>`;
 
   const gegevensSubtitle = infoComplete ? 'Persoonsgegevens ingevuld' : 'Nog niet ingevuld';
