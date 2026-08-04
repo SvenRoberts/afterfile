@@ -814,11 +814,10 @@ async function reportDeathViaSupabase(details) {
   }
 
   const { data, error } = await supabase.rpc('report_death', {
-    p_target_email:     details.deceasedEmail,
     p_reporter_name:    details.reporterName,
     p_reporter_email:   details.reporterEmail,
     p_reporter_phone:   details.reporterPhone || '',
-    p_relationship:     details.relationship || '',
+    p_deceased_name:    details.deceasedName || '',
     p_message:          details.message || '',
     p_has_certificate:  hasCertificate,
     p_certificate_path: certificatePath,
@@ -837,9 +836,9 @@ async function reportDeathViaSupabase(details) {
   // wel correct verwerkt door de RPC hierboven.
   supabase.functions.invoke('send-death-report-alert', {
     body: {
-      deceasedEmail: row.deceased_email || details.deceasedEmail,
+      deceasedEmail: row.deceased_email || '',
       reporterName: details.reporterName,
-      relationship: details.relationship,
+      relationship: details.relationship || '',
     },
   }).catch(err => console.error('send-death-report-alert aanroep mislukt', err));
   return { type: 'matched', deceasedName, hasCertificate, real: true };
@@ -1117,8 +1116,19 @@ function renderDeathReportResult() {
 // header te bereiken (data-nav="death-report"), staat dus niet meer als sectie onderaan de
 // landingspagina. Vanuit hier kan altijd weer terug naar de landingspagina via Home/het logo.
 function renderDeathReport() {
-  const relationshipOptionsHtmlForDeathForm = RELATIONSHIP_SUGGESTIONS.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+  const hash   = window.location.hash.slice(1);
+  const params = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
+  const prefillToken = params.get('token') || '';
+
   return `
+    <style>
+      .dr-sections{display:flex;flex-direction:column;gap:40px;}
+      .dr-divider{display:flex;align-items:center;gap:16px;margin:8px 0;}
+      .dr-divider::before,.dr-divider::after{content:'';flex:1;height:1px;background:rgba(47,93,217,.12);}
+      .dr-divider-label{font-size:11px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
+      .dr-vault-card{background:#fff;border:1px solid rgba(47,93,217,.18);border-left:3px solid #2F5DD9;border-radius:10px;padding:24px 28px;}
+      .dr-vault-token-hint{font-size:12px;color:#9AAAC8;margin-top:4px;line-height:1.5;}
+    </style>
     <nav class="publicnav">
       <div class="publicnav-inner">
         <a href="#" class="brand" data-nav="landing"><span class="brand-mark">${logoMark(34)}</span> AfterFile</a>
@@ -1127,74 +1137,97 @@ function renderDeathReport() {
     </nav>
     <main class="page">
       <div class="container">
-        <section class="report-death-section" id="meld-overlijden">
-          <div class="section-heading">
-            <span class="kicker">Voor vertrouwde contacten</span>
-            <h2>Melding maken van overlijden?</h2>
-            <p>Ben je door iemand toegevoegd als vertrouwd contact en is die persoon overleden? Meld dat hier. We vragen om voldoende gegevens om dit te kunnen verifiëren.</p>
-          </div>
-          <div class="inline-form-card report-death-card">
-            <form id="death-report-form">
-              <h4 class="report-death-subheading">Over de overledene</h4>
-              <div class="field-row">
+        <div class="dr-sections">
+
+          <!-- Sectie 1: Overlijden melden -->
+          <section class="report-death-section" id="meld-overlijden">
+            <div class="section-heading">
+              <span class="kicker">Voor vertrouwde contacten</span>
+              <h2>Overlijden melden</h2>
+              <p>Ben je door iemand toegevoegd als vertrouwd contact en is die persoon overleden? Meld dat hier. We vragen om basisgegevens om dit te kunnen verifiëren.</p>
+            </div>
+            <div class="inline-form-card report-death-card">
+              <form id="death-report-form">
+                <h4 class="report-death-subheading">Over de overledene</h4>
                 <div class="field ${ui.deathReportErrors && ui.deathReportErrors.deceasedName ? 'invalid' : ''}">
-                  <label for="dr-deceased-name">Naam</label>
-                  <input id="dr-deceased-name" name="deceasedName" type="text" placeholder="Volledige naam">
+                  <label for="dr-deceased-name">Naam overledene</label>
+                  <input id="dr-deceased-name" name="deceasedName" type="text" placeholder="Volledige naam" autocapitalize="words">
                 </div>
-                <div class="field ${ui.deathReportErrors && ui.deathReportErrors.deceasedEmail ? 'invalid' : ''}">
-                  <label for="dr-deceased-email">E-mailadres bij AfterFile</label>
-                  <input id="dr-deceased-email" name="deceasedEmail" type="email" placeholder="naam@voorbeeld.nl">
-                </div>
-              </div>
 
-              <h4 class="report-death-subheading">Jouw contactgegevens (ter verificatie)</h4>
-              <div class="field-row">
-                <div class="field ${ui.deathReportErrors && ui.deathReportErrors.reporterName ? 'invalid' : ''}">
-                  <label for="dr-reporter-name">Jouw naam</label>
-                  <input id="dr-reporter-name" name="reporterName" type="text" placeholder="Jouw volledige naam">
-                </div>
-                <div class="field ${ui.deathReportErrors && ui.deathReportErrors.reporterEmail ? 'invalid' : ''}">
-                  <label for="dr-reporter-email">Jouw e-mailadres</label>
-                  <input id="dr-reporter-email" name="reporterEmail" type="email" placeholder="jouw@voorbeeld.nl">
-                </div>
-              </div>
-              <div class="field-row">
-                <div class="field">
-                  <label for="dr-reporter-phone">Jouw telefoonnummer <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-                  <input id="dr-reporter-phone" name="reporterPhone" type="tel" placeholder="bijv. 06 12345678">
+                <h4 class="report-death-subheading" style="margin-top:20px;">Jouw gegevens</h4>
+                <div class="field-row">
+                  <div class="field ${ui.deathReportErrors && ui.deathReportErrors.reporterName ? 'invalid' : ''}">
+                    <label for="dr-reporter-name">Jouw naam</label>
+                    <input id="dr-reporter-name" name="reporterName" type="text" placeholder="Jouw volledige naam" autocapitalize="words">
+                  </div>
+                  <div class="field ${ui.deathReportErrors && ui.deathReportErrors.reporterEmail ? 'invalid' : ''}">
+                    <label for="dr-reporter-email">Jouw e-mailadres</label>
+                    <input id="dr-reporter-email" name="reporterEmail" type="email" placeholder="jouw@voorbeeld.nl">
+                  </div>
                 </div>
                 <div class="field">
-                  <label for="dr-relationship">Jouw relatie tot deze persoon <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-                  <select id="dr-relationship" name="relationship">
-                    ${relationshipOptionsHtmlForDeathForm}
-                    <option value="">Anders…</option>
-                  </select>
-                  <input id="dr-relationship-other" name="relationship-other" type="text" placeholder="Vul je eigen relatie in" style="display:none; margin-top:10px;">
+                  <label for="dr-message">Toelichting <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
+                  <textarea id="dr-message" name="message" rows="3" placeholder="Eventueel extra context, bijvoorbeeld hoe je dit weet."></textarea>
                 </div>
-              </div>
-              <div class="field">
-                <label for="dr-message">Toelichting <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-                <textarea id="dr-message" name="message" rows="3" placeholder="Eventueel extra context, bijvoorbeeld hoe je dit weet."></textarea>
-              </div>
 
-              <div class="field certificate-upload-field ${ui.deathReportErrors && ui.deathReportErrors.certificate ? 'invalid' : ''}">
-                <label for="dr-certificate">Akte van overlijden</label>
-                <input id="dr-certificate" name="certificate" type="file" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:6px;" required>
-                <div class="field-hint" style="margin-top:6px;">
-                  Upload een scan of foto van de akte van overlijden. AfterFile controleert dit en geeft de gegevens vrij, doorgaans <strong>binnen 1 werkdag</strong>.<br>
-                  Toegestaan: PDF, JPG, PNG · max. 5 MB.
+                <div class="field certificate-upload-field ${ui.deathReportErrors && ui.deathReportErrors.certificate ? 'invalid' : ''}">
+                  <label for="dr-certificate">Akte van overlijden</label>
+                  <input id="dr-certificate" name="certificate" type="file" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:6px;" required>
+                  <div class="field-hint" style="margin-top:6px;">
+                    Upload een scan of foto van de akte van overlijden. AfterFile controleert dit en geeft de gegevens vrij, doorgaans <strong>binnen 1 werkdag</strong>.<br>
+                    Toegestaan: PDF, JPG, PNG · max. 5 MB.
+                  </div>
                 </div>
-              </div>
 
-              ${(ui.deathReportErrors && Object.keys(ui.deathReportErrors).length) ? `<p class="field-error">Vul je naam en e-mailadres in, en een geldig e-mailadres voor de overledene.</p>` : ''}
-              ${(ui.deathReportErrors && ui.deathReportErrors.certificate) ? `<p class="field-error">${esc(ui.deathReportErrors.certificate)}</p>` : ''}
-              <div class="form-actions">
-                <button type="submit" class="btn btn-secondary" ${ui.deathReportSubmitting ? 'disabled' : ''}>${ui.deathReportSubmitting ? 'Bezig…' : 'Melding versturen'}</button>
+                ${(ui.deathReportErrors && Object.keys(ui.deathReportErrors).length) ? `<p class="field-error">Vul je naam en een geldig e-mailadres in.</p>` : ''}
+                ${(ui.deathReportErrors && ui.deathReportErrors.certificate) ? `<p class="field-error">${esc(ui.deathReportErrors.certificate)}</p>` : ''}
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-secondary" ${ui.deathReportSubmitting ? 'disabled' : ''}>${ui.deathReportSubmitting ? 'Bezig…' : 'Melding versturen'}</button>
+                </div>
+              </form>
+            </div>
+            ${renderDeathReportResult()}
+          </section>
+
+          <!-- Sectie 2: Kluis openen — alleen zichtbaar na goedkeuring (token vereist) -->
+          ${prefillToken ? `<section class="report-death-section" id="kluis-openen">
+            <div class="section-heading">
+              <span class="kicker">Kluistoegang</span>
+              <h2>Kluis openen</h2>
+              <p>Heb je een toegangslink ontvangen van AfterFile? Voer je persoonlijke code in om de bezittingen te bekijken.</p>
+            </div>
+            <div class="dr-vault-card">
+              <form id="dr-vault-claim-form">
+                <div class="field" style="margin-bottom:14px;">
+                  <label for="dr-vault-token" style="font-size:13px;font-weight:600;color:#0F1222;">Toegangslink of token</label>
+                  <input id="dr-vault-token" type="text" value="${esc(prefillToken)}"
+                    placeholder="Plak hier je link (https://afterfile.nl/#view=vault-claim?token=…) of alleen het token"
+                    style="font-size:12px;font-family:monospace;">
+                  <div class="dr-vault-token-hint">Je ontvangt deze link per e-mail zodra een overlijdensmelding is goedgekeurd.</div>
+                </div>
+                <div class="field" style="margin-bottom:16px;">
+                  <label for="dr-vault-code" style="font-size:13px;font-weight:600;color:#0F1222;">Jouw persoonlijke code (Fragment C)</label>
+                  <textarea id="dr-vault-code" rows="4"
+                    placeholder="Plak hier de code uit de e-mail die je ontving toen je als kluiscontact werd aangewezen…"
+                    style="font-family:monospace;font-size:11px;resize:vertical;"></textarea>
+                </div>
+                <p id="dr-vault-err" class="vk-err hidden"></p>
+                <button type="submit" class="btn btn-secondary" style="display:flex;align-items:center;gap:6px;">
+                  ${iconSvg('lock', 14)} Kluis openen
+                </button>
+              </form>
+              <div id="dr-vault-result" class="hidden" style="margin-top:20px;"></div>
+              <div class="claim-abc" style="margin-top:20px;">
+                <span>${iconSvg('shield', 11)} Fragment B: AfterFile</span>
+                <span>+</span>
+                <span>${iconSvg('shield', 11)} Fragment C: jouw code</span>
+                <span>=</span>
+                <span>${iconSvg('check', 11)} Toegang</span>
               </div>
-            </form>
-          </div>
-          ${renderDeathReportResult()}
-        </section>
+            </div>
+          </section>` : ''}
+
+        </div>
       </div>
     </main>
   `;
@@ -2665,6 +2698,52 @@ function wireEvents() {
     });
   }
 
+  // Kluis-claim op "Voor naasten" pagina (dr-vault-claim-form)
+  const drVaultClaimForm = document.getElementById('dr-vault-claim-form');
+  if (drVaultClaimForm) {
+    drVaultClaimForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const rawToken  = document.getElementById('dr-vault-token').value.trim();
+      const fragCb64  = document.getElementById('dr-vault-code').value.trim();
+      const errEl     = document.getElementById('dr-vault-err');
+      const resEl     = document.getElementById('dr-vault-result');
+      errEl.classList.add('hidden');
+
+      // Haal token op uit een geplakte URL of direct tokenwaarde
+      let token = rawToken;
+      if (rawToken.includes('token=')) {
+        try { token = new URL(rawToken).searchParams.get('token') || rawToken.split('token=')[1]?.split('&')[0] || rawToken; }
+        catch { token = rawToken.split('token=')[1]?.split('&')[0] || rawToken; }
+      }
+
+      if (!fragCb64 || !token) {
+        errEl.textContent = 'Vul je toegangslink en persoonlijke code in.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      const btn = drVaultClaimForm.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Even geduld...';
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/vault-claim?token=${encodeURIComponent(token)}`);
+        if (!res.ok) { const b = await res.json(); throw new Error(b.error || 'Fout bij ophalen.'); }
+        const { fragment_b, encrypted_blob } = await res.json();
+        const fragC = b64ToU8(fragCb64);
+        const fragB = b64ToU8(fragment_b);
+        const rawK  = sssReconstruct(2, fragB, 3, fragC);
+        const key   = await vkImportKey(rawK);
+        const plain = await vkDec(key, encrypted_blob);
+        const snap  = JSON.parse(plain);
+        drVaultClaimForm.classList.add('hidden');
+        resEl.classList.remove('hidden');
+        resEl.innerHTML = renderClaimSnapshot(snap);
+      } catch(err) {
+        errEl.textContent = err.message || 'Er ging iets mis. Controleer je link en code.';
+        errEl.classList.remove('hidden');
+        btn.disabled = false; btn.innerHTML = `${iconSvg('lock', 14)} Kluis openen`;
+      }
+    });
+  }
+
   // Kluis-claim (publieke pagina voor contact na overlijden)
   const vkClaimForm = document.getElementById('vk-claim-form');
   if (vkClaimForm) {
@@ -3023,6 +3102,12 @@ function wireEvents() {
       const _fragC = localStorage.getItem(VK_FRAG_C) || null;
       supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id, fragment_c: _fragC } })
         .catch(err => console.error('send-contact-invite aanroep mislukt', err));
+      // Als dit de kluiscontact is (fragment_c aanwezig), sla hun e-mail op in vault_data
+      // zodat na goedkeuring van een overlijdensmelding de toegangslink naar het juiste adres gaat.
+      if (_fragC && saved.email) {
+        supabase.from('vault_data').update({ contact_email: saved.email }).eq('user_id', state.account.id)
+          .catch(err => console.error('vault_data contact_email update mislukt', err));
+      }
     }
   });
   } // end if (contactForm)
@@ -3141,16 +3226,21 @@ function wireEvents() {
   document.querySelectorAll('[data-action="approve-death-report"]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-id');
-      if (!confirm('Weet je zeker dat je de informatie wilt vrijgeven? Dit stuurt direct een e-mail naar alle contacten met de rol "Informatie ontvangen".')) return;
+      if (!confirm('Weet je zeker dat je de informatie wilt vrijgeven? Dit stuurt direct een e-mail naar alle contacten met de rol "Informatie ontvangen" en een kluislink naar het kluiscontact.')) return;
       btn.disabled = true; btn.textContent = 'Bezig…';
       const { error } = await supabase.rpc('approve_death_report', { p_account_id: id });
       if (error) {
         flashToast('Vrijgave mislukt: ' + error.message);
         btn.disabled = false; btn.textContent = 'Informatie vrijgeven';
-      } else {
-        flashToast('Informatie is vrijgegeven en e-mails zijn verstuurd.');
-        await loadSignups(); render();
+        return;
       }
+      // Stuur kluistoegang-e-mail naar het kluiscontact
+      const signup = (state.signups || []).find(s => s.id === id);
+      const deceasedName = signup?.name || '';
+      supabase.functions.invoke('send-vault-access', { body: { accountId: id, deceasedName } })
+        .catch(err => console.error('send-vault-access mislukt', err));
+      flashToast('Informatie is vrijgegeven en e-mails zijn verstuurd.');
+      await loadSignups(); render();
     });
   });
 
@@ -3183,8 +3273,6 @@ function wireEvents() {
     e.preventDefault();
     const fd = new FormData(deathReportForm);
     const deceasedName = (fd.get('deceasedName') || '').trim();
-    const deceasedEmail = (fd.get('deceasedEmail') || '').trim();
-    const relationship = (fd.get('relationship') || '').trim() || (fd.get('relationship-other') || '').trim();
     const reporterName = (fd.get('reporterName') || '').trim();
     const reporterEmail = (fd.get('reporterEmail') || '').trim();
     const reporterPhone = (fd.get('reporterPhone') || '').trim();
@@ -3192,7 +3280,6 @@ function wireEvents() {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errors = {};
     if (!deceasedName) errors.deceasedName = true;
-    if (!emailPattern.test(deceasedEmail)) errors.deceasedEmail = true;
     if (!reporterName) errors.reporterName = true;
     if (!emailPattern.test(reporterEmail)) errors.reporterEmail = true;
     if (Object.keys(errors).length) {
@@ -3205,23 +3292,10 @@ function wireEvents() {
     ui.deathReportErrors = null;
     ui.deathReportSubmitting = true;
     render();
-    ui.deathReportResult = await reportDeathViaSupabase({ deceasedName, deceasedEmail, relationship, reporterName, reporterEmail, reporterPhone, message });
+    ui.deathReportResult = await reportDeathViaSupabase({ deceasedName, reporterName, reporterEmail, reporterPhone, message });
     ui.deathReportSubmitting = false;
     render();
     setTimeout(() => { const el = document.getElementById('meld-overlijden'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 0);
-  });
-
-  const drRelationshipSelect = document.getElementById('dr-relationship');
-  if (drRelationshipSelect) drRelationshipSelect.addEventListener('change', () => {
-    const otherInput = document.getElementById('dr-relationship-other');
-    if (!otherInput) return;
-    if (drRelationshipSelect.value === '') {
-      otherInput.style.display = 'block';
-      otherInput.focus();
-    } else {
-      otherInput.style.display = 'none';
-      otherInput.value = '';
-    }
   });
 
   const simDeathWaitBtn = document.querySelector('[data-action="sim-death-wait-elapsed"]');
