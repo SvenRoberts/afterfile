@@ -1640,10 +1640,10 @@ function renderDashboard() {
     <a href="#" data-nav="${nav}" style="display:flex;flex-direction:column;padding:16px;gap:10px;text-decoration:none;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;">
       <span style="color:#2F5DD9;display:flex;">${iconSvg(icon, 16)}</span>
       <span style="flex:1;">
-        <span style="display:block;font-size:14px;font-weight:600;color:#0F1222;">${title}</span>
-        <span style="display:block;font-size:12px;color:#9AAAC8;margin-top:2px;">${sub}</span>
+        <span style="display:block;font-size:15px;font-weight:600;color:#0F1222;">${title}</span>
+        <span style="display:block;font-size:13px;color:#9AAAC8;margin-top:2px;">${sub}</span>
       </span>
-      <span style="font-size:12.5px;font-weight:600;color:#2F5DD9;">${actionLabel} →</span>
+      <span style="font-size:13.5px;font-weight:600;color:#2F5DD9;">${actionLabel} →</span>
     </a>`;
 
   const gegevensSubtitle = infoComplete ? 'Persoonsgegevens ingevuld' : 'Nog niet ingevuld';
@@ -1654,7 +1654,7 @@ function renderDashboard() {
     ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}.`, sub: `Zo staat je plan er vandaag voor.${planBadge}` })}
     ${upgradeBannerHtml}
     ${progressHtml}
-    <div style="background:#EFF4FF;border-radius:10px;padding:12px;margin-bottom:28px;">
+    <div style="background:#EFF4FF;border-radius:10px;padding:12px 0;overflow:hidden;margin-bottom:28px;">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
         ${card('info',   'Mijn gegevens',        gegevensSubtitle, 'gegevens', 'Aanpassen')}
         ${card('folder', 'Bezittingen',          assetsSubtitle,   'assets',   'Toevoegen')}
