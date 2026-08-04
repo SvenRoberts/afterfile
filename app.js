@@ -37,12 +37,15 @@ const ASSET_CATEGORIES = [
       ]},
   ]},
   { key: 'digital', label: 'Digitaal', types: [
-      { key: 'website', label: 'Website', icon: 'globe', namePlaceholder: 'bijv. Facebook account', extraFields: [
-          { key: 'username', label: 'Gebruikersnaam', placeholder: 'bijv. jouwgebruikersnaam' },
+      { key: 'website', label: 'Website', icon: 'globe', namePlaceholder: 'bijv. Persoonlijke blog of bedrijfswebsite', extraFields: [
+          { key: 'url', label: 'Website URL', placeholder: 'bijv. www.mijnwebsite.nl' },
+          { key: 'registrar', label: 'Registrar / domeinbeheerder', placeholder: 'bijv. Mijndomein.nl, TransIP, Vimexx' },
+          { key: 'loginEmail', label: 'Inlogmailadres', placeholder: 'bijv. naam@voorbeeld.nl' },
           { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'domain', label: 'Domeinnaam', icon: 'link', namePlaceholder: 'bijv. mijnwebsite.nl', extraFields: [
-          { key: 'registrar', label: 'Registrar', placeholder: 'bijv. TransIP, Vimexx' },
+          { key: 'registrar', label: 'Registrar / domeinbeheerder', placeholder: 'bijv. Mijndomein.nl, TransIP, Vimexx' },
+          { key: 'loginEmail', label: 'Inlogmailadres', placeholder: 'bijv. naam@voorbeeld.nl' },
           { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'cloud', label: 'Cloudopslag', icon: 'cloud', namePlaceholder: 'bijv. Google Drive opslag', extraFields: [
@@ -50,6 +53,20 @@ const ASSET_CATEGORIES = [
           { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'email', label: 'E-mailaccount', icon: 'mail', namePlaceholder: 'bijv. Gmail prive', extraFields: [
+          { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
+      ]},
+  ]},
+  { key: 'practical', label: 'Praktisch', types: [
+      { key: 'phone', label: 'Telefoon', icon: 'phone', namePlaceholder: 'bijv. iPhone 15 Pro', extraFields: [
+          { key: 'brand', label: 'Merk en model', placeholder: 'bijv. Apple iPhone 15 Pro' },
+          { key: 'pinCode', label: 'Pincode', placeholder: 'Optioneel', type: 'password' },
+      ]},
+      { key: 'laptop', label: 'Laptop', icon: 'laptop', namePlaceholder: 'bijv. MacBook Pro werk', extraFields: [
+          { key: 'brand', label: 'Merk en model', placeholder: 'bijv. Apple MacBook Pro 14"' },
+          { key: 'password', label: 'Inlogwachtwoord', placeholder: 'Optioneel', type: 'password' },
+      ]},
+      { key: 'email', label: 'E-mail', icon: 'mail', namePlaceholder: 'bijv. Persoonlijk e-mailaccount', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
           { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
@@ -94,6 +111,8 @@ const ICON_PATHS = {
   safe: '<rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="12" cy="12" r="3.2"></circle><path d="M9 6h.01M15 6h.01M9 18h.01M15 18h.01"></path>',
   document: '<path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"></path><path d="M14 3v4h4"></path>',
   folder: '<path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"></path>',
+  phone: '<path d="M6.5 3h3l1.5 4-2 1.5a11 11 0 0 0 6.5 6.5L17 13l4 1.5v3C21 19.3 19 21 17.5 21 9 21 3 15 3 6.5 3 5 5 3 6.5 3z"></path>',
+  laptop: '<rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M1 21h22"></path>',
   download: '<path d="M12 4v11"></path><path d="M7.5 11 12 15.5 16.5 11"></path><path d="M5 19h14"></path>',
   check: '<path d="M5 12.5l4.5 4.5L19 7"></path>',
   users: '<circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"></path><circle cx="17.5" cy="9" r="2.3"></circle><path d="M15.3 19c.2-2.1 1.7-3.8 3.6-4.4"></path>',
@@ -1819,7 +1838,7 @@ function renderAssets() {
     `;
   }
 
-  const catIconMap = { financial: 'bank', digital: 'globe', other: 'folder' };
+  const catIconMap = { financial: 'bank', digital: 'globe', practical: 'phone', other: 'folder' };
   const catPickerHtml = ASSET_CATEGORIES.map(cat => {
     const isOpen = ui.addingCatOpen === cat.key;
     return `
@@ -2758,18 +2777,19 @@ function wireEvents() {
     });
   });
 
-  const cancelAssetBtn = document.querySelector('[data-action="cancel-asset"]');
-  if (cancelAssetBtn) cancelAssetBtn.addEventListener('click', () => {
-    if (ui.addingAssetType && !ui.editingAssetId) {
-      ui.addingAssetType = null;
-    } else {
-      ui.addingAssetType = null;
-      ui.addingAsset = false;
-      ui.editingAssetId = null;
-      ui.draftAsset = {};
-      ui.addingCatOpen = null;
-    }
-    render();
+  document.querySelectorAll('[data-action="cancel-asset"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (ui.addingAssetType && !ui.editingAssetId) {
+        ui.addingAssetType = null;
+      } else {
+        ui.addingAssetType = null;
+        ui.addingAsset = false;
+        ui.editingAssetId = null;
+        ui.draftAsset = {};
+        ui.addingCatOpen = null;
+      }
+      render();
+    });
   });
 
   const openAssetPickerBtn = document.querySelector('[data-action="open-asset-picker"]');
