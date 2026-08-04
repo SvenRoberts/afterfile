@@ -30,6 +30,7 @@
 html, body {
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
   background-color: var(--color-bg);
   background-image: radial-gradient(circle, rgba(15, 18, 34, 0.05) 1px, transparent 1.6px);
   background-size: 24px 24px;
@@ -1287,8 +1288,9 @@ footer.site-footer a:hover { color: var(--color-primary); }
   .publicnav-links .btn { padding: 8px 12px; font-size: 13px; }
 
   /* --- Signed-in nav --- */
-  .topnav-inner { padding: 10px 16px; }
-  .nav-links .nav-link:not(.btn) { display: none; }
+  .topnav-inner { padding: 10px 12px; }
+  .nav-links { gap: 0; }
+  .nav-link { padding: 6px 8px; font-size: 13px; }
 
   /* --- Hero: foto boven tekst --- */
   .hero-split {
@@ -1325,7 +1327,22 @@ footer.site-footer a:hover { color: var(--color-primary); }
   .type-tiles { grid-template-columns: repeat(2, 1fr); }
   .item-list { grid-template-columns: 1fr; }
   .role-options { grid-template-columns: 1fr; }
+  .field-row { flex-direction: column; gap: 0; }
   .form-row { flex-direction: column; gap: 0; }
+
+  /* --- Upgrade banner --- */
+  .upgrade-banner { flex-direction: column; gap: 16px; align-items: stretch; }
+  .upgrade-banner-actions { flex-wrap: wrap; }
+
+  /* --- Waitlist tabs --- */
+  .wl-tabs { width: 100%; }
+  .wl-tab { flex: 1; text-align: center; padding: 8px 8px; font-size: 13px; }
+
+  /* --- Cards / forms --- */
+  .asset-picker-panel { padding: 16px 16px 12px; }
+  .inline-form-card { padding: 20px; }
+  .item-card { padding: 14px; }
+  .plan-card--featured { transform: none; }
 
   /* --- Kluis --- */
   .va { padding: 20px 16px 28px !important; }

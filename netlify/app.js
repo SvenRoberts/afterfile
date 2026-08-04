@@ -555,7 +555,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingAsset: false, addingContact: false, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1814,7 +1814,7 @@ function renderAssets() {
             <input id="as-notes" name="notes" type="text" placeholder="Iets anders dat het weten waard is" value="${esc(ui.draftAsset.notes || '')}">
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Bezitting opslaan</button>
+            <button type="submit" class="btn btn-primary">${ui.editingAssetId ? 'Wijzigingen opslaan' : 'Bezitting opslaan'}</button>
             <button type="button" class="btn btn-ghost" data-action="cancel-asset">Annuleren</button>
           </div>
         </form>
@@ -1849,7 +1849,10 @@ function renderAssets() {
             <div class="item-card">
               <div class="item-card-top">
                 <span class="item-tag">${esc(a.typeLabel)}</span>
-                <button class="btn-danger-ghost" data-action="delete-asset" data-id="${a.id}">Verwijderen</button>
+                <div style="display:flex;gap:4px;">
+                  <button class="btn-ghost btn-sm" data-action="edit-asset" data-id="${a.id}">Bewerken</button>
+                  <button class="btn-danger-ghost" data-action="delete-asset" data-id="${a.id}">Verwijderen</button>
+                </div>
               </div>
               <h4>${esc(a.name)}</h4>
               ${(findType(a.categoryKey, a.typeKey)?.extraFields || []).map(ef => (a.extra || {})[ef.key] ? `<p class="meta-row"><strong>${esc(ef.label)}:</strong> ${ef.type === 'password' ? '••••••••' : esc(a.extra[ef.key])}</p>` : '').join('')}
@@ -2080,7 +2083,7 @@ function renderContacts() {
 
   const formHtml = `
     <div class="inline-form-card">
-      <div class="form-title">Vertrouwd contact toevoegen</div>
+      <div class="form-title">${ui.editingContactId ? 'Contact bewerken' : 'Vertrouwd contact toevoegen'}</div>
       <form id="contact-form">
         <div class="field-row">
           <div class="field">
@@ -2096,13 +2099,13 @@ function renderContacts() {
           <label for="ct-relationship">Relatie</label>
           <select id="ct-relationship" name="relationship">
             ${RELATIONSHIP_SUGGESTIONS.map(r => `<option value="${esc(r)}" ${ui.draftContact.relationship === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}
-            <option value="">Anders…</option>
+            <option value="" ${!RELATIONSHIP_SUGGESTIONS.includes(ui.draftContact.relationship || '') && ui.draftContact._touched ? 'selected' : ''}>Anders…</option>
           </select>
-          <input id="ct-relationship-other" name="relationship-other" type="text" placeholder="Vul je eigen relatie in" style="display:none; margin-top:10px;">
+          <input id="ct-relationship-other" name="relationship-other" type="text" placeholder="Vul je eigen relatie in" value="${esc((!RELATIONSHIP_SUGGESTIONS.includes(ui.draftContact.relationship || '') && ui.draftContact._touched) ? (ui.draftContact.relationship || '') : '')}" style="${(!RELATIONSHIP_SUGGESTIONS.includes(ui.draftContact.relationship || '') && ui.draftContact._touched) ? '' : 'display:none;'} margin-top:10px;">
         </div>
         <div class="field">
           <label for="ct-address">Adres <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-          <input id="ct-address" name="address" type="text" placeholder="bijv. Hoofdstraat 12, 1234 AB Amsterdam">
+          <input id="ct-address" name="address" type="text" placeholder="bijv. Hoofdstraat 12, 1234 AB Amsterdam" value="${esc(ui.draftContact.address || '')}">
         </div>
         <div class="field-row">
           <div class="field">
@@ -2131,7 +2134,7 @@ function renderContacts() {
           <div class="field-hint">Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.</div>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Contact opslaan</button>
+          <button type="submit" class="btn btn-primary">${ui.editingContactId ? 'Wijzigingen opslaan' : 'Contact opslaan'}</button>
           <button type="button" class="btn btn-ghost" data-action="cancel-contact">Annuleren</button>
         </div>
       </form>
@@ -2142,7 +2145,10 @@ function renderContacts() {
     <div class="item-card">
       <div class="item-card-top">
         <span class="item-tag">${esc(c.relationship || 'Contact')}</span>
-        <button class="btn-danger-ghost" data-action="delete-contact" data-id="${c.id}">Verwijderen</button>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-ghost btn-sm" data-action="edit-contact" data-id="${c.id}">Bewerken</button>
+          <button class="btn-danger-ghost" data-action="delete-contact" data-id="${c.id}">Verwijderen</button>
+        </div>
       </div>
       <h4>${esc(c.name)}</h4>
       <p class="meta-row">${esc(c.email)}</p>
@@ -2720,13 +2726,13 @@ function wireEvents() {
   });
 
   const cancelAssetBtn = document.querySelector('[data-action="cancel-asset"]');
-  if (cancelAssetBtn) cancelAssetBtn.addEventListener('click', () => { ui.addingAssetType = null; ui.addingAsset = false; ui.draftAsset = {}; render(); });
+  if (cancelAssetBtn) cancelAssetBtn.addEventListener('click', () => { ui.addingAssetType = null; ui.addingAsset = false; ui.editingAssetId = null; ui.draftAsset = {}; render(); });
 
   const openAssetPickerBtn = document.querySelector('[data-action="open-asset-picker"]');
   if (openAssetPickerBtn) openAssetPickerBtn.addEventListener('click', () => { ui.addingAsset = true; render(); });
 
   const cancelContactBtn = document.querySelector('[data-action="cancel-contact"]');
-  if (cancelContactBtn) cancelContactBtn.addEventListener('click', () => { ui.addingContact = false; ui.draftContact = {}; render(); });
+  if (cancelContactBtn) cancelContactBtn.addEventListener('click', () => { ui.addingContact = false; ui.editingContactId = null; ui.draftContact = {}; render(); });
 
   const openContactFormBtn = document.querySelector('[data-action="open-contact-form"]');
   if (openContactFormBtn) openContactFormBtn.addEventListener('click', () => { ui.addingContact = true; render(); });
@@ -2751,17 +2757,27 @@ function wireEvents() {
       const val = (fd.get(ef.key) || '').trim();
       if (val) extra[ef.key] = val;
     });
-    const { data, error } = await supabase.from('assets').insert({
-      account_id: state.account.id,
-      category_key: categoryKey, type_key: typeKey, type_label: type.label,
+    const payload = {
       name: (fd.get('name') || '').trim(),
       extra,
       description: (fd.get('description') || '').trim(),
       location: (fd.get('location') || '').trim(),
       notes: (fd.get('notes') || '').trim(),
-    }).select().single();
-    if (error) { flashToast('Opslaan is niet gelukt, probeer het opnieuw.'); return; }
-    state.assets.push(rowToAsset(data));
+    };
+    if (ui.editingAssetId) {
+      const { data, error } = await supabase.from('assets').update(payload).eq('id', ui.editingAssetId).select().single();
+      if (error) { flashToast('Opslaan is niet gelukt, probeer het opnieuw.'); return; }
+      state.assets = state.assets.map(a => a.id === ui.editingAssetId ? rowToAsset(data) : a);
+      ui.editingAssetId = null;
+    } else {
+      const { data, error } = await supabase.from('assets').insert({
+        account_id: state.account.id,
+        category_key: categoryKey, type_key: typeKey, type_label: type.label,
+        ...payload,
+      }).select().single();
+      if (error) { flashToast('Opslaan is niet gelukt, probeer het opnieuw.'); return; }
+      state.assets.push(rowToAsset(data));
+    }
     ui.addingAssetType = null;
     ui.addingAsset = false;
     ui.draftAsset = {};
@@ -2771,6 +2787,19 @@ function wireEvents() {
     flashToast('Bezitting opgeslagen');
   });
   } // end if (assetForm)
+
+  document.querySelectorAll('[data-action="edit-asset"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const a = state.assets.find(x => x.id === id);
+      if (!a) return;
+      ui.editingAssetId = id;
+      ui.addingAsset = true;
+      ui.addingAssetType = { categoryKey: a.categoryKey, typeKey: a.typeKey };
+      ui.draftAsset = { name: a.name, description: a.description || '', location: a.location || '', notes: a.notes || '', ...(a.extra || {}) };
+      render();
+    });
+  });
 
   document.querySelectorAll('[data-action="delete-asset"]').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -2834,8 +2863,7 @@ function wireEvents() {
     if (fd.get('role-inform')) roles.push('inform');
     if (fd.get('role-verify')) roles.push('verify');
     const relationship = (fd.get('relationship') || '').trim() || (fd.get('relationship-other') || '').trim();
-    const { data, error } = await supabase.from('contacts').insert({
-      account_id: state.account.id,
+    const payload = {
       name: (fd.get('name') || '').trim(),
       email: (fd.get('email') || '').trim(),
       relationship,
@@ -2843,25 +2871,57 @@ function wireEvents() {
       birth_date: (fd.get('birthDate') || '').trim(),
       phone: (fd.get('phone') || '').trim(),
       roles: roles.length ? roles : ['inform'],
-    }).select().single();
-    if (error) { flashToast('Opslaan is niet gelukt, probeer het opnieuw.'); return; }
-    const saved = rowToContact(data);
-    state.contacts.push(saved);
-    syncCurrentSignupRecord();
-    saveLocalDemoState();
-    ui.addingContact = false;
-    ui.draftContact = {};
-    ui.contactInvitePreview = saved;
-    render();
-    // Niet-blokkerend: de uitnodigingsmail mag de UI niet ophouden. Mislukt deze, dan blijft
-    // het contact zelf gewoon opgeslagen; de gebruiker ziet de preview-modal als bevestiging.
-    // supabase-js stuurt automatisch het JWT van de ingelogde gebruiker mee als Authorization-
-    // header (vereist, want deze Edge Function draait met verify_jwt: true).
-    const _fragC = localStorage.getItem(VK_FRAG_C) || null;
-    supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id, fragment_c: _fragC } })
-      .catch(err => console.error('send-contact-invite aanroep mislukt', err));
+    };
+    if (ui.editingContactId) {
+      const { data, error } = await supabase.from('contacts').update(payload).eq('id', ui.editingContactId).select().single();
+      if (error) { flashToast('Opslaan is niet gelukt, probeer het opnieuw.'); return; }
+      state.contacts = state.contacts.map(c => c.id === ui.editingContactId ? rowToContact(data) : c);
+      ui.editingContactId = null;
+      ui.addingContact = false;
+      ui.draftContact = {};
+      syncCurrentSignupRecord();
+      saveLocalDemoState();
+      render();
+      flashToast('Contact opgeslagen');
+    } else {
+      const { data, error } = await supabase.from('contacts').insert({ account_id: state.account.id, ...payload }).select().single();
+      if (error) { flashToast('Opslaan is niet gelukt, probeer het opnieuw.'); return; }
+      const saved = rowToContact(data);
+      state.contacts.push(saved);
+      syncCurrentSignupRecord();
+      saveLocalDemoState();
+      ui.addingContact = false;
+      ui.draftContact = {};
+      ui.contactInvitePreview = saved;
+      render();
+      const _fragC = localStorage.getItem(VK_FRAG_C) || null;
+      supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id, fragment_c: _fragC } })
+        .catch(err => console.error('send-contact-invite aanroep mislukt', err));
+    }
   });
   } // end if (contactForm)
+
+  document.querySelectorAll('[data-action="edit-contact"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const c = state.contacts.find(x => x.id === id);
+      if (!c) return;
+      ui.editingContactId = id;
+      ui.addingContact = true;
+      ui.draftContact = {
+        _touched: true,
+        name: c.name || '',
+        email: c.email || '',
+        phone: c.phone || '',
+        birthDate: c.birthDate || '',
+        address: c.address || '',
+        relationship: c.relationship || '',
+        roleInform: (c.roles || []).includes('inform'),
+        roleVerify: (c.roles || []).includes('verify'),
+      };
+      render();
+    });
+  });
 
   document.querySelectorAll('[data-action="delete-contact"]').forEach(btn => {
     btn.addEventListener('click', async () => {
