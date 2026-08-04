@@ -1446,6 +1446,54 @@ footer.site-footer a:hover { color: var(--color-primary); }
 .vault-active .btn-danger-ghost { color: #475569; }
 .vault-active .btn-danger-ghost:hover { color: #F87171; background: rgba(239,68,68,0.1); }
 
+/* ── Vault accordion (lichte modus) ── */
+.vault-cat { border-radius: 8px; border: 1px solid rgba(47,93,217,.13); margin-bottom: 6px; overflow: hidden; }
+.vault-cat-hdr { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; background: rgba(47,93,217,.03); transition: background .15s; }
+.vault-cat-hdr:hover { background: rgba(47,93,217,.07); }
+.vault-cat-hdr > svg { color: #2F5DD9; flex-shrink: 0; }
+.vault-cat-label { flex: 1; font-size: 13.5px; font-weight: 700; color: var(--color-text); }
+.vault-cat-count { font-size: 11px; font-weight: 700; color: #2F5DD9; background: rgba(47,93,217,.1); padding: 1px 7px; border-radius: 99px; }
+.vault-cat-chevron { color: var(--color-text-muted); flex-shrink: 0; transition: transform .2s; display: flex; }
+.vault-cat.open .vault-cat-chevron { transform: rotate(90deg); }
+.vault-cat-body { border-top: 1px solid rgba(47,93,217,.08); }
+.vault-asset-row { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; transition: background .12s; }
+.vault-asset-row + .vault-asset-row { border-top: 1px solid rgba(47,93,217,.06); }
+.vault-asset-row:hover { background: rgba(47,93,217,.05); }
+.vault-asset-row.open { background: rgba(47,93,217,.07); }
+.vault-asset-row > svg { color: #2F5DD9; opacity: .7; flex-shrink: 0; }
+.vault-asset-name { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--color-text); }
+.vault-asset-type { font-size: 11.5px; color: var(--color-text-muted); white-space: nowrap; }
+.vault-asset-chevron { color: var(--color-text-muted); flex-shrink: 0; transition: transform .2s; display: flex; }
+.vault-asset-row.open .vault-asset-chevron { transform: rotate(90deg); }
+.vault-asset-detail { padding: 14px 16px 16px; background: rgba(47,93,217,.025); border-top: 1px solid rgba(47,93,217,.08); }
+.vault-detail-row { display: flex; gap: 16px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid rgba(47,93,217,.05); }
+.vault-detail-row:last-of-type { border-bottom: none; }
+.vault-detail-lbl { font-weight: 600; color: var(--color-text-muted); min-width: 110px; flex-shrink: 0; font-size: 12px; padding-top: 1px; }
+.vault-detail-val { color: var(--color-text); word-break: break-all; }
+.vault-detail-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(47,93,217,.08); }
+
+/* ── Vault accordion dark (vault-active) ── */
+.vault-active .vault-cat { border-color: rgba(100,116,139,.18); }
+.vault-active .vault-cat-hdr { background: rgba(15,27,45,.5); }
+.vault-active .vault-cat-hdr:hover { background: rgba(20,35,55,.75); }
+.vault-active .vault-cat-hdr > svg { color: #00C9A7; }
+.vault-active .vault-cat-label { color: #CBD5E1; }
+.vault-active .vault-cat-count { color: #00C9A7; background: rgba(0,201,167,.12); }
+.vault-active .vault-cat-chevron { color: #475569; }
+.vault-active .vault-cat-body { border-top-color: rgba(100,116,139,.1); }
+.vault-active .vault-asset-row:hover { background: rgba(0,201,167,.05); }
+.vault-active .vault-asset-row.open { background: rgba(0,201,167,.08); }
+.vault-active .vault-asset-row + .vault-asset-row { border-top-color: rgba(100,116,139,.08); }
+.vault-active .vault-asset-row > svg { color: #00C9A7; }
+.vault-active .vault-asset-name { color: #E2E8F0; }
+.vault-active .vault-asset-type { color: #475569; }
+.vault-active .vault-asset-chevron { color: #334155; }
+.vault-active .vault-asset-detail { background: rgba(11,17,32,.55); border-top-color: rgba(100,116,139,.1); }
+.vault-active .vault-detail-row { border-bottom-color: rgba(100,116,139,.07); }
+.vault-active .vault-detail-lbl { color: #475569; }
+.vault-active .vault-detail-val { color: #CBD5E1; }
+.vault-active .vault-detail-actions { border-top-color: rgba(100,116,139,.1); }
+
 /* Empty state */
 .vault-active .empty-state { color: #334155; border-color: rgba(100,116,139,0.12); }
 

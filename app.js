@@ -98,6 +98,7 @@ const ICON_PATHS = {
   check: '<path d="M5 12.5l4.5 4.5L19 7"></path>',
   users: '<circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"></path><circle cx="17.5" cy="9" r="2.3"></circle><path d="M15.3 19c.2-2.1 1.7-3.8 3.6-4.4"></path>',
   'chevron-down': '<path d="M6 9l6 6 6-6"></path>',
+  'chevron-right': '<path d="M9 6l6 6-6 6"></path>',
   info: '<circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.6h.01"></path>',
   x: '<path d="M6 6l12 12M18 6 6 18"></path>',
 };
@@ -555,7 +556,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1834,30 +1835,47 @@ function renderAssets() {
 
   const hasAny = state.assets.length > 0;
 
+  const catIconMap = { financial: 'bank', digital: 'globe', other: 'folder' };
   const listHtml = ASSET_CATEGORIES.map(cat => {
     const items = state.assets.filter(a => a.categoryKey === cat.key);
     if (!items.length) return '';
+    const catOpen = (ui.vaultOpenCats || {})[cat.key] !== false;
     return `
-      <div class="type-group">
-        <h3>${esc(cat.label)}</h3>
-        <div class="item-list">
-          ${items.map(a => `
-            <div class="item-card">
-              <div class="item-card-top">
-                <span class="item-tag">${esc(a.typeLabel)}</span>
-                <div style="display:flex;gap:4px;">
+      <div class="vault-cat${catOpen ? ' open' : ''}">
+        <div class="vault-cat-hdr" data-action="toggle-vault-cat" data-cat="${cat.key}">
+          ${iconSvg(catIconMap[cat.key] || 'folder', 15)}
+          <span class="vault-cat-label">${esc(cat.label)}</span>
+          <span class="vault-cat-count">${items.length}</span>
+          <span class="vault-cat-chevron">${iconSvg('chevron-right', 12)}</span>
+        </div>
+        ${catOpen ? `<div class="vault-cat-body">
+          ${items.map(a => {
+            const type = findType(a.categoryKey, a.typeKey);
+            const assetOpen = ui.vaultOpenAsset === a.id;
+            const detailRows = [
+              ...(type?.extraFields || []).filter(ef => (a.extra || {})[ef.key]).map(ef =>
+                `<div class="vault-detail-row"><span class="vault-detail-lbl">${esc(ef.label)}</span><span class="vault-detail-val">${ef.type === 'password' ? '••••••••' : esc(a.extra[ef.key])}</span></div>`),
+              a.description ? `<div class="vault-detail-row"><span class="vault-detail-lbl">Beschrijving</span><span class="vault-detail-val">${esc(a.description)}</span></div>` : '',
+              a.location    ? `<div class="vault-detail-row"><span class="vault-detail-lbl">Locatie</span><span class="vault-detail-val">${esc(a.location)}</span></div>` : '',
+              a.notes       ? `<div class="vault-detail-row"><span class="vault-detail-lbl">Notities</span><span class="vault-detail-val">${esc(a.notes)}</span></div>` : '',
+            ].filter(Boolean);
+            return `
+              <div class="vault-asset-row${assetOpen ? ' open' : ''}" data-action="toggle-vault-asset" data-id="${a.id}">
+                ${iconSvg(type?.icon || 'folder', 14)}
+                <span class="vault-asset-name">${esc(a.name)}</span>
+                <span class="vault-asset-type">${esc(a.typeLabel)}</span>
+                <span class="vault-asset-chevron">${iconSvg('chevron-right', 11)}</span>
+              </div>
+              ${assetOpen ? `<div class="vault-asset-detail">
+                ${detailRows.length ? detailRows.join('') : '<p style="font-size:13px;color:var(--color-text-muted);margin:0 0 8px;">Geen extra details opgeslagen.</p>'}
+                <div class="vault-detail-actions">
                   <button class="btn-ghost btn-sm" data-action="edit-asset" data-id="${a.id}">Bewerken</button>
                   <button class="btn-danger-ghost" data-action="delete-asset" data-id="${a.id}">Verwijderen</button>
                 </div>
-              </div>
-              <h4>${esc(a.name)}</h4>
-              ${(findType(a.categoryKey, a.typeKey)?.extraFields || []).map(ef => (a.extra || {})[ef.key] ? `<p class="meta-row"><strong>${esc(ef.label)}:</strong> ${ef.type === 'password' ? '••••••••' : esc(a.extra[ef.key])}</p>` : '').join('')}
-              ${a.description ? `<p class="meta-row">${esc(a.description)}</p>` : ''}
-              ${a.location ? `<p class="meta-row"><strong>Locatie:</strong> ${esc(a.location)}</p>` : ''}
-              ${a.notes ? `<p class="meta-row"><strong>Notities:</strong> ${esc(a.notes)}</p>` : ''}
-            </div>
-          `).join('')}
-        </div>
+              </div>` : ''}
+            `;
+          }).join('')}
+        </div>` : ''}
       </div>
     `;
   }).join('');
@@ -2803,8 +2821,27 @@ function wireEvents() {
       const { error } = await supabase.from('assets').delete().eq('id', id);
       if (error) { flashToast('Verwijderen is niet gelukt, probeer het opnieuw.'); return; }
       state.assets = state.assets.filter(a => a.id !== id);
+      if (ui.vaultOpenAsset === id) ui.vaultOpenAsset = null;
       syncCurrentSignupRecord();
       saveLocalDemoState();
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="toggle-vault-cat"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      if (!ui.vaultOpenCats) ui.vaultOpenCats = {};
+      const isOpen = ui.vaultOpenCats[cat] !== false;
+      ui.vaultOpenCats[cat] = !isOpen;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="toggle-vault-asset"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      ui.vaultOpenAsset = ui.vaultOpenAsset === id ? null : id;
       render();
     });
   });
