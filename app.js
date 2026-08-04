@@ -1613,83 +1613,65 @@ function renderDashboard() {
   const offset = circumference * (1 - pct / 100);
   const firstName = getFirstName();
 
-  // Self-serve upgrade voor Basis-gebruikers — dekt twee gevallen: iemand die bij signup al
-  // voor Basis koos en later toch wil upgraden, én herstel als de automatische redirect naar
-  // Stripe na het kiezen van een betaald plan (zie maybeStartCheckout()) ooit onderbroken werd.
-  const upgradeBannerHtml = (state.account.plan === 'basis') ? `
-    <div class="upgrade-banner">
-      <div class="upgrade-banner-text">
-        <h3>Haal meer uit AfterFile</h3>
-        <p>Upgrade naar Compleet voor onbeperkt bezittingen, een volledig Legacy Report (PDF) en meer vertrouwde contacten. De eerste ${LAUNCH_OFFER_MONTHS} maanden zijn gratis.</p>
-      </div>
-      <div class="upgrade-banner-actions">
-        ${PLANS.filter(p => p.launchEligible).map(p => `
-          <button type="button" class="btn ${p.featured ? 'btn-primary' : 'btn-secondary'}" data-action="upgrade-plan" data-plan="${p.key}" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig…' : `Naar ${esc(p.name)} (${esc(p.price)}${esc(p.period)})`}</button>
-        `).join('')}
-      </div>
-    </div>
-  ` : '';
-
-  const changePlanBannerHtml = '';
-
-  const completionCardHtml = showCompletionCard ? `
-    <div class="completion-card">
-      <div class="completion-text">
-        <h2>${heading}</h2>
-        <p>${esc(completionMsg)}</p>
-        ${todoHtml}
-      </div>
-      <div class="progress-ring-wrap">
-        <svg width="96" height="96">
-          <circle cx="48" cy="48" r="40" stroke="#E5E9F0" stroke-width="10" fill="none"></circle>
-          <circle cx="48" cy="48" r="40" stroke="#5B8DEF" stroke-width="10" fill="none"
-            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"></circle>
-        </svg>
-        <div class="progress-ring-label">${pct}%</div>
-      </div>
-    </div>
-  ` : '';
   const currentPlan = PLANS.find(p => p.key === state.account.plan);
-  const planBadge = currentPlan ? ` &thinsp;<span style="display:inline-flex;align-items:center;padding:2px 10px;background:var(--tint-blue);color:var(--color-primary-dark);border-radius:20px;font-size:12px;font-weight:600;vertical-align:middle;">${esc(currentPlan.name)}</span>` : '';
+  const planBadge = currentPlan ? ` &thinsp;<span style="display:inline-flex;align-items:center;padding:2px 10px;background:rgba(47,93,217,.1);color:#2F5DD9;border-radius:20px;font-size:11.5px;font-weight:600;vertical-align:middle;">${esc(currentPlan.name)}</span>` : '';
+
+  const card = (icon, title, done, countHtml, linkLabel, nav) => `
+    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:9px;padding:10px 16px;background:#EFF4FF;border-bottom:1px solid rgba(47,93,217,.12);">
+        <span style="color:#2F5DD9;flex-shrink:0;display:flex;">${iconSvg(icon, 14)}</span>
+        <span style="font-size:13px;font-weight:700;color:#0F1222;flex:1;">${title}</span>
+        ${done ? `<span style="width:18px;height:18px;border-radius:50%;background:#E3F6EB;color:#22C55E;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconSvg('check', 11)}</span>` : ''}
+      </div>
+      <div style="padding:14px 16px 16px;flex:1;display:flex;flex-direction:column;">
+        <div style="font-size:26px;font-weight:700;color:#0F1222;letter-spacing:-0.02em;margin-bottom:6px;line-height:1;">${countHtml}</div>
+        <a href="#" data-nav="${nav}" style="margin-top:auto;font-size:12.5px;font-weight:600;color:#2F5DD9;text-decoration:none;">${linkLabel} →</a>
+      </div>
+    </div>`;
+
+  const upgradeBannerHtml = (state.account.plan === 'basis') ? `
+    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:9px;padding:10px 16px;background:#EFF4FF;border-bottom:1px solid rgba(47,93,217,.12);">
+        <span style="font-size:13px;font-weight:700;color:#0F1222;">Haal meer uit AfterFile</span>
+      </div>
+      <div style="padding:12px 16px 14px;">
+        <p style="font-size:13px;color:#7A8BB5;margin:0 0 12px;line-height:1.5;">Upgrade naar Compleet voor onbeperkt bezittingen, een volledig Legacy Report en meer vertrouwde contacten.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${PLANS.filter(p => p.launchEligible).map(p => `
+            <button type="button" style="padding:7px 16px;border-radius:7px;border:none;background:${p.featured ? '#2F5DD9' : 'rgba(47,93,217,.1)'};color:${p.featured ? '#fff' : '#2F5DD9'};font-size:13px;font-weight:600;cursor:pointer;" data-action="upgrade-plan" data-plan="${p.key}" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig…' : `Naar ${esc(p.name)} (${esc(p.price)}${esc(p.period)})`}</button>
+          `).join('')}
+        </div>
+      </div>
+    </div>` : '';
+
+  const r30 = 2 * Math.PI * 30;
+  const completionCardHtml = showCompletionCard ? `
+    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 20px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;color:#0F1222;margin-bottom:4px;">${heading}</div>
+          <div style="font-size:12.5px;color:#7A8BB5;">${esc(completionMsg)}</div>
+          ${todo.length ? `<div style="margin-top:8px;">${todo.map(t => `<a href="#" data-nav="${t.nav}" style="display:block;font-size:12.5px;font-weight:600;color:#2F5DD9;text-decoration:none;margin-bottom:3px;">${esc(t.label)} →</a>`).join('')}</div>` : ''}
+        </div>
+        <div style="position:relative;width:68px;height:68px;flex-shrink:0;">
+          <svg width="68" height="68" style="transform:rotate(-90deg);display:block;">
+            <circle cx="34" cy="34" r="30" stroke="#EEF2FF" stroke-width="7" fill="none"></circle>
+            <circle cx="34" cy="34" r="30" stroke="#2F5DD9" stroke-width="7" fill="none"
+              stroke-dasharray="${r30.toFixed(1)}" stroke-dashoffset="${(r30*(1-pct/100)).toFixed(1)}" stroke-linecap="round"></circle>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F1222;">${pct}%</div>
+        </div>
+      </div>
+    </div>` : '';
 
   return `
-    ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}`, sub: `Dit is hoe je plan er vandaag voor staat.${planBadge}` })}
-
+    ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}.`, sub: `Zo staat je plan er vandaag voor.${planBadge}` })}
     ${upgradeBannerHtml}
-
-    ${changePlanBannerHtml}
-
     ${completionCardHtml}
-
-
-
-
-    <div class="dash-grid">
-      <div class="dash-card">
-        <div class="dash-card-top">
-          <div class="dash-card-title"><span class="card-icon">${iconSvg('info', 17)}</span><h3>Mijn gegevens</h3></div>
-          <span class="check ${infoComplete ? 'done' : ''}">${infoComplete ? iconSvg('check', 12) : ''}</span>
-        </div>
-        <div class="count" style="font-size:18px;">${infoComplete ? 'Volledig' : 'Nog niet volledig'}</div>
-        <a class="card-link" href="#" data-nav="gegevens">${infoComplete ? 'Gegevens bewerken →' : 'Gegevens invullen →'}</a>
-      </div>
-      <div class="dash-card">
-        <div class="dash-card-top">
-          <div class="dash-card-title"><span class="card-icon">${iconSvg('folder', 17)}</span><h3>Digitale bezittingen</h3></div>
-          <span class="check ${a > 0 ? 'done' : ''}">${a > 0 ? iconSvg('check', 12) : ''}</span>
-        </div>
-        <div class="count">${a} <span class="unit">toegevoegd</span></div>
-        <a class="card-link" href="#" data-nav="assets">Bezitting toevoegen →</a>
-      </div>
-      <div class="dash-card">
-        <div class="dash-card-top">
-          <div class="dash-card-title"><span class="card-icon">${iconSvg('users', 17)}</span><h3>Vertrouwde contacten</h3></div>
-          <span class="check ${c > 0 ? 'done' : ''}">${c > 0 ? iconSvg('check', 12) : ''}</span>
-        </div>
-        <div class="count">${c} <span class="unit">toegevoegd</span></div>
-        <a class="card-link" href="#" data-nav="contacts">Contact toevoegen →</a>
-      </div>
-
+    <div class="dash-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+      ${card('info',  'Mijn gegevens',       infoComplete, infoComplete ? 'Volledig' : '<span style="font-size:14px;font-weight:600;color:#C0CCDF;">Niet ingevuld</span>', infoComplete ? 'Gegevens bewerken' : 'Gegevens invullen', 'gegevens')}
+      ${card('folder','Bezittingen',         a > 0, `${a}<span style="font-size:13px;font-weight:500;color:#9AAAC8;margin-left:5px;">toegevoegd</span>`, 'Bezitting toevoegen', 'assets')}
+      ${card('users', 'Vertrouwde contacten',c > 0, `${c}<span style="font-size:13px;font-weight:500;color:#9AAAC8;margin-left:5px;">toegevoegd</span>`, 'Contact toevoegen',   'contacts')}
     </div>
   `;
 }
