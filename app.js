@@ -663,6 +663,27 @@ function esc(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function formatDate(d) { return d.toLocaleDateString('nl-NL', { year: 'numeric', month: 'long', day: 'numeric' }); }
+function flashToast(msg, durationMs) {
+  durationMs = durationMs || 3000;
+  let t = document.getElementById('af-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'af-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:#0F1222;color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.22);z-index:9999;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  clearTimeout(t._timer);
+  // show
+  requestAnimationFrame(() => {
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  t._timer = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(8px)';
+  }, durationMs);
+}
 function findType(categoryKey, typeKey) {
   const cat = ASSET_CATEGORIES.find(c => c.key === categoryKey);
   return cat ? cat.types.find(t => t.key === typeKey) : null;
@@ -1671,40 +1692,51 @@ function renderPersonalInfo() {
   const p = state.personalInfo || {};
   const complete = personalInfoComplete();
   return `
+    <style>
+      .pi-field{margin-bottom:12px;}
+      .pi-field label{display:block;font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+      .pi-field input{width:100%;padding:6px 10px;font-size:13px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;box-sizing:border-box;font-family:inherit;}
+      .pi-field input:focus{border-color:#2F5DD9;box-shadow:0 0 0 2px rgba(47,93,217,.14);}
+      .pi-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+      @media(max-width:480px){.pi-row{grid-template-columns:1fr;}}
+    </style>
     ${pageHeader({ kicker: 'Mijn gegevens', title: 'Leg je persoonsgegevens vast.', sub: 'We gebruiken dit om jouw plan aan jou te koppelen en op te nemen in je Legacy Report.' })}
-    ${!complete ? `<div class="info-banner">${iconSvg('info', 16)}<span>Vul je gegevens hieronder volledig in, dit is nodig voordat je een bezitting kunt toevoegen.</span></div>` : ''}
-    <div class="inline-form-card">
-      <div class="form-title">Persoonlijke gegevens</div>
+    ${!complete ? `
+      <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(47,93,217,.07);border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:#2F5DD9;">
+        <span style="flex-shrink:0;margin-top:1px;">${iconSvg('info', 15)}</span><span>Vul je gegevens hieronder volledig in, dit is nodig voordat je een bezitting kunt toevoegen.</span>
+      </div>` : ''}
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:20px 22px;">
+      <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;">Persoonlijke gegevens</div>
       <form id="personal-info-form">
-        <div class="field-row">
-          <div class="field">
+        <div class="pi-row">
+          <div class="pi-field">
             <label for="pi-fullname">Volledige naam</label>
             <input id="pi-fullname" name="fullName" type="text" placeholder="bijv. Sven Bakker" value="${esc(p.fullName)}" required autofocus>
           </div>
-          <div class="field">
+          <div class="pi-field">
             <label for="pi-birthdate">Geboortedatum</label>
             <input id="pi-birthdate" name="birthDate" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4}" value="${esc(toNlDate(p.birthDate))}" required>
           </div>
         </div>
-        <div class="field">
+        <div class="pi-field">
           <label for="pi-street">Straat en huisnummer</label>
           <input id="pi-street" name="street" type="text" placeholder="bijv. Hoofdstraat 12" value="${esc(p.street)}" required>
         </div>
-        <div class="field-row">
-          <div class="field">
+        <div class="pi-row">
+          <div class="pi-field">
             <label for="pi-postal">Postcode</label>
             <input id="pi-postal" name="postalCode" type="text" placeholder="bijv. 1234 AB" value="${esc(p.postalCode)}" required>
           </div>
-          <div class="field">
+          <div class="pi-field">
             <label for="pi-city">Woonplaats</label>
             <input id="pi-city" name="city" type="text" placeholder="bijv. Amsterdam" value="${esc(p.city)}" required>
           </div>
         </div>
-        <div class="field">
+        <div class="pi-field">
           <label for="pi-phone">Telefoonnummer</label>
           <input id="pi-phone" name="phone" type="tel" placeholder="bijv. 06 12345678" value="${esc(p.phone)}" required>
         </div>
-        <div class="form-actions">
+        <div style="margin-top:18px;">
           <button type="submit" class="btn btn-primary">Gegevens opslaan</button>
         </div>
       </form>
