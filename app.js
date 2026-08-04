@@ -1803,35 +1803,29 @@ function renderAssets() {
   if (adding) {
     const cat = ASSET_CATEGORIES.find(c => c.key === adding.categoryKey);
     const type = findType(adding.categoryKey, adding.typeKey);
-    const extraFieldsHtml = (type.extraFields || []).map(ef => `
-          <div class="field">
-            <label for="as-${ef.key}">${esc(ef.label)} <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-            <input id="as-${ef.key}" name="${ef.key}" type="${ef.type || 'text'}" placeholder="${esc(ef.placeholder || '')}" value="${esc((ui.draftAsset[ef.key] || ''))}">
-          </div>`).join('');
+    const vf = (id, label, name, type2, placeholder, value, required = false) =>
+      `<div class="vf">
+        <label for="${id}">${label}${required ? '' : '<span class="vf-opt">(optioneel)</span>'}</label>
+        <input id="${id}" name="${name}" type="${type2}" placeholder="${placeholder}" value="${esc(value)}"${required ? ' required autofocus' : ''}>
+      </div>`;
+    const extraFieldsHtml = (type.extraFields || []).map(ef =>
+      vf(`as-${ef.key}`, esc(ef.label), ef.key, ef.type || 'text', esc(ef.placeholder || ''), ui.draftAsset[ef.key] || '')).join('');
     formHtml = `
-      <div class="inline-form-card">
-        <div class="form-title"><span class="badge-pill">${esc(cat.label)}</span> ${iconSvg(type.icon, 16)} ${esc(type.label)}</div>
-        <form id="asset-form">
-          <div class="field">
-            <label for="as-name">Naam</label>
-            <input id="as-name" name="name" type="text" placeholder="${esc(type.namePlaceholder || 'bijv. naam van deze bezitting')}" value="${esc(ui.draftAsset.name || '')}" required autofocus>
-          </div>
+      <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);">
+        <div style="display:flex;align-items:center;gap:9px;padding:10px 16px;background:#EFF4FF;border-bottom:1px solid rgba(47,93,217,.12);">
+          <span style="color:#2F5DD9;flex-shrink:0;display:flex;">${iconSvg(type.icon, 14)}</span>
+          <span style="font-size:13px;font-weight:700;color:#0F1222;flex:1;">${esc(type.label)}</span>
+          <span style="font-size:10.5px;font-weight:600;color:#6B83C9;">${esc(cat.label)}</span>
+        </div>
+        <form id="asset-form" style="padding:14px 16px 16px;">
+          ${vf('as-name', 'Naam', 'name', 'text', esc(type.namePlaceholder || 'bijv. naam van deze bezitting'), ui.draftAsset.name || '', true)}
           ${extraFieldsHtml}
-          <div class="field">
-            <label for="as-description">Beschrijving <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-            <input id="as-description" name="description" type="text" placeholder="Een korte notitie over deze bezitting" value="${esc(ui.draftAsset.description || '')}">
-          </div>
-          <div class="field">
-            <label for="as-location">Locatie <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-            <input id="as-location" name="location" type="text" placeholder="Waar het te vinden is" value="${esc(ui.draftAsset.location || '')}">
-          </div>
-          <div class="field">
-            <label for="as-notes">Notities <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-            <input id="as-notes" name="notes" type="text" placeholder="Iets anders dat het weten waard is" value="${esc(ui.draftAsset.notes || '')}">
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">${ui.editingAssetId ? 'Wijzigingen opslaan' : 'Bezitting opslaan'}</button>
-            <button type="button" class="btn btn-ghost" data-action="cancel-asset">Annuleren</button>
+          ${vf('as-description', 'Beschrijving', 'description', 'text', 'Een korte notitie', ui.draftAsset.description || '')}
+          ${vf('as-location', 'Locatie', 'location', 'text', 'Waar het te vinden is', ui.draftAsset.location || '')}
+          ${vf('as-notes', 'Notities', 'notes', 'text', 'Overige opmerkingen', ui.draftAsset.notes || '')}
+          <div style="display:flex;gap:8px;margin-top:14px;">
+            <button type="submit" style="padding:7px 16px;border-radius:7px;border:none;background:#2F5DD9;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">${ui.editingAssetId ? 'Wijzigingen opslaan' : 'Bezitting opslaan'}</button>
+            <button type="button" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(47,93,217,.22);background:transparent;color:#7A8BB5;font-size:13px;font-weight:600;cursor:pointer;" data-action="cancel-asset">Annuleren</button>
           </div>
         </form>
       </div>
@@ -1925,6 +1919,11 @@ function renderAssets() {
         .vlb:hover{border-color:rgba(220,38,38,.3);color:#DC2626;background:rgba(220,38,38,.05)}
         .vsd{animation:vp 2.2s infinite}
         .add-type-row:hover{background:#F5F8FF;}
+        .vf{margin-bottom:10px;}
+        .vf label{display:block;font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+        .vf input{width:100%;padding:6px 10px;font-size:13px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;box-sizing:border-box;font-family:inherit;}
+        .vf input:focus{border-color:#2F5DD9;box-shadow:0 0 0 2px rgba(47,93,217,.14);}
+        .vf-opt{font-size:10px;font-weight:400;color:#B0BCDA;text-transform:none;letter-spacing:0;margin-left:4px;}
       </style>
       <div class="va" style="border:2.5px solid transparent;border-radius:16px;padding:32px 32px 40px;background:linear-gradient(#FAFBFF,#F6F9FF) padding-box,linear-gradient(135deg,rgba(210,228,255,.97) 0%,rgba(47,93,217,.85) 14%,rgba(238,246,255,1) 29%,rgba(80,130,240,.38) 50%,rgba(225,238,255,.92) 68%,rgba(47,93,217,.75) 84%,rgba(200,222,255,.96) 100%) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 28px rgba(15,25,70,.09);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
