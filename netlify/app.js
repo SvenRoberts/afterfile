@@ -556,7 +556,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1819,23 +1819,35 @@ function renderAssets() {
     `;
   }
 
-  const typeGroups = ASSET_CATEGORIES.map(cat => `
-    <div class="type-group">
-      <h3>${esc(cat.label)}</h3>
-      <div class="type-tiles">
-        ${cat.types.map(t => `
-          <button type="button" class="type-tile ${adding && adding.categoryKey === cat.key && adding.typeKey === t.key ? 'selected' : ''}"
-            data-action="pick-asset-type" data-category="${cat.key}" data-type="${t.key}">
-            <span class="tile-icon">${iconSvg(t.icon, 18)}</span>${esc(t.label)}
-          </button>
-        `).join('')}
+  const catIconMap = { financial: 'bank', digital: 'globe', other: 'folder' };
+  const catPickerHtml = ASSET_CATEGORIES.map(cat => {
+    const isOpen = ui.addingCatOpen === cat.key;
+    return `
+      <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;margin-bottom:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);">
+        <div data-action="toggle-add-cat" data-cat="${cat.key}"
+          style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;background:${isOpen ? '#E6EEFF' : '#EFF4FF'};">
+          <span style="color:#2F5DD9;flex-shrink:0;display:flex;">${iconSvg(catIconMap[cat.key] || 'folder', 15)}</span>
+          <span style="flex:1;font-size:13.5px;font-weight:700;color:#0F1222;">${esc(cat.label)}</span>
+          <span style="color:#7A8BB5;flex-shrink:0;display:flex;align-items:center;transform:${isOpen ? 'rotate(90deg)' : 'none'};transition:transform .2s;">${iconSvg('chevron-right', 12)}</span>
+        </div>
+        ${isOpen ? `
+          <div style="border-top:1px solid rgba(47,93,217,.12);background:#fff;">
+            ${cat.types.map(t => `
+              <div data-action="pick-asset-type" data-category="${cat.key}" data-type="${t.key}" class="add-type-row"
+                style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-top:1px solid #EEF2FF;">
+                <span style="color:#2F5DD9;opacity:.75;flex-shrink:0;display:flex;">${iconSvg(t.icon, 14)}</span>
+                <span style="flex:1;font-size:13.5px;font-weight:600;color:#0F1222;">${esc(t.label)}</span>
+                <span style="color:#C5CFEA;flex-shrink:0;display:flex;">${iconSvg('chevron-right', 11)}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const hasAny = state.assets.length > 0;
 
-  const catIconMap = { financial: 'bank', digital: 'globe', other: 'folder' };
   const listHtml = ASSET_CATEGORIES.map(cat => {
     const items = state.assets.filter(a => a.categoryKey === cat.key);
     if (!items.length) return '';
@@ -1891,10 +1903,11 @@ function renderAssets() {
         .vlb{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:1px solid var(--color-border);background:transparent;color:var(--color-text-muted);font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
         .vlb:hover{border-color:rgba(220,38,38,.3);color:#DC2626;background:rgba(220,38,38,.05)}
         .vsd{animation:vp 2.2s infinite}
+        .add-type-row:hover{background:#F5F8FF;}
       </style>
       <div class="va" style="border:2.5px solid transparent;border-radius:16px;padding:32px 32px 40px;background:linear-gradient(#FAFBFF,#F6F9FF) padding-box,linear-gradient(135deg,rgba(210,228,255,.97) 0%,rgba(47,93,217,.85) 14%,rgba(238,246,255,1) 29%,rgba(80,130,240,.38) 50%,rgba(225,238,255,.92) 68%,rgba(47,93,217,.75) 84%,rgba(200,222,255,.96) 100%) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 28px rgba(15,25,70,.09);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-          <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: ui.addingAsset ? (ui.editingAssetId ? 'Bezitting bewerken.' : 'Bezitting toevoegen.') : 'Jouw bezittingen.', sub: '' })}</div>
+          <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: (ui.addingAsset || ui.addingAssetType) ? (ui.editingAssetId ? 'Bezitting bewerken.' : 'Bezitting toevoegen.') : 'Jouw bezittingen.', sub: '' })}</div>
           ${showDial ? `<div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;pointer-events:none;user-select:none;">${vaultDialSvg()}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
@@ -1907,13 +1920,15 @@ function renderAssets() {
 
   if (hasAny) {
     if (ui.addingAsset) {
-      // Toevoeg/bewerk-scherm: ALLEEN picker + form, geen lijst
+      if (ui.addingAssetType) {
+        return vaShell(`
+          <button type="button" class="btn btn-ghost btn-sm" data-action="cancel-asset" style="margin-bottom:20px;">← Terug naar categorieën</button>
+          ${formHtml}
+        `);
+      }
       return vaShell(`
         <button type="button" class="btn btn-ghost btn-sm" data-action="cancel-asset" style="margin-bottom:20px;">← Terug naar overzicht</button>
-        <div class="asset-picker-panel">
-          ${typeGroups}
-          ${formHtml}
-        </div>
+        ${catPickerHtml}
       `);
     }
     // Overzichtsscherm: lijst + knoppen
@@ -1925,11 +1940,18 @@ function renderAssets() {
         </div>
     `);
   } else {
-    // Nog geen bezittingen — toon type-picker direct
-    return vaShell(`
+    if (ui.addingAssetType) {
+      return vaShell(`
+        <button type="button" class="btn btn-ghost btn-sm" data-action="cancel-asset" style="margin-bottom:20px;">← Terug naar categorieën</button>
         ${formHtml}
-        ${typeGroups}
-        <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;">
+          <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+        </div>
+      `);
+    }
+    return vaShell(`
+        ${catPickerHtml}
+        <div class="empty-state">Nog geen bezittingen. Kies een categorie om je eerste toe te voegen.</div>
         <div style="margin-top:24px;display:flex;justify-content:flex-end;">
           <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
         </div>
@@ -2728,18 +2750,25 @@ function wireEvents() {
     btn.addEventListener('click', () => {
       const categoryKey = btn.getAttribute('data-category');
       const typeKey = btn.getAttribute('data-type');
-      if (ui.addingAssetType && ui.addingAssetType.categoryKey === categoryKey && ui.addingAssetType.typeKey === typeKey) {
-        ui.addingAssetType = null;
-      } else {
-        ui.addingAssetType = { categoryKey, typeKey };
-      }
+      ui.addingAssetType = { categoryKey, typeKey };
       render();
       setTimeout(() => { const el = document.getElementById('as-name'); if (el) el.focus(); }, 0);
     });
   });
 
   const cancelAssetBtn = document.querySelector('[data-action="cancel-asset"]');
-  if (cancelAssetBtn) cancelAssetBtn.addEventListener('click', () => { ui.addingAssetType = null; ui.addingAsset = false; ui.editingAssetId = null; ui.draftAsset = {}; render(); });
+  if (cancelAssetBtn) cancelAssetBtn.addEventListener('click', () => {
+    if (ui.addingAssetType && !ui.editingAssetId) {
+      ui.addingAssetType = null;
+    } else {
+      ui.addingAssetType = null;
+      ui.addingAsset = false;
+      ui.editingAssetId = null;
+      ui.draftAsset = {};
+      ui.addingCatOpen = null;
+    }
+    render();
+  });
 
   const openAssetPickerBtn = document.querySelector('[data-action="open-asset-picker"]');
   if (openAssetPickerBtn) openAssetPickerBtn.addEventListener('click', () => { ui.addingAsset = true; render(); });
@@ -2823,6 +2852,14 @@ function wireEvents() {
       if (ui.vaultOpenAsset === id) ui.vaultOpenAsset = null;
       syncCurrentSignupRecord();
       saveLocalDemoState();
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="toggle-add-cat"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      ui.addingCatOpen = ui.addingCatOpen === cat ? null : cat;
       render();
     });
   });
