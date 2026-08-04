@@ -1635,21 +1635,15 @@ function renderDashboard() {
       </div>
     </div>` : '';
 
-  // Status-pill helper
-  const pill = (done, doneLabel, todoLabel) => done
-    ? `<span style="font-size:10.5px;font-weight:700;color:#1A9B5B;background:rgba(26,155,91,.1);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;">${doneLabel}</span>`
-    : `<span style="font-size:10.5px;font-weight:700;color:#4B6FD4;background:rgba(47,93,217,.1);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;">${todoLabel}</span>`;
-
-  // Rij-helper (klikbaar als <a>)
-  const row = (icon, title, sub, done, nav, doneLabel, todoLabel, last = false) => `
-    <a href="#" data-nav="${nav}" style="display:flex;align-items:center;padding:12px 16px;gap:12px;text-decoration:none;${last ? '' : 'border-bottom:1px solid rgba(47,93,217,.1);'}background:#fff;">
+  // Rij-helper — rechts altijd een actieknop, nooit statustekst
+  const row = (icon, title, sub, nav, actionLabel, last = false) => `
+    <a href="#" data-nav="${nav}" style="display:flex;align-items:center;padding:13px 16px;gap:12px;text-decoration:none;${last ? '' : 'border-bottom:1px solid rgba(47,93,217,.12);'}background:#fff;">
       <span style="color:#2F5DD9;display:flex;flex-shrink:0;">${iconSvg(icon, 15)}</span>
       <span style="flex:1;min-width:0;">
         <span style="display:block;font-size:13px;font-weight:600;color:#0F1222;">${title}</span>
         <span style="display:block;font-size:11px;color:#9AAAC8;margin-top:1px;">${sub}</span>
       </span>
-      ${pill(done, doneLabel, todoLabel)}
-      <span style="color:#C0CCDF;display:flex;flex-shrink:0;">${iconSvg('chevron-right', 11)}</span>
+      <span style="font-size:11.5px;font-weight:600;color:#2F5DD9;white-space:nowrap;flex-shrink:0;">${actionLabel} →</span>
     </a>`;
 
   const gegevensSubtitle = infoComplete ? 'Persoonsgegevens ingevuld' : 'Nog niet ingevuld';
@@ -1660,10 +1654,12 @@ function renderDashboard() {
     ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}.`, sub: `Zo staat je plan er vandaag voor.${planBadge}` })}
     ${upgradeBannerHtml}
     ${progressHtml}
-    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;margin-bottom:28px;">
-      ${row('info',   'Mijn gegevens',        gegevensSubtitle, infoComplete, 'gegevens', 'Volledig',   'Aanvullen')}
-      ${row('folder', 'Bezittingen',          assetsSubtitle,   a > 0,        'assets',   'Toegevoegd', 'Toevoegen')}
-      ${row('users',  'Vertrouwde contacten', contactsSubtitle, c > 0,        'contacts', 'Toegevoegd', 'Toevoegen', true)}
+    <div style="background:#EFF4FF;border-radius:10px;padding:12px;margin-bottom:28px;">
+      <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;">
+        ${row('info',   'Mijn gegevens',        gegevensSubtitle, 'gegevens', 'Aanpassen')}
+        ${row('folder', 'Bezittingen',          assetsSubtitle,   'assets',   'Toevoegen')}
+        ${row('users',  'Vertrouwde contacten', contactsSubtitle, 'contacts', 'Toevoegen', true)}
+      </div>
     </div>
   `;
 }
