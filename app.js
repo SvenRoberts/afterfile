@@ -1841,34 +1841,39 @@ function renderAssets() {
     if (!items.length) return '';
     const catOpen = (ui.vaultOpenCats || {})[cat.key] !== false;
     return `
-      <div class="vault-cat${catOpen ? ' open' : ''}">
-        <div class="vault-cat-hdr" data-action="toggle-vault-cat" data-cat="${cat.key}">
-          ${iconSvg(catIconMap[cat.key] || 'folder', 15)}
-          <span class="vault-cat-label">${esc(cat.label)}</span>
-          <span class="vault-cat-count">${items.length}</span>
-          <span class="vault-cat-chevron">${iconSvg('chevron-right', 12)}</span>
+      <div class="vault-cat${catOpen ? ' open' : ''}" style="border-radius:8px;border:1px solid rgba(47,93,217,.22);margin-bottom:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);">
+        <div class="vault-cat-hdr" data-action="toggle-vault-cat" data-cat="${cat.key}"
+          style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;background:#EFF4FF;border-radius:0;">
+          <span style="color:#2F5DD9;flex-shrink:0;display:flex;">${iconSvg(catIconMap[cat.key] || 'folder', 15)}</span>
+          <span style="flex:1;font-size:13.5px;font-weight:700;color:#0F1222;">${esc(cat.label)}</span>
+          <span style="font-size:11px;font-weight:700;color:#2F5DD9;background:rgba(47,93,217,.13);padding:2px 8px;border-radius:99px;">${items.length}</span>
+          <span style="color:#7A8BB5;flex-shrink:0;display:flex;align-items:center;transition:transform .2s;" class="vault-cat-chevron">${iconSvg('chevron-right', 12)}</span>
         </div>
-        ${catOpen ? `<div class="vault-cat-body">
+        ${catOpen ? `<div style="border-top:1px solid rgba(47,93,217,.12);background:#fff;">
           ${items.map(a => {
             const type = findType(a.categoryKey, a.typeKey);
             const assetOpen = ui.vaultOpenAsset === a.id;
             const detailRows = [
               ...(type?.extraFields || []).filter(ef => (a.extra || {})[ef.key]).map(ef =>
-                `<div class="vault-detail-row"><span class="vault-detail-lbl">${esc(ef.label)}</span><span class="vault-detail-val">${ef.type === 'password' ? '••••••••' : esc(a.extra[ef.key])}</span></div>`),
-              a.description ? `<div class="vault-detail-row"><span class="vault-detail-lbl">Beschrijving</span><span class="vault-detail-val">${esc(a.description)}</span></div>` : '',
-              a.location    ? `<div class="vault-detail-row"><span class="vault-detail-lbl">Locatie</span><span class="vault-detail-val">${esc(a.location)}</span></div>` : '',
-              a.notes       ? `<div class="vault-detail-row"><span class="vault-detail-lbl">Notities</span><span class="vault-detail-val">${esc(a.notes)}</span></div>` : '',
+                `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;">
+                  <span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">${esc(ef.label)}</span>
+                  <span style="color:#0F1222;word-break:break-all;">${ef.type === 'password' ? '••••••••' : esc(a.extra[ef.key])}</span>
+                </div>`),
+              a.description ? `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;"><span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">Beschrijving</span><span style="color:#0F1222;">${esc(a.description)}</span></div>` : '',
+              a.location    ? `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;"><span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">Locatie</span><span style="color:#0F1222;">${esc(a.location)}</span></div>` : '',
+              a.notes       ? `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;"><span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">Notities</span><span style="color:#0F1222;">${esc(a.notes)}</span></div>` : '',
             ].filter(Boolean);
             return `
-              <div class="vault-asset-row${assetOpen ? ' open' : ''}" data-action="toggle-vault-asset" data-id="${a.id}">
-                ${iconSvg(type?.icon || 'folder', 14)}
-                <span class="vault-asset-name">${esc(a.name)}</span>
-                <span class="vault-asset-type">${esc(a.typeLabel)}</span>
-                <span class="vault-asset-chevron">${iconSvg('chevron-right', 11)}</span>
+              <div class="vault-asset-row${assetOpen ? ' open' : ''}" data-action="toggle-vault-asset" data-id="${a.id}"
+                style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;background:${assetOpen ? '#EEF3FF' : 'transparent'};border-top:1px solid #EEF2FF;">
+                <span style="color:#2F5DD9;opacity:.75;flex-shrink:0;display:flex;">${iconSvg(type?.icon || 'folder', 14)}</span>
+                <span style="flex:1;font-size:13.5px;font-weight:600;color:#0F1222;">${esc(a.name)}</span>
+                <span style="font-size:11.5px;color:#7A8BB5;white-space:nowrap;">${esc(a.typeLabel)}</span>
+                <span style="color:${assetOpen ? '#2F5DD9' : '#B0BCDA'};flex-shrink:0;display:flex;align-items:center;transform:${assetOpen ? 'rotate(90deg)' : 'none'};transition:transform .2s;">${iconSvg('chevron-right', 11)}</span>
               </div>
-              ${assetOpen ? `<div class="vault-asset-detail">
-                ${detailRows.length ? detailRows.join('') : '<p style="font-size:13px;color:var(--color-text-muted);margin:0 0 8px;">Geen extra details opgeslagen.</p>'}
-                <div class="vault-detail-actions">
+              ${assetOpen ? `<div style="padding:14px 16px 16px;background:#F8FAFF;border-top:1px solid rgba(47,93,217,.1);">
+                ${detailRows.length ? detailRows.join('') : '<p style="font-size:13px;color:#7A8BB5;margin:0 0 8px;">Geen extra details opgeslagen.</p>'}
+                <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #EEF2FF;">
                   <button class="btn-ghost btn-sm" data-action="edit-asset" data-id="${a.id}">Bewerken</button>
                   <button class="btn-danger-ghost" data-action="delete-asset" data-id="${a.id}">Verwijderen</button>
                 </div>
