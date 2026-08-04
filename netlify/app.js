@@ -1637,7 +1637,7 @@ function renderDashboard() {
 
   // Kaart-helper — drie losse klikbare kaarten naast elkaar
   const card = (icon, title, sub, nav, actionLabel) => `
-    <a href="#" data-nav="${nav}" style="display:flex;flex-direction:column;padding:16px;gap:10px;text-decoration:none;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;">
+    <a href="#" data-nav="${nav}" class="lift" style="display:flex;flex-direction:column;padding:16px;gap:10px;text-decoration:none;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;">
       <span style="color:#2F5DD9;display:flex;">${iconSvg(icon, 16)}</span>
       <span style="flex:1;">
         <span style="display:block;font-size:15px;font-weight:600;color:#0F1222;">${title}</span>
