@@ -12,6 +12,11 @@ if not exist ".git" (
 
 git checkout main 2>nul
 
+REM Verwijder eventuele achtergebleven lockbestanden
+if exist ".git\index.lock"           del /f /q ".git\index.lock"
+if exist ".git\HEAD.lock"            del /f /q ".git\HEAD.lock"
+if exist ".git\objects\maintenance.lock" del /f /q ".git\objects\maintenance.lock"
+
 REM Tijdstempel voor commit
 for /f "tokens=1-3 delims=/ " %%a in ("%date%") do set DAG=%%a&set MAAND=%%b&set JAAR=%%c
 for /f "tokens=1-2 delims=:." %%a in ("%time%") do set UUR=%%a&set MIN=%%b

@@ -1723,7 +1723,7 @@ function vaultDialSvg(open = true) {
   const shackle = open
     ? 'M19,28 L19,22 Q19,12 28,12 Q37,12 37,22 L37,13'
     : 'M19,28 L19,22 Q19,12 28,12 Q37,12 37,22 L37,28';
-  return `<svg width="72" height="72" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
+  return `<svg width="52" height="52" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="pointer-events:none;display:block;">
 <circle cx="28" cy="28" r="28" fill="#2F5DD9"/>
 <path d="${shackle}" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="3.5" stroke-linecap="round"/>
 <rect x="15" y="26" width="26" height="18" rx="5" fill="rgba(255,255,255,.95)"/>
