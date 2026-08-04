@@ -3031,6 +3031,10 @@ function wireEvents() {
   document.querySelectorAll('[data-action="delete-contact"]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-id');
+      const contact = state.contacts.find(c => c.id === id);
+      const name = contact ? contact.name : 'deze contactpersoon';
+      const confirmed = confirm(`Weet je zeker dat je ${name} wilt verwijderen?`);
+      if (!confirmed) return;
       const { error } = await supabase.from('contacts').delete().eq('id', id);
       if (error) { flashToast('Verwijderen is niet gelukt, probeer het opnieuw.'); return; }
       state.contacts = state.contacts.filter(c => c.id !== id);
