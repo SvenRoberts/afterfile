@@ -1885,61 +1885,55 @@ function renderAssets() {
     `;
   }).join('');
 
-  if (hasAny) {
-    // Assets exist: show list first, add-panel behind a toggle button
-    const pickerHtml = ui.addingAsset ? `
-      <div class="asset-picker-panel">
-        ${typeGroups}
-        ${formHtml}
-        ${!adding ? `<div style="margin-top:8px;"><button type="button" class="btn btn-ghost btn-sm" data-action="cancel-asset">Sluiten</button></div>` : ''}
-      </div>
-    ` : '';
-    return `
+  const vaShell = (content, showDial = true) => `
       <style>
         @keyframes vp{0%{box-shadow:0 0 0 0 rgba(47,93,217,.4)}70%{box-shadow:0 0 0 6px rgba(47,93,217,0)}100%{box-shadow:0 0 0 0 rgba(47,93,217,0)}}
-        .va .item-card{border-left:3px solid rgba(47,93,217,.3)!important}
         .vlb{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:1px solid var(--color-border);background:transparent;color:var(--color-text-muted);font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
         .vlb:hover{border-color:rgba(220,38,38,.3);color:#DC2626;background:rgba(220,38,38,.05)}
         .vsd{animation:vp 2.2s infinite}
       </style>
       <div class="va" style="border:2.5px solid transparent;border-radius:16px;padding:32px 32px 40px;background:linear-gradient(#FAFBFF,#F6F9FF) padding-box,linear-gradient(135deg,rgba(210,228,255,.97) 0%,rgba(47,93,217,.85) 14%,rgba(238,246,255,1) 29%,rgba(80,130,240,.38) 50%,rgba(225,238,255,.92) 68%,rgba(47,93,217,.75) 84%,rgba(200,222,255,.96) 100%) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 28px rgba(15,25,70,.09);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-          <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Jouw bezittingen.', sub: '' })}</div>
-          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;pointer-events:none;user-select:none;">${vaultDialSvg()}</div>
+          <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: ui.addingAsset ? (ui.editingAssetId ? 'Bezitting bewerken.' : 'Bezitting toevoegen.') : 'Jouw bezittingen.', sub: '' })}</div>
+          ${showDial ? `<div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;pointer-events:none;user-select:none;">${vaultDialSvg()}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
           <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
           <span>Kluis ontgrendeld</span>
         </div>
-        ${pickerHtml}
-        ${listHtml}
-        ${!ui.addingAsset ? `
-          <div style="margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <button type="button" class="btn btn-primary btn-sm" style="width:auto;" data-action="open-asset-picker">+ Bezitting toevoegen</button>
-            <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
-          </div>` : ''}
+        ${content}
       </div>
     `;
+
+  if (hasAny) {
+    if (ui.addingAsset) {
+      // Toevoeg/bewerk-scherm: ALLEEN picker + form, geen lijst
+      return vaShell(`
+        <button type="button" class="btn btn-ghost btn-sm" data-action="cancel-asset" style="margin-bottom:20px;">← Terug naar overzicht</button>
+        <div class="asset-picker-panel">
+          ${typeGroups}
+          ${formHtml}
+        </div>
+      `);
+    }
+    // Overzichtsscherm: lijst + knoppen
+    return vaShell(`
+        ${listHtml}
+        <div style="margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <button type="button" class="btn btn-primary btn-sm" style="width:auto;" data-action="open-asset-picker">+ Bezitting toevoegen</button>
+          <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
+        </div>
+    `);
   } else {
-    // No assets yet: show tile grid immediately to encourage first add
-    return `
-      <div class="va" style="border:2.5px solid transparent;border-radius:16px;padding:32px 32px 40px;background:linear-gradient(#FAFBFF,#F6F9FF) padding-box,linear-gradient(135deg,rgba(210,228,255,.97) 0%,rgba(47,93,217,.85) 14%,rgba(238,246,255,1) 29%,rgba(80,130,240,.38) 50%,rgba(225,238,255,.92) 68%,rgba(47,93,217,.75) 84%,rgba(200,222,255,.96) 100%) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 28px rgba(15,25,70,.09);">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-          <div style="flex:1;min-width:0;">${pageHeader({ kicker: 'Beveiligde kluis', title: 'Houd alles wat belangrijk is georganiseerd.', sub: 'Kies een categorie en voeg je eerste bezitting toe.' })}</div>
-          <div class="vd-dial" style="flex-shrink:0;margin-top:4px;opacity:.9;pointer-events:none;user-select:none;">${vaultDialSvg()}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:10px 16px;background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:8px;font-size:13px;font-weight:600;color:#2F5DD9;">
-          <span class="vsd" style="width:8px;height:8px;border-radius:50%;background:#2F5DD9;flex:none;display:inline-block;"></span>
-          <span>Kluis ontgrendeld</span>
-        </div>
+    // Nog geen bezittingen — toon type-picker direct
+    return vaShell(`
         ${formHtml}
         ${typeGroups}
         <div class="empty-state">Nog geen bezittingen. Kies hierboven een type om je eerste toe te voegen, het duurt minder dan 30 seconden.</div>
         <div style="margin-top:24px;display:flex;justify-content:flex-end;">
           <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
         </div>
-      </div>
-    `;
+    `);
   }
 }
 
