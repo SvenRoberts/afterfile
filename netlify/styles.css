@@ -1338,6 +1338,11 @@ footer.site-footer a:hover { color: var(--color-primary); }
   .wl-tabs { width: 100%; }
   .wl-tab { flex: 1; text-align: center; padding: 8px 8px; font-size: 13px; }
 
+  /* --- Footer --- */
+  footer.site-footer { padding: 24px 16px; }
+  .site-footer-inner { flex-direction: column; align-items: center; text-align: center; }
+  .site-footer-right { align-items: center; }
+
   /* --- Cards / forms --- */
   .asset-picker-panel { padding: 16px 16px 12px; }
   .inline-form-card { padding: 20px; }
