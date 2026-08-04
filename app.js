@@ -1865,22 +1865,24 @@ function renderAssets() {
           ${items.map(a => {
             const type = findType(a.categoryKey, a.typeKey);
             const assetOpen = ui.vaultOpenAsset === a.id;
+            const detailRow = (label, val, pw = false) =>
+              `<div style="padding:6px 0;border-bottom:1px solid #EEF2FF;">
+                <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">${label}</div>
+                <div style="font-size:13px;color:#0F1222;word-break:break-word;">${pw ? '••••••••' : val}</div>
+              </div>`;
             const detailRows = [
               ...(type?.extraFields || []).filter(ef => (a.extra || {})[ef.key]).map(ef =>
-                `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;">
-                  <span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">${esc(ef.label)}</span>
-                  <span style="color:#0F1222;word-break:break-all;">${ef.type === 'password' ? '••••••••' : esc(a.extra[ef.key])}</span>
-                </div>`),
-              a.description ? `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;"><span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">Beschrijving</span><span style="color:#0F1222;">${esc(a.description)}</span></div>` : '',
-              a.location    ? `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;"><span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">Locatie</span><span style="color:#0F1222;">${esc(a.location)}</span></div>` : '',
-              a.notes       ? `<div style="display:flex;gap:16px;padding:5px 0;font-size:13px;border-bottom:1px solid #EEF2FF;"><span style="font-weight:600;color:#7A8BB5;min-width:110px;flex-shrink:0;font-size:12px;">Notities</span><span style="color:#0F1222;">${esc(a.notes)}</span></div>` : '',
+                detailRow(esc(ef.label), esc(a.extra[ef.key]), ef.type === 'password')),
+              a.description ? detailRow('Beschrijving', esc(a.description)) : '',
+              a.location    ? detailRow('Locatie', esc(a.location)) : '',
+              a.notes       ? detailRow('Notities', esc(a.notes)) : '',
             ].filter(Boolean);
             return `
               <div class="vault-asset-row${assetOpen ? ' open' : ''}" data-action="toggle-vault-asset" data-id="${a.id}"
                 style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;background:${assetOpen ? '#EEF3FF' : 'transparent'};border-top:1px solid #EEF2FF;">
                 <span style="color:#2F5DD9;opacity:.75;flex-shrink:0;display:flex;">${iconSvg(type?.icon || 'folder', 14)}</span>
-                <span style="flex:1;font-size:13.5px;font-weight:600;color:#0F1222;">${esc(a.name)}</span>
-                <span style="font-size:11.5px;color:#7A8BB5;white-space:nowrap;">${esc(a.typeLabel)}</span>
+                <span style="flex:1;font-size:13px;font-weight:600;color:#0F1222;">${esc(a.name)}</span>
+                <span style="font-size:10.5px;font-weight:700;color:#4B6FD4;background:rgba(47,93,217,.1);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;">${esc(a.typeLabel)}</span>
                 <span style="color:${assetOpen ? '#2F5DD9' : '#B0BCDA'};flex-shrink:0;display:flex;align-items:center;transform:${assetOpen ? 'rotate(90deg)' : 'none'};transition:transform .2s;">${iconSvg('chevron-right', 11)}</span>
               </div>
               ${assetOpen ? `<div style="padding:14px 16px 16px;background:#F8FAFF;border-top:1px solid rgba(47,93,217,.1);">
