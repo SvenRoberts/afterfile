@@ -1654,7 +1654,7 @@ function renderDashboard() {
     ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}.`, sub: `Zo staat je plan er vandaag voor.${planBadge}` })}
     ${upgradeBannerHtml}
     ${progressHtml}
-    <div style="background:#EFF4FF;border-radius:10px;padding:12px 0;overflow:hidden;margin-bottom:28px;">
+    <div style="background:#EFF4FF;border-radius:10px;padding:12px;margin-bottom:28px;">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
         ${card('info',   'Mijn gegevens',        gegevensSubtitle, 'gegevens', 'Aanpassen')}
         ${card('folder', 'Bezittingen',          assetsSubtitle,   'assets',   'Toevoegen')}
