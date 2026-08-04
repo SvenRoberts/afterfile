@@ -1637,7 +1637,7 @@ function renderDashboard() {
 
   // Kaart-helper — drie losse klikbare kaarten naast elkaar
   const card = (icon, title, sub, nav, actionLabel) => `
-    <a href="#" data-nav="${nav}" class="lift" style="display:flex;flex-direction:column;padding:16px;gap:10px;text-decoration:none;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;">
+    <a href="#" data-nav="${nav}" class="dash-card" style="display:flex;flex-direction:column;padding:16px;gap:10px;text-decoration:none;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;">
       <span style="color:#2F5DD9;display:flex;">${iconSvg(icon, 16)}</span>
       <span style="flex:1;">
         <span style="display:block;font-size:15px;font-weight:600;color:#0F1222;">${title}</span>
@@ -1651,6 +1651,7 @@ function renderDashboard() {
   const contactsSubtitle = c === 0 ? 'Nog geen contacten'  : `${c} contact${c === 1 ? '' : 'en'} toegevoegd`;
 
   return `
+    <style>.dash-card{transition:box-shadow .18s ease,transform .18s ease;}.dash-card:hover{box-shadow:0 4px 16px rgba(47,93,217,.18);transform:translateY(-2px);}</style>
     ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}.`, sub: `Zo staat je plan er vandaag voor.${planBadge}` })}
     ${upgradeBannerHtml}
     ${progressHtml}

@@ -357,7 +357,8 @@ main.page { flex: 1; padding: 48px 0 96px; }
   flex-direction: column;
 }
 .plan-card h3 { margin: 0 0 14px; font-size: 18px; font-weight: 700; letter-spacing: -0.005em; }
-.plan-card:hover { box-shadow: 0 4px 16px rgba(47,93,217,.18); transform: translateY(-2px); }
+.plan-card:not(.plan-card--featured):hover { box-shadow: 0 4px 16px rgba(47,93,217,.18); transform: translateY(-2px); }
+.plan-card--featured:hover { box-shadow: 0 6px 20px rgba(47,93,217,.25); }
 .plan-card--featured {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-elevated);
