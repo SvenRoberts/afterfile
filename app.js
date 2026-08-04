@@ -1541,6 +1541,7 @@ function renderShell(content) {
     </main>
     ${renderSiteFooter()}
     ${renderContactInviteModal()}
+    ${renderDeleteContactModal()}
   `;
 }
 
@@ -1616,14 +1617,7 @@ function renderDashboard() {
     state.completedAt = null;
     if (supabase) supabase.from('profiles').update({ completed_at: null }).eq('id', state.account.id).then(() => {});
   }
-  const justCompleted = pct >= 100 && !!state.completedAt && (Date.now() - state.completedAt) < COMPLETION_CONFIRM_MS;
-  const showProgress = pct < 100 || justCompleted;
-
-  clearTimeout(completionHideTimer);
-  if (justCompleted) {
-    const remaining = COMPLETION_CONFIRM_MS - (Date.now() - state.completedAt);
-    completionHideTimer = setTimeout(() => { if (state.view === 'dashboard') render(); }, Math.max(remaining, 0) + 50);
-  }
+  const showProgress = pct < 100;
 
   const firstName = getFirstName();
   const currentPlan = PLANS.find(p => p.key === state.account.plan);
@@ -1988,6 +1982,27 @@ function renderAssets() {
 // Voorbeeld-e-mail aan een nieuw vertrouwd contact: getoond als modal direct na het
 // opslaan van een contact (zie het contact-formulier in wireEvents), zodat duidelijk is
 // wat zo'n contact te zien zou krijgen. Er wordt in deze demo geen echte e-mail verzonden.
+function renderDeleteContactModal() {
+  const id = ui.confirmDeleteContactId;
+  if (!id) return '';
+  const contact = state.contacts.find(c => c.id === id);
+  const name = contact ? esc(contact.name) : 'dit contact';
+  return `
+    <div id="delete-contact-modal" style="position:fixed;inset:0;background:rgba(15,18,34,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:#fff;border-radius:12px;border:1px solid rgba(47,93,217,.18);max-width:400px;width:100%;padding:28px 28px 24px;box-shadow:0 12px 40px rgba(15,18,34,.18);">
+        <div style="font-size:17px;font-weight:700;color:#0F1222;margin-bottom:8px;">Contact verwijderen</div>
+        <div style="font-size:14px;line-height:1.6;color:#5B6880;margin-bottom:24px;">
+          Weet je zeker dat je <strong style="color:#0F1222;">${name}</strong> wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button data-action="cancel-delete-contact" style="font-size:13px;font-weight:600;color:#5B6880;background:transparent;border:1px solid rgba(0,0,0,.12);border-radius:7px;padding:8px 18px;cursor:pointer;">Annuleren</button>
+          <button data-action="confirm-delete-contact" data-id="${id}" style="font-size:13px;font-weight:600;color:#fff;background:#DC3545;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;">Verwijderen</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderContactInviteModal() {
   const c = ui.contactInvitePreview;
   if (!c) return '';
@@ -2237,9 +2252,9 @@ function renderContacts() {
       .ct-card:hover{box-shadow:0 3px 14px rgba(47,93,217,.14);}
       .ct-badge{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:4px;background:#EFF4FF;color:#2F5DD9;border:1px solid rgba(47,93,217,.18);}
       .ct-badge-verify{background:#F5F0FF;color:#6B44C8;border-color:rgba(107,68,200,.2);}
-      .ct-btn-edit{font-size:11.5px;color:#2F5DD9;background:#EFF4FF;border:1px solid rgba(47,93,217,.22);border-radius:5px;padding:4px 10px;cursor:pointer;font-weight:500;}
+      .ct-btn-edit{font-size:11.5px;color:#2F5DD9;background:#EFF4FF;border:1px solid rgba(47,93,217,.22);border-radius:5px;padding:4px 10px;cursor:pointer;font-weight:500;width:90px;text-align:center;}
       .ct-btn-edit:hover{background:rgba(47,93,217,.15);}
-      .ct-btn-del{font-size:11.5px;color:#9AAAC8;background:transparent;border:1px solid rgba(0,0,0,.08);border-radius:5px;padding:4px 10px;cursor:pointer;}
+      .ct-btn-del{font-size:11.5px;color:#9AAAC8;background:transparent;border:1px solid rgba(0,0,0,.08);border-radius:5px;padding:4px 10px;cursor:pointer;width:90px;text-align:center;}
       .ct-btn-del:hover{color:#DC3545;border-color:rgba(220,53,69,.25);}
       .ct-add-btn{display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:13px;font-weight:600;color:#2F5DD9;background:transparent;border:1.5px solid rgba(47,93,217,.35);border-radius:7px;padding:8px 16px;cursor:pointer;width:fit-content;}
     </style>
@@ -3029,19 +3044,28 @@ function wireEvents() {
   });
 
   document.querySelectorAll('[data-action="delete-contact"]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.getAttribute('data-id');
-      const contact = state.contacts.find(c => c.id === id);
-      const name = contact ? contact.name : 'deze contactpersoon';
-      const confirmed = confirm(`Weet je zeker dat je ${name} wilt verwijderen?`);
-      if (!confirmed) return;
-      const { error } = await supabase.from('contacts').delete().eq('id', id);
-      if (error) { flashToast('Verwijderen is niet gelukt, probeer het opnieuw.'); return; }
-      state.contacts = state.contacts.filter(c => c.id !== id);
-      syncCurrentSignupRecord();
-      saveLocalDemoState();
+    btn.addEventListener('click', () => {
+      ui.confirmDeleteContactId = btn.getAttribute('data-id');
       render();
     });
+  });
+
+  const cancelDeleteBtn = document.querySelector('[data-action="cancel-delete-contact"]');
+  if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => {
+    ui.confirmDeleteContactId = null;
+    render();
+  });
+
+  const confirmDeleteBtn = document.querySelector('[data-action="confirm-delete-contact"]');
+  if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', async () => {
+    const id = confirmDeleteBtn.getAttribute('data-id');
+    ui.confirmDeleteContactId = null;
+    const { error } = await supabase.from('contacts').delete().eq('id', id);
+    if (error) { flashToast('Verwijderen is niet gelukt, probeer het opnieuw.'); return; }
+    state.contacts = state.contacts.filter(c => c.id !== id);
+    syncCurrentSignupRecord();
+    saveLocalDemoState();
+    render();
   });
 
   // Hoofdletters per woord op blur voor naamvelden
