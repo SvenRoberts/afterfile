@@ -57,6 +57,7 @@ svg { display: block; }
 }
 
 /* ---------- Buttons ---------- */
+.btn svg { display: inline; vertical-align: middle; flex: none; }
 .btn {
   display: inline-flex;
   align-items: center;

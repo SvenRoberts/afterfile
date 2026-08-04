@@ -1892,7 +1892,7 @@ function renderAssets() {
         ${listHtml}
         ${!ui.addingAsset ? `
           <div style="margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <button type="button" class="btn btn-primary" style="width:auto;" data-action="open-asset-picker">${iconSvg('plus', 16)} Bezitting toevoegen</button>
+            <button type="button" class="btn btn-primary btn-sm" style="width:auto;" data-action="open-asset-picker">${iconSvg('plus', 15)} Bezitting toevoegen</button>
             <button type="button" class="vlb" data-action="vk-lock">${iconSvg('lock', 14)} Kluis verlaten</button>
           </div>` : ''}
       </div>
@@ -2165,7 +2165,7 @@ function renderContacts() {
       ${pageHeader({ kicker: 'Vertrouwde contacten', title: 'Jouw contacten.', sub: 'Voeg de mensen toe die het zouden willen weten, een partner, kind, executeur of vriend(in).' })}
       ${ui.addingContact ? `<div class="asset-picker-panel">${formHtml}</div>` : ''}
       <div class="item-list">${listHtml}</div>
-      ${!ui.addingContact ? `<div style="margin-top:24px;"><button type="button" class="btn btn-primary" data-action="open-contact-form">${iconSvg('plus', 16)} Contact toevoegen</button></div>` : ''}
+      ${!ui.addingContact ? `<div style="margin-top:24px;"><button type="button" class="btn btn-primary btn-sm" data-action="open-contact-form">${iconSvg('plus', 15)} Contact toevoegen</button></div>` : ''}
     `;
   } else {
     return `
