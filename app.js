@@ -2243,7 +2243,7 @@ function renderContacts() {
       .ct-btn-del:hover{color:#DC3545;border-color:rgba(220,53,69,.25);}
       .ct-add-btn{display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:13px;font-weight:600;color:#2F5DD9;background:transparent;border:1.5px solid rgba(47,93,217,.35);border-radius:7px;padding:8px 16px;cursor:pointer;width:fit-content;}
     </style>
-    ${pageHeader({ kicker: 'Vertrouwde contacten', title: hasAny ? 'Jouw contacten.' : 'Kies wie geïnformeerd moet worden.', sub: 'Voeg de mensen toe die het zouden willen weten — een partner, kind, executeur of vriend(in).' })}
+    ${pageHeader({ kicker: 'Vertrouwde contacten', title: hasAny ? 'Jouw contacten.' : 'Kies wie geïnformeerd moet worden.', sub: 'Bepaal wie jouw gegevens ontvangt.' })}
     ${hasAny ? `<div style="margin-bottom:4px;">${listHtml}</div>` : ''}
     ${hasAny && !showForm ? `<button type="button" class="ct-add-btn" data-action="open-contact-form">+ Contact toevoegen</button>` : ''}
     ${showForm ? formHtml : ''}
