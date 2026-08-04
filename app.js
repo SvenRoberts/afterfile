@@ -1578,7 +1578,7 @@ function renderFaqPage() {
 
 function renderDashboard() {
   const pct = computeCompletion();
-  const a = state.assets.length, c = state.contacts.length, hasInstr = state.instructions.trim().length > 0;
+  const a = state.assets.length, c = state.contacts.length;
   const infoComplete = personalInfoComplete();
   const ASSET_TARGET = 1, CONTACT_TARGET = 1;
   const todo = [];
@@ -1586,8 +1586,7 @@ function renderDashboard() {
   if (a < ASSET_TARGET) { const n = ASSET_TARGET - a; todo.push({ label: `Voeg nog ${n} bezitting${n === 1 ? '' : 'en'} toe`, nav: 'assets' }); }
   if (c < CONTACT_TARGET) { const n = CONTACT_TARGET - c; todo.push({ label: `Voeg nog ${n} vertrouwd contact${n === 1 ? '' : 'en'} toe`, nav: 'contacts' }); }
 
-  // De voltooiingskaart is een tijdelijke bevestiging: zodra het plan voor het eerst 100% compleet
-  // is, onthouden we het moment, en laten we de kaart na een paar minuten weer verdwijnen.
+  // Completion tracking
   if (pct >= 100 && !state.completedAt) {
     state.completedAt = Date.now();
     if (supabase) supabase.from('profiles').update({ completed_at: new Date(state.completedAt).toISOString() }).eq('id', state.account.id).then(() => {});
@@ -1596,7 +1595,7 @@ function renderDashboard() {
     if (supabase) supabase.from('profiles').update({ completed_at: null }).eq('id', state.account.id).then(() => {});
   }
   const justCompleted = pct >= 100 && !!state.completedAt && (Date.now() - state.completedAt) < COMPLETION_CONFIRM_MS;
-  const showCompletionCard = pct < 100 || justCompleted;
+  const showProgress = pct < 100 || justCompleted;
 
   clearTimeout(completionHideTimer);
   if (justCompleted) {
@@ -1604,74 +1603,67 @@ function renderDashboard() {
     completionHideTimer = setTimeout(() => { if (state.view === 'dashboard') render(); }, Math.max(remaining, 0) + 50);
   }
 
-  const heading = pct >= 100 ? 'Je eerste nalatenschap is 100% compleet.' : `Je nalatenschapsplan is voor ${pct}% compleet.`;
-  const completionMsg = pct >= 100
-    ? 'Goed zo. Je dierbaren weten straks precies wat ze moeten doen.'
-    : 'Dit moet je nog doen om op 100% te komen:';
-  const todoHtml = todo.length ? `<ul class="completion-todo">${todo.map(t => `<li><a href="#" data-nav="${t.nav}">${esc(t.label)} →</a></li>`).join('')}</ul>` : '';
-  const circumference = 2 * Math.PI * 40;
-  const offset = circumference * (1 - pct / 100);
   const firstName = getFirstName();
-
   const currentPlan = PLANS.find(p => p.key === state.account.plan);
   const planBadge = currentPlan ? ` &thinsp;<span style="display:inline-flex;align-items:center;padding:2px 10px;background:rgba(47,93,217,.1);color:#2F5DD9;border-radius:20px;font-size:11.5px;font-weight:600;vertical-align:middle;">${esc(currentPlan.name)}</span>` : '';
 
-  const card = (icon, title, done, countHtml, linkLabel, nav) => `
-    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:center;gap:9px;padding:10px 16px;background:#EFF4FF;border-bottom:1px solid rgba(47,93,217,.12);">
-        <span style="color:#2F5DD9;flex-shrink:0;display:flex;">${iconSvg(icon, 14)}</span>
-        <span style="font-size:13px;font-weight:700;color:#0F1222;flex:1;">${title}</span>
-        ${done ? `<span style="width:18px;height:18px;border-radius:50%;background:#E3F6EB;color:#22C55E;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconSvg('check', 11)}</span>` : ''}
+  // Voortgangsbalk (alleen zichtbaar zolang < 100%)
+  const progressHtml = showProgress ? `
+    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;background:#fff;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:600;color:#0F1222;margin-bottom:7px;">
+          ${pct >= 100 ? 'Je nalatenschapsplan is compleet.' : `Je plan is ${pct}% compleet`}
+        </div>
+        <div style="height:4px;background:rgba(47,93,217,.15);border-radius:99px;">
+          <div style="width:${pct}%;height:100%;background:#2F5DD9;border-radius:99px;"></div>
+        </div>
+        ${todo.length ? `<div style="margin-top:8px;">${todo.map(t => `<a href="#" data-nav="${t.nav}" style="display:inline-block;font-size:11.5px;font-weight:600;color:#2F5DD9;text-decoration:none;margin-right:14px;">${esc(t.label)} →</a>`).join('')}</div>` : ''}
       </div>
-      <div style="padding:14px 16px 16px;flex:1;display:flex;flex-direction:column;">
-        <div style="font-size:26px;font-weight:700;color:#0F1222;letter-spacing:-0.02em;margin-bottom:6px;line-height:1;">${countHtml}</div>
-        <a href="#" data-nav="${nav}" style="margin-top:auto;font-size:12.5px;font-weight:600;color:#2F5DD9;text-decoration:none;">${linkLabel} →</a>
-      </div>
-    </div>`;
+      <div style="font-size:20px;font-weight:700;color:#2F5DD9;flex-shrink:0;">${pct}%</div>
+    </div>` : '';
 
+  // Upgrade banner (horizontaal, compact)
   const upgradeBannerHtml = (state.account.plan === 'basis') ? `
-    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:9px;padding:10px 16px;background:#EFF4FF;border-bottom:1px solid rgba(47,93,217,.12);">
-        <span style="font-size:13px;font-weight:700;color:#0F1222;">Haal meer uit AfterFile</span>
+    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;background:#fff;padding:11px 18px;margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0;">
+        <span style="font-size:12px;color:#7A8BB5;">Upgrade naar Compleet voor onbeperkt bezittingen en een volledig Legacy Report.</span>
       </div>
-      <div style="padding:12px 16px 14px;">
-        <p style="font-size:13px;color:#7A8BB5;margin:0 0 12px;line-height:1.5;">Upgrade naar Compleet voor onbeperkt bezittingen, een volledig Legacy Report en meer vertrouwde contacten.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${PLANS.filter(p => p.launchEligible).map(p => `
-            <button type="button" style="padding:7px 16px;border-radius:7px;border:none;background:${p.featured ? '#2F5DD9' : 'rgba(47,93,217,.1)'};color:${p.featured ? '#fff' : '#2F5DD9'};font-size:13px;font-weight:600;cursor:pointer;" data-action="upgrade-plan" data-plan="${p.key}" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig…' : `Naar ${esc(p.name)} (${esc(p.price)}${esc(p.period)})`}</button>
-          `).join('')}
-        </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+        ${PLANS.filter(p => p.launchEligible).map(p => `
+          <button type="button" style="padding:6px 14px;border-radius:6px;border:none;background:${p.featured ? '#2F5DD9' : 'rgba(47,93,217,.1)'};color:${p.featured ? '#fff' : '#2F5DD9'};font-size:12px;font-weight:600;cursor:pointer;" data-action="upgrade-plan" data-plan="${p.key}" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig…' : `${esc(p.name)} — ${esc(p.price)}${esc(p.period)}`}</button>
+        `).join('')}
       </div>
     </div>` : '';
 
-  const r30 = 2 * Math.PI * 30;
-  const completionCardHtml = showCompletionCard ? `
-    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 6px rgba(15,25,70,.08);margin-bottom:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 20px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:700;color:#0F1222;margin-bottom:4px;">${heading}</div>
-          <div style="font-size:12.5px;color:#7A8BB5;">${esc(completionMsg)}</div>
-          ${todo.length ? `<div style="margin-top:8px;">${todo.map(t => `<a href="#" data-nav="${t.nav}" style="display:block;font-size:12.5px;font-weight:600;color:#2F5DD9;text-decoration:none;margin-bottom:3px;">${esc(t.label)} →</a>`).join('')}</div>` : ''}
-        </div>
-        <div style="position:relative;width:68px;height:68px;flex-shrink:0;">
-          <svg width="68" height="68" style="transform:rotate(-90deg);display:block;">
-            <circle cx="34" cy="34" r="30" stroke="#EEF2FF" stroke-width="7" fill="none"></circle>
-            <circle cx="34" cy="34" r="30" stroke="#2F5DD9" stroke-width="7" fill="none"
-              stroke-dasharray="${r30.toFixed(1)}" stroke-dashoffset="${(r30*(1-pct/100)).toFixed(1)}" stroke-linecap="round"></circle>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F1222;">${pct}%</div>
-        </div>
-      </div>
-    </div>` : '';
+  // Status-pill helper
+  const pill = (done, doneLabel, todoLabel) => done
+    ? `<span style="font-size:10.5px;font-weight:700;color:#1A9B5B;background:rgba(26,155,91,.1);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;">${doneLabel}</span>`
+    : `<span style="font-size:10.5px;font-weight:700;color:#4B6FD4;background:rgba(47,93,217,.1);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;">${todoLabel}</span>`;
+
+  // Rij-helper (klikbaar als <a>)
+  const row = (icon, title, sub, done, nav, doneLabel, todoLabel, last = false) => `
+    <a href="#" data-nav="${nav}" style="display:flex;align-items:center;padding:12px 16px;gap:12px;text-decoration:none;${last ? '' : 'border-bottom:1px solid rgba(47,93,217,.1);'}background:#fff;">
+      <span style="color:#2F5DD9;display:flex;flex-shrink:0;">${iconSvg(icon, 15)}</span>
+      <span style="flex:1;min-width:0;">
+        <span style="display:block;font-size:13px;font-weight:600;color:#0F1222;">${title}</span>
+        <span style="display:block;font-size:11px;color:#9AAAC8;margin-top:1px;">${sub}</span>
+      </span>
+      ${pill(done, doneLabel, todoLabel)}
+      <span style="color:#C0CCDF;display:flex;flex-shrink:0;">${iconSvg('chevron-right', 11)}</span>
+    </a>`;
+
+  const gegevensSubtitle = infoComplete ? 'Persoonsgegevens ingevuld' : 'Nog niet ingevuld';
+  const assetsSubtitle   = a === 0 ? 'Nog geen bezittingen' : `${a} bezitting${a === 1 ? '' : 'en'} toegevoegd`;
+  const contactsSubtitle = c === 0 ? 'Nog geen contacten'  : `${c} contact${c === 1 ? '' : 'en'} toegevoegd`;
 
   return `
     ${pageHeader({ kicker: 'Dashboard', title: `Welkom terug, ${esc(firstName)}.`, sub: `Zo staat je plan er vandaag voor.${planBadge}` })}
     ${upgradeBannerHtml}
-    ${completionCardHtml}
-    <div class="dash-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
-      ${card('info',  'Mijn gegevens',       infoComplete, infoComplete ? 'Volledig' : '<span style="font-size:14px;font-weight:600;color:#C0CCDF;">Niet ingevuld</span>', infoComplete ? 'Gegevens bewerken' : 'Gegevens invullen', 'gegevens')}
-      ${card('folder','Bezittingen',         a > 0, `${a}<span style="font-size:13px;font-weight:500;color:#9AAAC8;margin-left:5px;">toegevoegd</span>`, 'Bezitting toevoegen', 'assets')}
-      ${card('users', 'Vertrouwde contacten',c > 0, `${c}<span style="font-size:13px;font-weight:500;color:#9AAAC8;margin-left:5px;">toegevoegd</span>`, 'Contact toevoegen',   'contacts')}
+    ${progressHtml}
+    <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;background:#fff;margin-bottom:28px;">
+      ${row('info',   'Mijn gegevens',        gegevensSubtitle, infoComplete, 'gegevens', 'Volledig',   'Aanvullen')}
+      ${row('folder', 'Bezittingen',          assetsSubtitle,   a > 0,        'assets',   'Toegevoegd', 'Toevoegen')}
+      ${row('users',  'Vertrouwde contacten', contactsSubtitle, c > 0,        'contacts', 'Toegevoegd', 'Toevoegen', true)}
     </div>
   `;
 }
