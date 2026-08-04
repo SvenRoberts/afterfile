@@ -2139,105 +2139,111 @@ function renderClaimSnapshot(snap) {
 
 
 function renderContacts() {
-  const relationshipOptionsHtml = RELATIONSHIP_SUGGESTIONS.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+  const initials = name => (name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const hasAny   = state.contacts.length > 0;
+  const showForm = !hasAny || ui.addingContact;
+  const isOtherRel = !RELATIONSHIP_SUGGESTIONS.includes(ui.draftContact.relationship || '') && ui.draftContact._touched;
 
   const formHtml = `
-    <div class="inline-form-card">
-      <div class="form-title">${ui.editingContactId ? 'Contact bewerken' : 'Vertrouwd contact toevoegen'}</div>
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:20px 22px;margin-bottom:4px;">
+      <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;">${ui.editingContactId ? 'Contact bewerken' : 'Contact toevoegen'}</div>
       <form id="contact-form">
-        <div class="field-row">
-          <div class="field">
+        <div class="ct-row">
+          <div class="ct-field">
             <label for="ct-name">Naam</label>
             <input id="ct-name" name="name" type="text" placeholder="bijv. Anna de Vries" value="${esc(ui.draftContact.name || '')}" required autofocus>
           </div>
-          <div class="field">
+          <div class="ct-field">
             <label for="ct-email">E-mailadres</label>
             <input id="ct-email" name="email" type="email" placeholder="anna@voorbeeld.nl" value="${esc(ui.draftContact.email || '')}" required>
           </div>
         </div>
-        <div class="field">
-          <label for="ct-relationship">Relatie</label>
-          <select id="ct-relationship" name="relationship">
-            ${RELATIONSHIP_SUGGESTIONS.map(r => `<option value="${esc(r)}" ${ui.draftContact.relationship === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}
-            <option value="" ${!RELATIONSHIP_SUGGESTIONS.includes(ui.draftContact.relationship || '') && ui.draftContact._touched ? 'selected' : ''}>Anders…</option>
-          </select>
-          <input id="ct-relationship-other" name="relationship-other" type="text" placeholder="Vul je eigen relatie in" value="${esc((!RELATIONSHIP_SUGGESTIONS.includes(ui.draftContact.relationship || '') && ui.draftContact._touched) ? (ui.draftContact.relationship || '') : '')}" style="${(!RELATIONSHIP_SUGGESTIONS.includes(ui.draftContact.relationship || '') && ui.draftContact._touched) ? '' : 'display:none;'} margin-top:10px;">
-        </div>
-        <div class="field">
-          <label for="ct-address">Adres <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-          <input id="ct-address" name="address" type="text" placeholder="bijv. Hoofdstraat 12, 1234 AB Amsterdam" value="${esc(ui.draftContact.address || '')}">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="ct-birthdate">Geboortedatum <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
-            <input id="ct-birthdate" name="birthDate" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4}" value="${esc(ui.draftContact.birthDate || '')}">
+        <div class="ct-row">
+          <div class="ct-field">
+            <label for="ct-relationship">Relatie</label>
+            <select id="ct-relationship" name="relationship">
+              ${RELATIONSHIP_SUGGESTIONS.map(r => `<option value="${esc(r)}" ${ui.draftContact.relationship === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}
+              <option value="" ${isOtherRel ? 'selected' : ''}>Anders…</option>
+            </select>
+            <input id="ct-relationship-other" name="relationship-other" type="text" placeholder="Vul je eigen relatie in" value="${esc(isOtherRel ? (ui.draftContact.relationship || '') : '')}" style="display:${isOtherRel ? 'block' : 'none'};margin-top:6px;width:100%;padding:6px 10px;font-size:13px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;box-sizing:border-box;font-family:inherit;">
           </div>
-          <div class="field">
-            <label for="ct-phone">Telefoonnummer <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
+          <div class="ct-field">
+            <label for="ct-phone">Telefoon <span style="font-weight:400;color:#B0BCDA;">(optioneel)</span></label>
             <input id="ct-phone" name="phone" type="tel" placeholder="bijv. 06 12345678" value="${esc(ui.draftContact.phone || '')}">
           </div>
         </div>
-        <div class="field">
-          <label>Wat moet deze persoon kunnen doen?</label>
-          <div class="role-options">
-            <label class="role-option">
-              <input type="checkbox" name="role-inform" ${ui.draftContact._touched ? (ui.draftContact.roleInform !== false ? 'checked' : '') : 'checked'}>
-              <span>Jouw informatie ontvangen</span>
-              <span class="role-option-check" style="margin-left:auto;">✓</span>
-            </label>
-            <label class="role-option">
-              <input type="checkbox" name="role-verify" ${ui.draftContact.roleVerify ? 'checked' : ''}>
-              <span>Helpen bevestigen wat er is gebeurd</span>
-              <span class="role-option-check" style="margin-left:auto;">✓</span>
-            </label>
+        <div class="ct-row">
+          <div class="ct-field">
+            <label for="ct-address">Adres <span style="font-weight:400;color:#B0BCDA;">(optioneel)</span></label>
+            <input id="ct-address" name="address" type="text" placeholder="bijv. Hoofdstraat 12, 1234 AB Amsterdam" value="${esc(ui.draftContact.address || '')}">
           </div>
-          <div class="field-hint">Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.</div>
+          <div class="ct-field">
+            <label for="ct-birthdate">Geboortedatum <span style="font-weight:400;color:#B0BCDA;">(optioneel)</span></label>
+            <input id="ct-birthdate" name="birthDate" type="text" inputmode="numeric" placeholder="DD-MM-JJJJ" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4}" value="${esc(ui.draftContact.birthDate || '')}">
+          </div>
         </div>
-        <div class="form-actions">
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Rollen</div>
+          <label class="ct-role-opt">
+            <input type="checkbox" name="role-inform" ${ui.draftContact._touched ? (ui.draftContact.roleInform !== false ? 'checked' : '') : 'checked'}>
+            <span>Jouw informatie ontvangen</span>
+          </label>
+          <label class="ct-role-opt">
+            <input type="checkbox" name="role-verify" ${ui.draftContact.roleVerify ? 'checked' : ''}>
+            <span>Helpen bevestigen wat er is gebeurd</span>
+          </label>
+          <div style="font-size:11px;color:#9AAAC8;margin-top:8px;line-height:1.55;">Een contact met "Helpen bevestigen" kan via de "Overlijden melden"-pagina een officieel overlijdensbericht indienen. AfterFile controleert dit en geeft de gegevens vrij aan contacten met "Informatie ontvangen", doorgaans binnen 1 werkdag.</div>
+        </div>
+        <div style="display:flex;gap:8px;">
           <button type="submit" class="btn btn-primary">${ui.editingContactId ? 'Wijzigingen opslaan' : 'Contact opslaan'}</button>
-          <button type="button" class="btn btn-ghost" data-action="cancel-contact">Annuleren</button>
+          ${hasAny ? `<button type="button" class="btn btn-ghost" data-action="cancel-contact">Annuleren</button>` : ''}
         </div>
       </form>
     </div>
   `;
 
   const listHtml = state.contacts.map(c => `
-    <div class="item-card">
-      <div class="item-card-top">
-        <span class="item-tag">${esc(c.relationship || 'Contact')}</span>
-        <div style="display:flex;gap:4px;">
-          <button class="btn-ghost btn-sm" data-action="edit-contact" data-id="${c.id}">Bewerken</button>
-          <button class="btn-danger-ghost" data-action="delete-contact" data-id="${c.id}">Verwijderen</button>
+    <div class="ct-card">
+      <div class="ct-avatar">${esc(initials(c.name))}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(c.name)}</div>
+        <div style="font-size:12px;color:#9AAAC8;margin-top:1px;">${esc(c.email)}</div>
+        <div style="font-size:11.5px;color:#9AAAC8;margin-top:2px;">${esc(c.relationship || 'Contact')}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+          ${c.roles.includes('inform') ? '<span class="ct-badge">Ontvangt informatie</span>' : ''}
+          ${c.roles.includes('verify') ? '<span class="ct-badge">Kan helpen verifiëren</span>' : ''}
         </div>
       </div>
-      <h4>${esc(c.name)}</h4>
-      <p class="meta-row">${esc(c.email)}</p>
-      ${c.phone ? `<p class="meta-row"><strong>Telefoon:</strong> ${esc(c.phone)}</p>` : ''}
-      ${c.address ? `<p class="meta-row"><strong>Adres:</strong> ${esc(c.address)}</p>` : ''}
-      ${c.birthDate ? `<p class="meta-row"><strong>Geboortedatum:</strong> ${esc(toNlDate(c.birthDate))}</p>` : ''}
-      <div>
-        ${c.roles.includes('inform') ? '<span class="role-chip">Ontvangt informatie</span>' : ''}
-        ${c.roles.includes('verify') ? '<span class="role-chip">Kan helpen verifiëren</span>' : ''}
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button class="ct-btn-edit" data-action="edit-contact" data-id="${c.id}">Bewerken</button>
+        <button class="ct-btn-del" data-action="delete-contact" data-id="${c.id}">Verwijderen</button>
       </div>
     </div>
   `).join('');
 
-  const hasAny = state.contacts.length > 0;
-
-  if (hasAny) {
-    return `
-      ${pageHeader({ kicker: 'Vertrouwde contacten', title: 'Jouw contacten.', sub: 'Voeg de mensen toe die het zouden willen weten, een partner, kind, executeur of vriend(in).' })}
-      ${ui.addingContact ? `<div class="asset-picker-panel">${formHtml}</div>` : ''}
-      <div class="item-list">${listHtml}</div>
-      ${!ui.addingContact ? `<div style="margin-top:24px;"><button type="button" class="btn btn-primary btn-sm" data-action="open-contact-form">+ Contact toevoegen</button></div>` : ''}
-    `;
-  } else {
-    return `
-      ${pageHeader({ kicker: 'Vertrouwde contacten', title: 'Kies wie geïnformeerd moet worden.', sub: 'Voeg de mensen toe die het zouden willen weten, een partner, kind, executeur of vriend(in).' })}
-      ${formHtml}
-      <div class="empty-state">Nog geen vertrouwde contacten. Vul hierboven de eerste persoon in, het duurt minder dan 30 seconden.</div>
-    `;
-  }
+  return `
+    <style>
+      .ct-field{margin-bottom:12px;}
+      .ct-field label{display:block;font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+      .ct-field input,.ct-field select{width:100%;padding:6px 10px;font-size:13px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;box-sizing:border-box;font-family:inherit;}
+      .ct-field input:focus,.ct-field select:focus{border-color:#2F5DD9;box-shadow:0 0 0 2px rgba(47,93,217,.14);}
+      .ct-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+      @media(max-width:500px){.ct-row{grid-template-columns:1fr;}}
+      .ct-role-opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid rgba(47,93,217,.22);border-radius:7px;background:#fff;margin-bottom:6px;cursor:pointer;font-size:12.5px;color:#0F1222;font-weight:500;}
+      .ct-role-opt input{width:14px;height:14px;accent-color:#2F5DD9;flex-shrink:0;}
+      .ct-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:14px 16px;margin-bottom:8px;transition:box-shadow .18s ease,transform .18s ease;}
+      .ct-card:hover{box-shadow:0 4px 16px rgba(47,93,217,.18);transform:translateY(-2px);}
+      .ct-avatar{width:38px;height:38px;border-radius:50%;background:rgba(47,93,217,.12);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#2F5DD9;flex-shrink:0;}
+      .ct-badge{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:4px;background:rgba(47,93,217,.09);color:#2F5DD9;}
+      .ct-btn-edit{font-size:11.5px;color:#2F5DD9;background:transparent;border:1px solid rgba(47,93,217,.3);border-radius:5px;padding:3px 9px;cursor:pointer;}
+      .ct-btn-del{font-size:11.5px;color:#9AAAC8;background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:5px;padding:3px 9px;cursor:pointer;}
+      .ct-add-btn{display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:13px;font-weight:600;color:#2F5DD9;background:transparent;border:1.5px solid rgba(47,93,217,.35);border-radius:7px;padding:8px 16px;cursor:pointer;width:fit-content;}
+    </style>
+    ${pageHeader({ kicker: 'Vertrouwde contacten', title: hasAny ? 'Jouw contacten.' : 'Kies wie geïnformeerd moet worden.', sub: 'Voeg de mensen toe die het zouden willen weten — een partner, kind, executeur of vriend(in).' })}
+    ${hasAny ? `<div style="margin-bottom:4px;">${listHtml}</div>` : ''}
+    ${hasAny && !showForm ? `<button type="button" class="ct-add-btn" data-action="open-contact-form">+ Contact toevoegen</button>` : ''}
+    ${showForm ? formHtml : ''}
+  `;
 }
 
 
