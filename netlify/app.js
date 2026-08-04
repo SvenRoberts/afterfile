@@ -2231,7 +2231,7 @@ function renderContacts() {
           ${c.roles.includes('verify') ? '<span class="ct-badge ct-badge-verify">Helpt verifiëren</span>' : ''}
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;align-items:flex-end;">
+      <div class="ct-actions">
         <button class="ct-btn-edit" data-action="edit-contact" data-id="${c.id}">Bewerken</button>
         <button class="ct-btn-del" data-action="delete-contact" data-id="${c.id}">Verwijderen</button>
       </div>
@@ -2245,18 +2245,24 @@ function renderContacts() {
       .ct-field input,.ct-field select{width:100%;padding:6px 10px;font-size:13px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;box-sizing:border-box;font-family:inherit;}
       .ct-field input:focus,.ct-field select:focus{border-color:#2F5DD9;box-shadow:0 0 0 2px rgba(47,93,217,.14);}
       .ct-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-      @media(max-width:500px){.ct-row{grid-template-columns:1fr;}}
+      @media(max-width:540px){.ct-row{grid-template-columns:1fr;}}
       .ct-role-opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid rgba(47,93,217,.22);border-radius:7px;background:#fff;margin-bottom:6px;cursor:pointer;font-size:12.5px;color:#0F1222;font-weight:500;}
       .ct-role-opt input{width:14px;height:14px;accent-color:#2F5DD9;flex-shrink:0;}
       .ct-card{display:flex;align-items:flex-start;gap:14px;background:#fff;border:1px solid rgba(47,93,217,.18);border-left:3px solid #2F5DD9;border-radius:8px;padding:14px 16px;margin-bottom:8px;transition:box-shadow .18s ease;}
       .ct-card:hover{box-shadow:0 3px 14px rgba(47,93,217,.14);}
       .ct-badge{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:4px;background:#EFF4FF;color:#2F5DD9;border:1px solid rgba(47,93,217,.18);}
       .ct-badge-verify{background:#F5F0FF;color:#6B44C8;border-color:rgba(107,68,200,.2);}
+      .ct-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;align-items:flex-end;}
       .ct-btn-edit{font-size:11.5px;color:#2F5DD9;background:#EFF4FF;border:1px solid rgba(47,93,217,.22);border-radius:5px;padding:4px 10px;cursor:pointer;font-weight:500;width:90px;text-align:center;}
       .ct-btn-edit:hover{background:rgba(47,93,217,.15);}
       .ct-btn-del{font-size:11.5px;color:#9AAAC8;background:transparent;border:1px solid rgba(0,0,0,.08);border-radius:5px;padding:4px 10px;cursor:pointer;width:90px;text-align:center;}
       .ct-btn-del:hover{color:#DC3545;border-color:rgba(220,53,69,.25);}
       .ct-add-btn{display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:13px;font-weight:600;color:#2F5DD9;background:transparent;border:1.5px solid rgba(47,93,217,.35);border-radius:7px;padding:8px 16px;cursor:pointer;width:fit-content;}
+      @media(max-width:520px){
+        .ct-card{flex-direction:column;gap:0;}
+        .ct-actions{flex-direction:row;justify-content:flex-end;margin-top:12px;width:100%;align-items:center;}
+        .ct-btn-edit,.ct-btn-del{flex:1;width:auto;}
+      }
     </style>
     ${pageHeader({ kicker: 'Vertrouwde contacten', title: hasAny ? 'Jouw contacten.' : 'Kies wie geïnformeerd moet worden.', sub: 'Bepaal wie jouw gegevens ontvangt als dit nodig is.' })}
     ${hasAny ? `<div style="margin-bottom:4px;">${listHtml}</div>` : ''}
