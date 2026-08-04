@@ -1635,15 +1635,15 @@ function renderDashboard() {
       </div>
     </div>` : '';
 
-  // Rij-helper — rechts altijd een actieknop, nooit statustekst
-  const row = (icon, title, sub, nav, actionLabel, last = false) => `
-    <a href="#" data-nav="${nav}" style="display:flex;align-items:center;padding:14px 16px;gap:12px;text-decoration:none;${last ? '' : 'border-bottom:1px solid rgba(47,93,217,.12);'}background:#fff;">
-      <span style="color:#2F5DD9;display:flex;flex-shrink:0;">${iconSvg(icon, 16)}</span>
-      <span style="flex:1;min-width:0;">
+  // Kaart-helper — drie losse klikbare kaarten naast elkaar
+  const card = (icon, title, sub, nav, actionLabel) => `
+    <a href="#" data-nav="${nav}" style="display:flex;flex-direction:column;padding:16px;gap:10px;text-decoration:none;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;">
+      <span style="color:#2F5DD9;display:flex;">${iconSvg(icon, 16)}</span>
+      <span style="flex:1;">
         <span style="display:block;font-size:14px;font-weight:600;color:#0F1222;">${title}</span>
         <span style="display:block;font-size:12px;color:#9AAAC8;margin-top:2px;">${sub}</span>
       </span>
-      <span style="font-size:12.5px;font-weight:600;color:#2F5DD9;white-space:nowrap;flex-shrink:0;">${actionLabel} →</span>
+      <span style="font-size:12.5px;font-weight:600;color:#2F5DD9;">${actionLabel} →</span>
     </a>`;
 
   const gegevensSubtitle = infoComplete ? 'Persoonsgegevens ingevuld' : 'Nog niet ingevuld';
@@ -1655,10 +1655,10 @@ function renderDashboard() {
     ${upgradeBannerHtml}
     ${progressHtml}
     <div style="background:#EFF4FF;border-radius:10px;padding:12px;margin-bottom:28px;">
-      <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;overflow:hidden;">
-        ${row('info',   'Mijn gegevens',        gegevensSubtitle, 'gegevens', 'Aanpassen')}
-        ${row('folder', 'Bezittingen',          assetsSubtitle,   'assets',   'Toevoegen')}
-        ${row('users',  'Vertrouwde contacten', contactsSubtitle, 'contacts', 'Toevoegen', true)}
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        ${card('info',   'Mijn gegevens',        gegevensSubtitle, 'gegevens', 'Aanpassen')}
+        ${card('folder', 'Bezittingen',          assetsSubtitle,   'assets',   'Toevoegen')}
+        ${card('users',  'Vertrouwde contacten', contactsSubtitle, 'contacts', 'Toevoegen')}
       </div>
     </div>
   `;
