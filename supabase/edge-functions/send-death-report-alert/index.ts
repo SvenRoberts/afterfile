@@ -1,16 +1,11 @@
-// Edge Function: send-death-report-alert
-// Aanroep: rechtstreeks vanuit app.js, vlak na een succesvolle (nieuwe) report_death()-RPC,
-// door de anonieme melder. verify_jwt staat UIT (er is geen ingelogde gebruiker — de melder is
-// per definitie niet de accounteigenaar). Omdat dit dus door iedereen aanroepbaar is, vertrouwt
-// de functie niets wat de aanroeper beweert: ze zoekt zelf, met de service-role-key, de meest
-// recente 'waiting'-death_report op voor het opgegeven e-mailadres, stuurt alleen naar het
-// e-mailadres dat al in profiles staat (nooit naar een door de aanroeper opgegeven adres), en
-// doet dit alleen als die melding hooguit 5 minuten oud is — zodat deze functie niet los van een
-// echte report_death()-aanroep te misbruiken is.
+// Edge Function: send-death-report-alert (v5)
+// Aanroep: vanuit app.js na een succesvolle report_death()-RPC.
+// verify_jwt staat UIT. De functie zoekt zelf de meest recente 'waiting'-melding op
+// via de service-role-key en stuurt alleen naar het e-mailadres dat al in profiles staat.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const FROM_ADDRESS = "AfterFile <info@afterfile.nl>";
+const FROM_ADDRESS   = "AfterFile <info@afterfile.nl>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,29 +27,66 @@ async function sendEmail(to: string, subject: string, html: string) {
   if (!res.ok) throw new Error(`Resend-fout (${res.status}): ${await res.text()}`);
 }
 
-function escapeHtml(s: string) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
+function esc(s: string) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string,string>)[c]);
 }
 
-function emailShell(title: string, bodyHtml: string, accent = "#C0392B") {
-  return `<!DOCTYPE html><html lang="nl"><head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:0;background-color:#F7F8FA;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F7F8FA;">
-<tr><td align="center" style="padding:40px 16px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#FFFFFF;border:1px solid #E3E6EC;border-radius:16px;overflow:hidden;">
-<tr><td align="center" bgcolor="${accent}" style="background-color:${accent};padding:28px 24px;">
-<img src="https://afterfile.nl/assets/logo.png" width="36" height="36" alt="AfterFile" style="display:block;width:36px;height:36px;border-radius:8px;border:0;margin:0 auto 6px;" />
-<span style="font-size:18px;font-weight:700;color:#FFFFFF;">AfterFile</span>
+function emailShell(preheader: string, bodyHtml: string, accentColor = "#2F5DD9") {
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="x-apple-disable-message-reformatting" />
+<title>AfterFile</title>
+</head>
+<body style="margin:0;padding:0;background:#EFF4FF;-webkit-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${esc(preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#EFF4FF;">
+<tr><td align="center" style="padding:40px 16px 48px;">
+
+  <table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;background:#ffffff;border-radius:12px;border:1px solid rgba(47,93,217,.15);overflow:hidden;">
+
+        <!-- Accent bar -->
+    <tr>
+      <td style="background:${accentColor};height:5px;line-height:5px;font-size:5px;">&nbsp;</td>
+    </tr>
+    <!-- Logo header -->
+    <tr>
+      <td style="background:#ffffff;padding:20px 32px 18px;border-bottom:1px solid rgba(47,93,217,.1);">
+        <img src="https://afterfile.nl/assets/logo.png" width="36" height="36" alt="AfterFile" style="display:inline-block;vertical-align:middle;border:0;border-radius:8px;margin-right:10px;" /><span style="font-size:18px;font-weight:700;color:#0F1222;vertical-align:middle;letter-spacing:-.3px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">AfterFile</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:36px 40px 28px;">
+        ${bodyHtml}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:0 40px;">
+        <div style="height:1px;background:rgba(47,93,217,.1);"></div>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:20px 40px 28px;">
+        <p style="margin:0 0 4px;font-size:12px;line-height:1.6;color:#9AAAC8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+          AfterFile &mdash; jouw digitale nalatenschap, veilig geregeld.
+        </p>
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#B8C4D8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+          Vragen? <a href="mailto:info@afterfile.nl" style="color:#2F5DD9;text-decoration:none;">info@afterfile.nl</a>
+        </p>
+      </td>
+    </tr>
+
+  </table>
+
 </td></tr>
-<tr><td style="padding:32px 36px;">
-<h1 style="margin:0 0 16px;font-size:20px;line-height:1.3;color:#0F1222;font-weight:700;">${title}</h1>
-${bodyHtml}
-</td></tr>
-<tr><td style="padding:0 36px 28px;">
-<p style="margin:0;font-size:12px;line-height:1.6;color:#9AA1B0;">AfterFile, jouw digitale nalatenschap veilig geregeld.</p>
-</td></tr>
-</table></td></tr></table>
-</body></html>`;
+</table>
+</body>
+</html>`;
 }
 
 Deno.serve(async (req: Request) => {
@@ -90,24 +122,64 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     if (!profile?.email) return json({ ok: false });
 
+    const reporterDesc = reporterName
+      ? `${esc(reporterName)}${relationship ? ` (${esc(relationship)})` : ""}`
+      : "een derde";
+
     const bodyHtml = `
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
-        Iemand heeft via afterfile.nl een overlijden gemeld voor jouw account${
-          reporterName ? ` (melder: <strong style="color:#0F1222;">${escapeHtml(reporterName)}</strong>${relationship ? `, ${escapeHtml(relationship)}` : ""})` : ""
-        }.
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0F1222;letter-spacing:-.3px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">Melding voor jouw AfterFile-account</h1>
+      <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#5B6880;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+        Via <a href="https://afterfile.nl" style="color:#2F5DD9;text-decoration:none;">afterfile.nl</a> is een overlijdensmelding ingediend voor jouw account door ${reporterDesc}.
       </p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
-        Is dit niet juist? Log dan binnen 30 dagen in op je AfterFile-account. Daarmee wordt deze melding automatisch geannuleerd.
-      </p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5B6172;">
-        Doe je dit niet, dan worden de door jou vastgelegde gegevens na de wachttijd gedeeld met de contacten die jij de rol "Informatie ontvangen" hebt gegeven.
-      </p>
+
+      <!-- Waarschuwingsblok -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
+        <tr>
+          <td style="background:#FEF3F2;border:1px solid rgba(220,53,69,.2);border-left:3px solid #DC3545;border-radius:6px;padding:16px 20px;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#7B1422;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">Actie vereist als dit niet klopt</p>
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#7B1422;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+              Herken jij deze melding niet? Log dan in op je AfterFile-account. De melding wordt daarmee automatisch geannuleerd.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Wat er nu gebeurt -->
+      <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.1em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">Wat er nu gebeurt</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid rgba(47,93,217,.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#5B6880;">AfterFile verifieert de melding aan de hand van het ingediende overlijdensbericht.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid rgba(47,93,217,.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#5B6880;">Na verificatie en een wachttijd worden de door jou vastgelegde gegevens gedeeld met jouw contacten met de rol &ldquo;Informatie ontvangen&rdquo;.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0;font-size:13px;line-height:1.6;color:#5B6880;">Log je in op je account? Dan wordt de melding direct geannuleerd en gebeurt er niets.</p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- CTA knop -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0;">
+        <tr>
+          <td align="center" style="background:#2F5DD9;border-radius:8px;">
+            <a href="https://afterfile.nl" style="display:inline-block;padding:12px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-.1px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+              Inloggen op AfterFile &rarr;
+            </a>
+          </td>
+        </tr>
+      </table>
     `;
 
     await sendEmail(
       profile.email,
-      "Belangrijk: er is een overlijden gemeld voor jouw AfterFile-account",
-      emailShell("Een overlijden is gemeld voor jouw account", bodyHtml)
+      "Belangrijk: er is een overlijdensmelding ingediend voor jouw AfterFile-account",
+      emailShell("Er is een overlijdensmelding ingediend voor jouw account. Log in om dit te annuleren.", bodyHtml, "#1A2540")
     );
 
     return json({ ok: true });

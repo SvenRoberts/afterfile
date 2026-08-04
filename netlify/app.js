@@ -2204,17 +2204,18 @@ function renderContacts() {
 
   const listHtml = state.contacts.map(c => `
     <div class="ct-card">
-      <div class="ct-avatar">${esc(initials(c.name))}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(c.name)}</div>
-        <div style="font-size:12px;color:#9AAAC8;margin-top:1px;">${esc(c.email)}</div>
-        <div style="font-size:11.5px;color:#9AAAC8;margin-top:2px;">${esc(c.relationship || 'Contact')}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:14px;font-weight:700;color:#0F1222;">${esc(c.name)}</span>
+          <span style="font-size:11px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.04em;">${esc(c.relationship || 'Contact')}</span>
+        </div>
+        <div style="font-size:12.5px;color:#5B6880;margin-top:3px;">${esc(c.email)}${c.phone ? '<span style="color:#C8D0E0;"> · </span>' + esc(c.phone) : ''}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:9px;">
           ${c.roles.includes('inform') ? '<span class="ct-badge">Ontvangt informatie</span>' : ''}
-          ${c.roles.includes('verify') ? '<span class="ct-badge">Kan helpen verifiëren</span>' : ''}
+          ${c.roles.includes('verify') ? '<span class="ct-badge ct-badge-verify">Helpt verifiëren</span>' : ''}
         </div>
       </div>
-      <div style="display:flex;gap:4px;flex-shrink:0;">
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;align-items:flex-end;">
         <button class="ct-btn-edit" data-action="edit-contact" data-id="${c.id}">Bewerken</button>
         <button class="ct-btn-del" data-action="delete-contact" data-id="${c.id}">Verwijderen</button>
       </div>
@@ -2231,12 +2232,14 @@ function renderContacts() {
       @media(max-width:500px){.ct-row{grid-template-columns:1fr;}}
       .ct-role-opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid rgba(47,93,217,.22);border-radius:7px;background:#fff;margin-bottom:6px;cursor:pointer;font-size:12.5px;color:#0F1222;font-weight:500;}
       .ct-role-opt input{width:14px;height:14px;accent-color:#2F5DD9;flex-shrink:0;}
-      .ct-card{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:14px 16px;margin-bottom:8px;transition:box-shadow .18s ease,transform .18s ease;}
-      .ct-card:hover{box-shadow:0 4px 16px rgba(47,93,217,.18);transform:translateY(-2px);}
-      .ct-avatar{width:38px;height:38px;border-radius:50%;background:rgba(47,93,217,.12);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#2F5DD9;flex-shrink:0;}
-      .ct-badge{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:4px;background:rgba(47,93,217,.09);color:#2F5DD9;}
-      .ct-btn-edit{font-size:11.5px;color:#2F5DD9;background:transparent;border:1px solid rgba(47,93,217,.3);border-radius:5px;padding:3px 9px;cursor:pointer;}
-      .ct-btn-del{font-size:11.5px;color:#9AAAC8;background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:5px;padding:3px 9px;cursor:pointer;}
+      .ct-card{display:flex;align-items:flex-start;gap:14px;background:#fff;border:1px solid rgba(47,93,217,.18);border-left:3px solid #2F5DD9;border-radius:8px;padding:14px 16px;margin-bottom:8px;transition:box-shadow .18s ease;}
+      .ct-card:hover{box-shadow:0 3px 14px rgba(47,93,217,.14);}
+      .ct-badge{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:4px;background:#EFF4FF;color:#2F5DD9;border:1px solid rgba(47,93,217,.18);}
+      .ct-badge-verify{background:#F5F0FF;color:#6B44C8;border-color:rgba(107,68,200,.2);}
+      .ct-btn-edit{font-size:11.5px;color:#2F5DD9;background:#EFF4FF;border:1px solid rgba(47,93,217,.22);border-radius:5px;padding:4px 10px;cursor:pointer;font-weight:500;}
+      .ct-btn-edit:hover{background:rgba(47,93,217,.15);}
+      .ct-btn-del{font-size:11.5px;color:#9AAAC8;background:transparent;border:1px solid rgba(0,0,0,.08);border-radius:5px;padding:4px 10px;cursor:pointer;}
+      .ct-btn-del:hover{color:#DC3545;border-color:rgba(220,53,69,.25);}
       .ct-add-btn{display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:13px;font-weight:600;color:#2F5DD9;background:transparent;border:1.5px solid rgba(47,93,217,.35);border-radius:7px;padding:8px 16px;cursor:pointer;width:fit-content;}
     </style>
     ${pageHeader({ kicker: 'Vertrouwde contacten', title: hasAny ? 'Jouw contacten.' : 'Kies wie geïnformeerd moet worden.', sub: 'Voeg de mensen toe die het zouden willen weten — een partner, kind, executeur of vriend(in).' })}
