@@ -663,6 +663,7 @@ function esc(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function formatDate(d) { return d.toLocaleDateString('nl-NL', { year: 'numeric', month: 'long', day: 'numeric' }); }
+function capitalizeWords(s) { return (s || '').replace(/\b\w/g, c => c.toUpperCase()); }
 function flashToast(msg, durationMs) {
   durationMs = durationMs || 3000;
   let t = document.getElementById('af-toast');
@@ -1711,7 +1712,7 @@ function renderPersonalInfo() {
         <div class="pi-row">
           <div class="pi-field">
             <label for="pi-fullname">Volledige naam</label>
-            <input id="pi-fullname" name="fullName" type="text" placeholder="bijv. Sven Bakker" value="${esc(p.fullName)}" required autofocus>
+            <input id="pi-fullname" name="fullName" type="text" placeholder="bijv. Sven Bakker" value="${esc(p.fullName)}" required autofocus autocapitalize="words">
           </div>
           <div class="pi-field">
             <label for="pi-birthdate">Geboortedatum</label>
@@ -2151,7 +2152,7 @@ function renderContacts() {
         <div class="ct-row">
           <div class="ct-field">
             <label for="ct-name">Naam</label>
-            <input id="ct-name" name="name" type="text" placeholder="bijv. Anna de Vries" value="${esc(ui.draftContact.name || '')}" required autofocus>
+            <input id="ct-name" name="name" type="text" placeholder="bijv. Anna de Vries" value="${esc(ui.draftContact.name || '')}" required autofocus autocapitalize="words">
           </div>
           <div class="ct-field">
             <label for="ct-email">E-mailadres</label>
@@ -2968,7 +2969,7 @@ function wireEvents() {
     if (fd.get('role-verify')) roles.push('verify');
     const relationship = (fd.get('relationship') || '').trim() || (fd.get('relationship-other') || '').trim();
     const payload = {
-      name: (fd.get('name') || '').trim(),
+      name: capitalizeWords((fd.get('name') || '').trim()),
       email: (fd.get('email') || '').trim(),
       relationship,
       address: (fd.get('address') || '').trim(),
@@ -3039,13 +3040,19 @@ function wireEvents() {
     });
   });
 
+  // Hoofdletters per woord op blur voor naamvelden
+  ['ct-name', 'pi-fullname'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('blur', () => { el.value = capitalizeWords(el.value); });
+  });
+
   const personalInfoForm = document.getElementById('personal-info-form');
   if (personalInfoForm) personalInfoForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const wasComplete = personalInfoComplete();
     const fd = new FormData(personalInfoForm);
     const info = {
-      fullName: (fd.get('fullName') || '').trim(),
+      fullName: capitalizeWords((fd.get('fullName') || '').trim()),
       street: (fd.get('street') || '').trim(),
       postalCode: (fd.get('postalCode') || '').trim(),
       city: (fd.get('city') || '').trim(),
