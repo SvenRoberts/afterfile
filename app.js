@@ -317,14 +317,14 @@ async function vkSave() {
 
 // ── Auto-unlock: Fragment A (lokaal) + Fragment B (server) → K ──
 async function vkAutoUnlock() {
-  const fragAb64 = localStorage.getItem(VK_FRAG_A);
+  const fragAb64 = sessionStorage.getItem(VK_FRAG_A);
   if (!fragAb64 || !supabase || !state.account) return false;
   try {
     const { data, error } = await supabase
       .from('vault_data').select('fragment_b, encrypted_blob').eq('user_id', state.account.id).single();
     if (error || !data) {
       // Supabase heeft geen vault_data meer — localStorage opruimen
-      localStorage.removeItem(VK_FRAG_A);
+      sessionStorage.removeItem(VK_FRAG_A);
       localStorage.removeItem(VK_CONTACT);
       localStorage.removeItem(VK_DATA_LS);
       return false;
@@ -347,7 +347,7 @@ async function vkAutoUnlock() {
 // ── Initieel vault-state bepalen ──
 async function vkInit() {
   state.vaultContactEmail = localStorage.getItem(VK_CONTACT) || '';
-  const hasFragA = !!localStorage.getItem(VK_FRAG_A);
+  const hasFragA = !!sessionStorage.getItem(VK_FRAG_A);
   if (!hasFragA) {
     // Check of er al een kluis bestaat in de DB (= ander apparaat, niet eerste setup)
     if (supabase && state.account) {
@@ -362,7 +362,7 @@ async function vkInit() {
   if (!ok) {
     // vkAutoUnlock verwijdert VK_FRAG_A als er geen vault_data-rij in de DB is →
     // dan setup tonen, niet locked (anders werkt handmatig ontgrendelen ook nooit).
-    ui.vaultState = localStorage.getItem(VK_FRAG_A) ? 'locked' : 'setup';
+    ui.vaultState = sessionStorage.getItem(VK_FRAG_A) ? 'locked' : 'setup';
   }
   render();
 }
@@ -2615,7 +2615,7 @@ function wireEvents() {
       if (res.ok) {
         // Pas na server-bevestiging opslaan: fragA en fragB blijven altijd in sync.
         // Schrijven vóór de API-call veroorzaakte een mismatch waardoor auto-unlock altijd faalde.
-        localStorage.setItem(VK_FRAG_A, u8ToB64(fragA));
+        sessionStorage.setItem(VK_FRAG_A, u8ToB64(fragA));
         localStorage.setItem(VK_FRAG_C, u8ToB64(fragC));
         ui.vaultKey      = key;
         ui.vaultData     = snapshot;
@@ -2643,7 +2643,7 @@ function wireEvents() {
   // Kluis verlaten / vergrendelen (verwijdert Fragment A, forceert herbevestiging met code)
   document.querySelectorAll('[data-action="vk-lock"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      localStorage.removeItem(VK_FRAG_A);
+      sessionStorage.removeItem(VK_FRAG_A);
       Object.assign(ui, { vaultKey: null, vaultData: null, vaultState: 'locked' });
       render();
     });
@@ -2670,7 +2670,7 @@ function wireEvents() {
         const plain = await vkDec(key, data.encrypted_blob);
         const snap  = JSON.parse(plain);
         // Opslaan in localStorage voor dit apparaat
-        localStorage.setItem(VK_FRAG_A, input);
+        sessionStorage.setItem(VK_FRAG_A, input);
         ui.vaultKey   = key;
         ui.vaultData  = snap;
         ui.vaultState = 'unlocked';
