@@ -466,6 +466,7 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     stripeSubscriptionId: profile.stripe_subscription_id || null,
     lastPaymentAt: (lastPayments && lastPayments[0]) ? lastPayments[0].paid_at : null,
     isFirstMover: profile.is_first_mover || false,
+    billingPeriod: profile.billing_period || 'year',
   };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
@@ -589,7 +590,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1634,7 +1635,10 @@ async function loadAdminProfiles() {
 function renderSubscription() {
   const plan = state.account ? state.account.plan : 'basis';
   const isBasis = plan === 'basis';
-  const isCanceling = state.account && state.account.subscriptionStatus === 'canceling';
+  const subStatus = state.account && state.account.subscriptionStatus;
+  const isCanceling = subStatus === 'canceling';
+  const isTrialing = subStatus === 'trialing';
+  const billingPeriod = state.account && state.account.billingPeriod || 'year';
   const planData = PLANS.find(p => p.key === plan) || PLANS[0];
   const compleetData = PLANS.find(p => p.key === 'compleet');
 
@@ -1642,18 +1646,51 @@ function renderSubscription() {
     ? new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
     : '–';
 
-  const since = fmtDate(state.account && state.account.createdAt);
-  const lastPayment = fmtDate(state.account && state.account.lastPaymentAt);
-  const periodEnd = fmtDate(state.account && state.account.currentPeriodEnd);
+  // Bereken verlengingsdatum vanuit laatste betaling + facturatietermijn
+  const computeNextRenewal = (lastPaymentIso, period) => {
+    if (!lastPaymentIso) return null;
+    const d = new Date(lastPaymentIso);
+    if (period === 'month') d.setMonth(d.getMonth() + 1);
+    else d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString();
+  };
 
+  const since = fmtDate(state.account && state.account.createdAt);
+  const lastPaymentIso = state.account && state.account.lastPaymentAt;
+  const lastPayment = fmtDate(lastPaymentIso);
+  const currentPeriodEndIso = state.account && state.account.currentPeriodEnd;
+  const periodEnd = fmtDate(currentPeriodEndIso);
+
+  // Volgende verlenging = laatste betaling + termijn (zelf berekend)
+  const nextRenewalIso = computeNextRenewal(lastPaymentIso, billingPeriod);
+  const nextRenewal = fmtDate(nextRenewalIso);
+
+  // Datumrijen afhankelijk van status
+  let dateRows = [];
+  if (plan !== 'basis') {
+    if (isCanceling) {
+      dateRows = [
+        { label: 'Laatste betaling', val: lastPayment },
+        { label: 'Toegang tot en met', val: periodEnd },
+      ];
+    } else if (isTrialing) {
+      dateRows = [
+        { label: 'Proefperiode tot', val: periodEnd },
+      ];
+    } else if (lastPaymentIso) {
+      dateRows = [
+        { label: 'Laatste betaling', val: lastPayment },
+        { label: 'Volgende verlenging', val: nextRenewal },
+      ];
+    }
+  }
+
+  const metaRowStyle = 'display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(47,93,217,.08);';
   const metaRows = [
     { label: 'Lid sinds', val: since },
-    ...(plan !== 'basis' ? [
-      { label: 'Laatste betaling', val: lastPayment },
-      { label: isCanceling ? 'Toegang tot en met' : 'Volgende verlenging', val: periodEnd },
-    ] : []),
+    ...dateRows,
   ].map(r => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(47,93,217,.08);">
+    <div style="${metaRowStyle}">
       <span style="font-size:13px;color:#9AAAC8;">${r.label}</span>
       <span style="font-size:13px;font-weight:600;color:#0F1222;">${r.val}</span>
     </div>`).join('');
@@ -1661,6 +1698,26 @@ function renderSubscription() {
   const statusBadge = isCanceling
     ? `<span style="display:inline-flex;align-items:center;gap:5px;background:#FFF3CD;color:#92640A;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:10px;">Opgezegd</span>`
     : '';
+
+  // Facturatiemethode rij (met schakeloptie)
+  const billingLabel = billingPeriod === 'month' ? 'Maandelijks gefactureerd' : 'Jaarlijks gefactureerd';
+  const switchLabel = billingPeriod === 'month' ? 'Omzetten naar jaarlijks' : 'Omzetten naar maandelijks';
+  const switchTarget = billingPeriod === 'month' ? 'year' : 'month';
+  const canSwitch = !isCanceling && plan !== 'basis';
+  const switchRow = canSwitch ? `
+    <div style="${metaRowStyle}">
+      <span style="display:flex;align-items:center;gap:7px;">
+        <span style="font-size:13px;color:#9AAAC8;">${billingLabel}</span>
+        ${isTrialing ? `<span style="font-size:10px;font-weight:700;background:rgba(47,93,217,.1);color:#2F5DD9;padding:2px 7px;border-radius:20px;">Proefperiode</span>` : ''}
+      </span>
+      <button class="btn btn-secondary btn-sm" data-action="switch-billing-period" data-period="${switchTarget}"
+        style="font-size:11px;padding:3px 10px;border-radius:5px;" ${ui.billingPeriodSwitching ? 'disabled' : ''}>
+        ${ui.billingPeriodSwitching ? 'Bezig…' : switchLabel}
+      </button>
+    </div>` : `
+    <div style="${metaRowStyle}">
+      <span style="font-size:13px;color:#9AAAC8;">${billingLabel}</span>
+    </div>`;
 
   const planCard = `
     <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;margin-bottom:20px;max-width:520px;">
@@ -1679,6 +1736,7 @@ function renderSubscription() {
         </div>
       </div>
       ${metaRows}
+      ${plan !== 'basis' ? switchRow : ''}
     </div>`;
 
   if (isBasis) {
@@ -1697,20 +1755,42 @@ function renderSubscription() {
       ${upgradeCard}`;
   }
 
-  const cancelCard = isCanceling
-    ? `<div style="background:#FFF9EC;border:1px solid #F5C842;border-radius:8px;padding:20px 24px;max-width:520px;">
+  // Cancel sectie
+  let cancelSection;
+  if (isCanceling) {
+    cancelSection = `
+      <div style="background:#FFF9EC;border:1px solid #F5C842;border-radius:8px;padding:20px 24px;max-width:520px;">
         <div style="font-size:14px;font-weight:700;color:#92640A;margin-bottom:6px;">Je abonnement is opgezegd</div>
         <div style="font-size:13px;color:#A07830;line-height:1.65;">
-          Je houdt toegang tot al je gegevens tot en met <strong>${periodEnd}</strong>. Daarna wordt je account automatisch beëindigd. Je gegevens worden veilig bewaard totdat je ze zelf verwijdert.
+          Je houdt toegang tot al je gegevens tot en met <strong>${periodEnd}</strong>.
         </div>
-      </div>`
-    : `<div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;max-width:520px;">
-        <div style="font-size:14px;font-weight:700;color:#0F1222;margin-bottom:8px;">Abonnement opzeggen</div>
-        <div style="font-size:13px;color:#9AAAC8;line-height:1.65;margin-bottom:18px;">
-          Je abonnement wordt per einde van de lopende betaalperiode (${periodEnd}) beëindigd. Je behoudt tot die datum gewoon toegang. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.
-        </div>
-        <button class="btn btn-secondary btn-sm" data-action="cancel-subscription" style="border-color:#E53E3E;color:#E53E3E;">Abonnement opzeggen</button>
       </div>`;
+  } else if (ui.cancelConfirming) {
+    const endDate = currentPeriodEndIso ? periodEnd : nextRenewal;
+    cancelSection = `
+      <div style="background:#fff;border:1px solid rgba(232,72,72,.3);border-radius:8px;padding:24px 28px;max-width:520px;">
+        <div style="font-size:16px;font-weight:700;color:#0F1222;margin-bottom:10px;">Weet je het zeker?</div>
+        <div style="font-size:13px;color:#4A5568;line-height:1.7;margin-bottom:22px;">
+          Je abonnement wordt per einde van de lopende betaalperiode (<strong>${endDate}</strong>) beëindigd.
+          Je behoudt tot die datum gewoon toegang tot al je gegevens.
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-sm" data-action="cancel-subscription"
+            style="background:#E53E3E;color:#fff;border:none;font-weight:700;">
+            Ja, definitief opzeggen
+          </button>
+          <button class="btn btn-secondary btn-sm" data-action="back-from-cancel">Terug</button>
+        </div>
+      </div>`;
+  } else {
+    cancelSection = `
+      <div style="max-width:520px;padding-top:4px;">
+        <button class="btn btn-secondary btn-sm" data-action="open-cancel-confirm"
+          style="border-color:#E53E3E;color:#E53E3E;">
+          Abonnement opzeggen
+        </button>
+      </div>`;
+  }
 
   const discount = state.account && state.account.isFirstMover ? firstMoverDiscount(state.account.createdAt) : 0;
   const firstMoverCard = discount > 0 ? (() => {
@@ -1733,7 +1813,7 @@ function renderSubscription() {
     ${pageHeader({ kicker: 'Abonnement', title: 'Mijn abonnement.' })}
     ${firstMoverCard}
     ${planCard}
-    ${cancelCard}`;
+    ${cancelSection}`;
 }
 
 function renderFaqPage() {
@@ -3252,10 +3332,25 @@ function wireEvents() {
     });
   });
 
+  const openCancelBtn = document.querySelector('[data-action="open-cancel-confirm"]');
+  if (openCancelBtn) {
+    openCancelBtn.addEventListener('click', () => {
+      ui.cancelConfirming = true;
+      render();
+    });
+  }
+
+  const backFromCancelBtn = document.querySelector('[data-action="back-from-cancel"]');
+  if (backFromCancelBtn) {
+    backFromCancelBtn.addEventListener('click', () => {
+      ui.cancelConfirming = false;
+      render();
+    });
+  }
+
   const cancelSubBtn = document.querySelector('[data-action="cancel-subscription"]');
   if (cancelSubBtn) {
     cancelSubBtn.addEventListener('click', async () => {
-      if (!confirm('Weet je zeker dat je wilt opzeggen? Je behoudt toegang tot het einde van je betaalperiode.')) return;
       cancelSubBtn.disabled = true;
       cancelSubBtn.textContent = 'Bezig...';
       try {
@@ -3267,18 +3362,47 @@ function wireEvents() {
         const json = await res.json();
         if (json.ok) {
           state.account.subscriptionStatus = 'canceling';
+          ui.cancelConfirming = false;
           flashToast('Abonnement opgezegd. Je behoudt toegang tot het einde van je betaalperiode.');
           render();
         } else {
           cancelSubBtn.disabled = false;
-          cancelSubBtn.textContent = 'Abonnement opzeggen';
+          cancelSubBtn.textContent = 'Ja, definitief opzeggen';
           flashToast(json.error || 'Er ging iets mis. Probeer opnieuw.');
         }
       } catch (e) {
         cancelSubBtn.disabled = false;
-        cancelSubBtn.textContent = 'Abonnement opzeggen';
+        cancelSubBtn.textContent = 'Ja, definitief opzeggen';
         flashToast('Er ging iets mis. Probeer opnieuw.');
       }
+    });
+  }
+
+  const switchBillingBtn = document.querySelector('[data-action="switch-billing-period"]');
+  if (switchBillingBtn) {
+    switchBillingBtn.addEventListener('click', async () => {
+      const targetPeriod = switchBillingBtn.dataset.period;
+      ui.billingPeriodSwitching = true;
+      render();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/change-billing-period', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ billing_period: targetPeriod }),
+        });
+        const json = await res.json();
+        if (json.ok) {
+          state.account.billingPeriod = targetPeriod;
+          flashToast(targetPeriod === 'month' ? 'Omgezet naar maandelijkse facturatie.' : 'Omgezet naar jaarlijkse facturatie.');
+        } else {
+          flashToast(json.error || 'Er ging iets mis. Probeer opnieuw.');
+        }
+      } catch (e) {
+        flashToast('Er ging iets mis. Probeer opnieuw.');
+      }
+      ui.billingPeriodSwitching = false;
+      render();
     });
   }
 
