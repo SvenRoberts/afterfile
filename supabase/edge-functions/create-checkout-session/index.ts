@@ -3,16 +3,13 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://afterfile.nl';
 
-// Stripe prijs-IDs per plan + betaalperiode
+// Stripe prijs-IDs per plan (dezelfde secret-namen als eerder ingesteld in Supabase)
+const PRICE_COMPLEET = Deno.env.get('STRIPE_PRICE_COMPLEET') ?? '';
+const PRICE_PREMIUM  = Deno.env.get('STRIPE_PRICE_PREMIUM')  ?? '';
+
 const PRICE_IDS: Record<string, Record<string, string>> = {
-  compleet: {
-    month: Deno.env.get('STRIPE_PRICE_COMPLEET_MONTH') ?? '',
-    year:  Deno.env.get('STRIPE_PRICE_COMPLEET_YEAR')  ?? '',
-  },
-  premium: {
-    month: Deno.env.get('STRIPE_PRICE_PREMIUM_MONTH') ?? '',
-    year:  Deno.env.get('STRIPE_PRICE_PREMIUM_YEAR')  ?? '',
-  },
+  compleet: { month: PRICE_COMPLEET, year: PRICE_COMPLEET },
+  premium:  { month: PRICE_PREMIUM,  year: PRICE_PREMIUM  },
 };
 
 const cors = {
