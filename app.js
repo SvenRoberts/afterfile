@@ -1800,18 +1800,21 @@ function renderAssets() {
   }
   if (ui.vaultState === 'locked') {
     return `
-      ${pageHeader({ kicker: 'Bezittingen', title: 'Voer je sleutelcode in.' })}
-      <div class="vault-gate-card">
-        <div style="pointer-events:none;user-select:none;margin-bottom:8px;">${vaultDialSvg(false)}</div>
-        <h3>Kluis vergrendeld</h3>
-        <p>Voer je persoonlijke sleutelcode in om je kluis te openen.</p>
-        <form id="vk-unlock-form" class="vault-setup-form">
-          <div class="field">
-            <label for="vk-frag-a-input">Sleutelcode</label>
-            <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="font-family:monospace;font-size:13px;resize:none;"></textarea>
+      ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.' })}
+      <div style="background:#fff;border:1.5px solid rgba(47,93,217,.38);border-radius:8px;padding:24px 26px;max-width:520px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+          <div class="card-icon">${iconSvg('lock', 18)}</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#0F1222;letter-spacing:-.01em;">Kluis vergrendeld</div>
+            <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">Voer je sleutelcode in om toegang te krijgen.</div>
           </div>
-          <div id="vk-unlock-err" style="color:var(--color-danger);font-size:13px;display:none;">Ongeldige code. Controleer of je de juiste code hebt geplakt.</div>
-          <button type="submit" class="btn btn-primary">Kluis openen</button>
+        </div>
+        <div style="height:1px;background:rgba(47,93,217,.1);margin-bottom:20px;"></div>
+        <form id="vk-unlock-form">
+          <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Sleutelcode</div>
+          <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="width:100%;box-sizing:border-box;font-family:'Courier New',monospace;font-size:13px;resize:none;padding:10px 12px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;"></textarea>
+          <div id="vk-unlock-err" style="color:var(--color-danger);font-size:13px;display:none;margin-top:8px;">Ongeldige code. Controleer of je de juiste code hebt geplakt.</div>
+          <button type="submit" class="btn btn-primary" style="margin-top:16px;">Kluis openen</button>
         </form>
       </div>`;
   }
