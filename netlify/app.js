@@ -208,6 +208,7 @@ function defaultState() {
     checkins: { status: 'active', waitingStartedAt: null },
     view: 'landing',
     completedAt: null,
+    adminProfiles: null,
   };
 }
 
@@ -439,10 +440,11 @@ function rowToContact(row) {
 // allereerste keer inloggen), proberen we het hier zelf nog een paar keer met een korte vertraging.
 async function loadAccountFromSupabase(userId, email, attempt) {
   attempt = attempt || 0;
-  const [{ data: profile, error: profileError }, { data: assets }, { data: contacts }] = await Promise.all([
+  const [{ data: profile, error: profileError }, { data: assets }, { data: contacts }, { data: lastPayments }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase.from('assets').select('*').eq('account_id', userId).order('created_at', { ascending: true }),
     supabase.from('contacts').select('*').eq('account_id', userId).order('created_at', { ascending: true }),
+    supabase.from('payments').select('paid_at').eq('account_id', userId).eq('status', 'paid').order('paid_at', { ascending: false }).limit(1),
   ]);
   if (profileError || !profile) {
     if (attempt >= 3) {
@@ -452,7 +454,19 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     await new Promise(r => setTimeout(r, 600));
     return loadAccountFromSupabase(userId, email, attempt + 1);
   }
-  state.account = { id: userId, name: profile.name || email.split('@')[0], email: profile.email || email, plan: profile.plan, createdAt: profile.created_at, role: profile.role || 'user' };
+  state.account = {
+    id: userId,
+    name: profile.name || email.split('@')[0],
+    email: profile.email || email,
+    plan: profile.plan,
+    createdAt: profile.created_at,
+    role: profile.role || 'user',
+    subscriptionStatus: profile.subscription_status || null,
+    currentPeriodEnd: profile.current_period_end || null,
+    stripeSubscriptionId: profile.stripe_subscription_id || null,
+    lastPaymentAt: (lastPayments && lastPayments[0]) ? lastPayments[0].paid_at : null,
+    isFirstMover: profile.is_first_mover || false,
+  };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
     city: profile.city || '', birthDate: profile.birth_date || '', phone: profile.phone || '',
@@ -640,6 +654,7 @@ if (supabase) {
 }
 
 function navigate(view) {
+  if (view === 'admin') state.adminProfiles = null; // trigger fresh load on each visit
   state.view = view;
   render();
   window.scrollTo(0, 0);
@@ -1592,22 +1607,70 @@ function renderAccountMenu(activeView) {
   `;
 }
 
+function firstMoverDiscount(createdAt) {
+  if (!createdAt) return 0;
+  const joinYear = new Date(createdAt).getFullYear();
+  const currentYear = new Date().getFullYear();
+  return 5 + Math.max(0, currentYear - joinYear);
+}
+
+async function loadAdminProfiles() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const res = await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/manage-first-mover', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+    const json = await res.json();
+    state.adminProfiles = json.profiles || [];
+    render();
+  } catch (e) {
+    console.error('loadAdminProfiles fout:', e);
+    state.adminProfiles = [];
+    render();
+  }
+}
+
 function renderSubscription() {
   const plan = state.account ? state.account.plan : 'basis';
   const isBasis = plan === 'basis';
+  const isCanceling = state.account && state.account.subscriptionStatus === 'canceling';
   const planData = PLANS.find(p => p.key === plan) || PLANS[0];
   const compleetData = PLANS.find(p => p.key === 'compleet');
 
-  const since = state.account && state.account.createdAt
-    ? new Date(state.account.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+  const fmtDate = (iso) => iso
+    ? new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
     : '–';
+
+  const since = fmtDate(state.account && state.account.createdAt);
+  const lastPayment = fmtDate(state.account && state.account.lastPaymentAt);
+  const periodEnd = fmtDate(state.account && state.account.currentPeriodEnd);
+
+  const metaRows = [
+    { label: 'Lid sinds', val: since },
+    ...(plan !== 'basis' ? [
+      { label: 'Laatste betaling', val: lastPayment },
+      { label: isCanceling ? 'Toegang tot en met' : 'Volgende verlenging', val: periodEnd },
+    ] : []),
+  ].map(r => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(47,93,217,.08);">
+      <span style="font-size:13px;color:#9AAAC8;">${r.label}</span>
+      <span style="font-size:13px;font-weight:600;color:#0F1222;">${r.val}</span>
+    </div>`).join('');
+
+  const statusBadge = isCanceling
+    ? `<span style="display:inline-flex;align-items:center;gap:5px;background:#FFF3CD;color:#92640A;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:10px;">Opgezegd</span>`
+    : '';
 
   const planCard = `
     <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;margin-bottom:20px;max-width:520px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;">
         <div>
           <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Huidig pakket</div>
-          <div style="font-size:22px;font-weight:700;color:#0F1222;letter-spacing:-.02em;">${esc(planData.name)}</div>
+          <div style="display:flex;align-items:center;gap:0;">
+            <span style="font-size:22px;font-weight:700;color:#0F1222;letter-spacing:-.02em;">${esc(planData.name)}</span>
+            ${statusBadge}
+          </div>
           <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${esc(planData.billing)}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
@@ -1615,9 +1678,7 @@ function renderSubscription() {
           <div style="font-size:12px;color:#9AAAC8;">${esc(planData.period)}</div>
         </div>
       </div>
-      <div style="font-size:13px;color:#9AAAC8;border-top:1px solid rgba(47,93,217,.1);padding-top:14px;">
-        Lid sinds ${since}
-      </div>
+      ${metaRows}
     </div>`;
 
   if (isBasis) {
@@ -1636,17 +1697,41 @@ function renderSubscription() {
       ${upgradeCard}`;
   }
 
-  const cancelCard = `
-    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;max-width:520px;">
-      <div style="font-size:14px;font-weight:700;color:#0F1222;margin-bottom:8px;">Abonnement opzeggen</div>
-      <div style="font-size:13px;color:#9AAAC8;line-height:1.65;margin-bottom:18px;">
-        Stuur een e-mail naar <a href="mailto:info@afterfile.nl" style="color:#2F5DD9;font-weight:600;">info@afterfile.nl</a> en je abonnement wordt per einde van de lopende betaalperiode beëindigd. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.
+  const cancelCard = isCanceling
+    ? `<div style="background:#FFF9EC;border:1px solid #F5C842;border-radius:8px;padding:20px 24px;max-width:520px;">
+        <div style="font-size:14px;font-weight:700;color:#92640A;margin-bottom:6px;">Je abonnement is opgezegd</div>
+        <div style="font-size:13px;color:#A07830;line-height:1.65;">
+          Je houdt toegang tot al je gegevens tot en met <strong>${periodEnd}</strong>. Daarna wordt je account automatisch beëindigd. Je gegevens worden veilig bewaard totdat je ze zelf verwijdert.
+        </div>
+      </div>`
+    : `<div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;max-width:520px;">
+        <div style="font-size:14px;font-weight:700;color:#0F1222;margin-bottom:8px;">Abonnement opzeggen</div>
+        <div style="font-size:13px;color:#9AAAC8;line-height:1.65;margin-bottom:18px;">
+          Je abonnement wordt per einde van de lopende betaalperiode (${periodEnd}) beëindigd. Je behoudt tot die datum gewoon toegang. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.
+        </div>
+        <button class="btn btn-secondary btn-sm" data-action="cancel-subscription" style="border-color:#E53E3E;color:#E53E3E;">Abonnement opzeggen</button>
+      </div>`;
+
+  const discount = state.account && state.account.isFirstMover ? firstMoverDiscount(state.account.createdAt) : 0;
+  const firstMoverCard = discount > 0 ? (() => {
+    const discountedPrice = (3.95 * (1 - discount / 100)).toFixed(2).replace('.', ',');
+    return `
+    <div style="background:linear-gradient(135deg,#0F1222 0%,#1A2240 100%);border-radius:8px;padding:22px 28px;max-width:520px;margin-bottom:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(47,93,217,.18);border-radius:50%;"></div>
+      <div style="position:absolute;bottom:-30px;right:30px;width:60px;height:60px;background:rgba(122,77,240,.15);border-radius:50%;"></div>
+      <div style="font-size:11px;font-weight:700;color:#7A8BB5;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">First Mover voordeel</div>
+      <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:4px;">Jouw loyaliteitskorting: ${discount}%</div>
+      <div style="font-size:13px;color:#7A8BB5;margin-bottom:14px;line-height:1.5;">Je was er als een van de eersten. Als dank groeit jouw korting elk jaar automatisch met 1%.</div>
+      <div style="display:flex;align-items:baseline;gap:10px;">
+        <span style="font-size:13px;color:#7A8BB5;text-decoration:line-through;">€3,95/mnd</span>
+        <span style="font-size:22px;font-weight:700;color:#2F5DD9;">€${discountedPrice}/mnd</span>
       </div>
-      <a href="mailto:info@afterfile.nl?subject=Abonnement%20opzeggen&body=Hallo%2C%0A%0AIk%20wil%20mijn%20AfterFile-abonnement%20opzeggen.%0AMijn%20e-mailadres%3A%20${encodeURIComponent(state.account ? state.account.email : '')}" class="btn btn-secondary btn-sm">E-mail sturen →</a>
     </div>`;
+  })() : '';
 
   return `
     ${pageHeader({ kicker: 'Abonnement', title: 'Mijn abonnement.' })}
+    ${firstMoverCard}
     ${planCard}
     ${cancelCard}`;
 }
@@ -2601,6 +2686,59 @@ function renderAdmin() {
   const signups = (state.signups || []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const planLabel = (key) => { const p = PLANS.find(pl => pl.key === key); return p ? p.name : key; };
 
+  // ── KPI's ────────────────────────────────────────────────────────────────
+  const totalKlanten   = signups.length;
+  const compleetCount  = signups.filter(s => s.plan !== 'basis').length;
+  const basisCount     = totalKlanten - compleetCount;
+  const mrr            = (compleetCount * 3.95).toFixed(2).replace('.', ',');
+  const pendingReports = signups.filter(s => (s.checkins || {}).status === 'waiting').length;
+  const avgAssets      = totalKlanten ? (signups.reduce((t, s) => t + (s.assets || []).length, 0) / totalKlanten).toFixed(1) : '0';
+  const avgContacts    = totalKlanten ? (signups.reduce((t, s) => t + (s.contacts || []).length, 0) / totalKlanten).toFixed(1) : '0';
+  const profileFilled  = signups.filter(s => {
+    const p = s.personalInfo || {};
+    return ['fullName','street','postalCode','city','birthDate','phone'].every(k => (p[k]||'').trim());
+  }).length;
+
+  const kpiCard = (label, value, sub, color) => `
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.18);border-radius:8px;padding:18px 20px;flex:1;min-width:120px;">
+      <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">${label}</div>
+      <div style="font-size:26px;font-weight:700;color:${color || '#0F1222'};letter-spacing:-.02em;line-height:1;">${value}</div>
+      ${sub ? `<div style="font-size:12px;color:#9AAAC8;margin-top:4px;">${sub}</div>` : ''}
+    </div>`;
+
+  const kpisHtml = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;">
+      ${kpiCard('Klanten', totalKlanten, `${compleetCount} Compleet · ${basisCount} Basis`)}
+      ${kpiCard('MRR', `€${mrr}`, `${compleetCount} betalend`,'#2F5DD9')}
+      ${kpiCard('Gem. bezittingen', avgAssets, 'per klant')}
+      ${kpiCard('Gem. contacten', avgContacts, 'per klant')}
+      ${kpiCard('Profiel ingevuld', profileFilled, `van ${totalKlanten} klanten`)}
+      ${pendingReports ? kpiCard('Openstaand', pendingReports, 'te beoordelen melding(en)', '#C4453F') : ''}
+    </div>`;
+
+  // ── Klantenrijen ─────────────────────────────────────────────────────────
+  const completionPct = s => {
+    let done = 0, total = 4;
+    const p = s.personalInfo || {};
+    if (['fullName','street','postalCode','city','birthDate','phone'].every(k => (p[k]||'').trim())) done++;
+    if ((s.assets || []).length > 0) done++;
+    if ((s.contacts || []).length > 0) done++;
+    if ((s.instructions || '').trim()) done++;
+    return Math.round((done / total) * 100);
+  };
+
+  const pctBadge = pct => {
+    const color = pct === 100 ? '#1F9D5C' : pct >= 50 ? '#2F5DD9' : '#9AAAC8';
+    return `<span style="font-size:11px;font-weight:700;color:${color};background:${color}18;padding:2px 8px;border-radius:20px;">${pct}% compleet</span>`;
+  };
+
+  const statusBadge = s => {
+    const ci = (s.checkins || {}).status || 'active';
+    if (ci === 'waiting') return `<span style="font-size:11px;font-weight:700;color:#C4453F;background:#FCEEED;padding:2px 8px;border-radius:20px;">⚠ Melding ingediend</span>`;
+    if (ci === 'shared')  return `<span style="font-size:11px;font-weight:700;color:#1F9D5C;background:#EDFAF4;padding:2px 8px;border-radius:20px;">✓ Vrijgegeven</span>`;
+    return '';
+  };
+
   const rowsHtml = signups.length ? signups.map(s => {
     const open = ui.openSignupId === s.id;
     const p = s.personalInfo || {};
@@ -2609,16 +2747,23 @@ function renderAdmin() {
     const contacts = s.contacts || [];
     const instr = (s.instructions || '').trim();
     const ci = s.checkins || { status: 'active' };
-    const ciLabel = { active: 'Actief, niets gemeld', waiting: 'Wachttijd loopt', shared: 'Informatie gedeeld' }[ci.status] || 'Actief, niets gemeld';
+    const pct = completionPct(s);
     return `
       <div class="admin-row ${open ? 'open' : ''}">
         <button type="button" class="admin-row-summary" data-action="toggle-signup" data-id="${s.id}">
           <div class="admin-row-main">
             <strong>${esc(s.name)}</strong>
             <span class="admin-row-email">${esc(s.email)}</span>
+            <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span class="admin-pill admin-pill--${s.plan}">${esc(planLabel(s.plan))}</span>
+              ${pctBadge(pct)}
+              ${statusBadge(s)}
+            </div>
           </div>
-          <span class="admin-pill admin-pill--${s.plan}">${esc(planLabel(s.plan))}</span>
-          <span class="admin-row-date">${esc(formatDate(new Date(s.createdAt)))}</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;font-size:12px;color:#9AAAC8;">
+            <span>${esc(formatDate(new Date(s.createdAt)))}</span>
+            <span>${assets.length} bezitting${assets.length !== 1 ? 'en' : ''} · ${contacts.length} contact${contacts.length !== 1 ? 'en' : ''}</span>
+          </div>
           ${iconSvg('chevron-down', 18)}
         </button>
         <div class="admin-row-detail">
@@ -2634,39 +2779,86 @@ function renderAdmin() {
             </div>
             <div class="admin-detail-block">
               <h4>${iconSvg('folder', 14)} Bezittingen (${assets.length})</h4>
-              ${assets.length ? assets.map(a => `<p class="meta-row"><strong>${esc(a.name)}</strong>, ${esc(a.typeLabel)}${a.location ? ` · ${esc(a.location)}` : ''}</p>`).join('') : `<p class="meta-row faint">Nog geen bezittingen.</p>`}
+              ${assets.length ? assets.map(a => `<p class="meta-row"><strong>${esc(a.name)}</strong> · ${esc(a.typeLabel)}${a.location ? ` · ${esc(a.location)}` : ''}</p>`).join('') : `<p class="meta-row faint">Nog geen bezittingen.</p>`}
             </div>
             <div class="admin-detail-block">
               <h4>${iconSvg('users', 14)} Contacten (${contacts.length})</h4>
-              ${contacts.length ? contacts.map(c => `<p class="meta-row"><strong>${esc(c.name)}</strong>, ${esc(c.relationship || 'Contact')} · ${esc(c.email)} · ${esc(rolesLabel(c.roles))}</p>`).join('') : `<p class="meta-row faint">Nog geen contacten.</p>`}
+              ${contacts.length ? contacts.map(c => `<p class="meta-row"><strong>${esc(c.name)}</strong> · ${esc(c.email)} · ${esc(rolesLabel(c.roles))}</p>`).join('') : `<p class="meta-row faint">Nog geen contacten.</p>`}
             </div>
             <div class="admin-detail-block">
               <h4>${iconSvg('file-text', 14)} Instructies</h4>
               <p class="meta-row${instr ? '' : ' faint'}">${instr ? esc(instr) : 'Nog niet geschreven.'}</p>
             </div>
+            ${ci.reportedBy ? `
             <div class="admin-detail-block">
-              <h4>${iconSvg('info', 14)} Status meldproces</h4>
-              <p class="meta-row">${esc(ciLabel)}</p>
-              ${ci.reportedBy ? `
-                <p class="meta-row"><strong>Gemeld door:</strong> ${esc(ci.reportedBy.name)} (${esc(ci.reportedBy.email)})${ci.reportedBy.phone ? ` · ${esc(ci.reportedBy.phone)}` : ''}${ci.reportedBy.relationship ? ` · ${esc(ci.reportedBy.relationship)}` : ''}</p>
-                ${ci.reportedBy.message ? `<p class="meta-row faint">${esc(ci.reportedBy.message)}</p>` : ''}
-                ${ci.reportedBy.certificatePath ? `
-                  <p class="meta-row"><strong>Akte van overlijden:</strong> <a href="#" data-action="view-certificate" data-path="${esc(ci.reportedBy.certificatePath)}" style="color:var(--color-primary);">Document bekijken</a></p>
-                ` : `<p class="meta-row faint">Geen akte geüpload.</p>`}
-                ${ci.status === 'waiting' ? `
-                  <div style="margin-top:10px;">
-                    <button type="button" class="btn btn-primary btn-sm" data-action="approve-death-report" data-id="${s.id}">
-                      Informatie vrijgeven
-                    </button>
-                  </div>
-                ` : ''}
-              ` : ''}
+              <h4>${iconSvg('info', 14)} Overlijdensmelding</h4>
+              <p class="meta-row"><strong>Gemeld door:</strong> ${esc(ci.reportedBy.name)} (${esc(ci.reportedBy.email)})${ci.reportedBy.phone ? ` · ${esc(ci.reportedBy.phone)}` : ''}</p>
+              ${ci.reportedBy.message ? `<p class="meta-row faint">${esc(ci.reportedBy.message)}</p>` : ''}
+              ${ci.reportedBy.certificatePath ? `<p class="meta-row"><a href="#" data-action="view-certificate" data-path="${esc(ci.reportedBy.certificatePath)}" style="color:var(--color-primary);">Akte bekijken →</a></p>` : `<p class="meta-row faint">Geen akte geüpload.</p>`}
+              ${ci.status === 'waiting' ? `<div style="margin-top:10px;"><button type="button" class="btn btn-primary btn-sm" data-action="approve-death-report" data-id="${s.id}">Informatie vrijgeven</button></div>` : ''}
             </div>
+            ` : ''}
           </div>
         </div>
       </div>
     `;
   }).join('') : `<div class="empty-state">Nog geen aanmeldingen.</div>`;
+
+  // ── First Movers (Supabase) ───────────────────────────────────────────────
+  let firstMoversHtml = '';
+  if (state.adminProfiles === null) {
+    // Trigger async load, show spinner
+    loadAdminProfiles();
+    firstMoversHtml = `<div style="color:#9AAAC8;font-size:13px;padding:16px 0;">Klanten laden...</div>`;
+  } else {
+    const profiles = state.adminProfiles;
+    const planLabel2 = (key) => { const p = PLANS.find(pl => pl.key === key); return p ? p.name : (key || 'Basis'); };
+    const profileRows = profiles.map(p => {
+      const disc = firstMoverDiscount(p.created_at);
+      const fmBadge = p.is_first_mover
+        ? `<span style="font-size:11px;font-weight:700;color:#2F5DD9;background:#EFF4FF;padding:2px 8px;border-radius:20px;">First Mover ${disc}%</span>`
+        : '';
+      const subBadge = p.subscription_status === 'canceling'
+        ? `<span style="font-size:11px;font-weight:700;color:#92640A;background:#FFF3CD;padding:2px 8px;border-radius:20px;">Opgezegd</span>`
+        : p.subscription_status === 'active' && p.plan !== 'basis'
+        ? `<span style="font-size:11px;font-weight:700;color:#1F9D5C;background:#EDFAF4;padding:2px 8px;border-radius:20px;">Actief</span>`
+        : '';
+      const endDate = p.current_period_end
+        ? new Date(p.current_period_end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid rgba(47,93,217,.08);flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(p.name || p.email)}</div>
+            <div style="font-size:12px;color:#9AAAC8;">${esc(p.email)}</div>
+            <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span class="admin-pill admin-pill--${p.plan || 'basis'}">${esc(planLabel2(p.plan))}</span>
+              ${fmBadge}
+              ${subBadge}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+            ${endDate ? `<span style="font-size:12px;color:#9AAAC8;">tot ${endDate}</span>` : ''}
+            <button type="button" class="btn btn-sm ${p.is_first_mover ? 'btn-secondary' : ''}"
+              style="font-size:12px;padding:5px 12px;"
+              data-action="toggle-first-mover"
+              data-id="${esc(p.id)}"
+              data-value="${p.is_first_mover ? 'false' : 'true'}">
+              ${p.is_first_mover ? 'First Mover verwijderen' : 'First Mover maken'}
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+    const fmCount = profiles.filter(p => p.is_first_mover).length;
+    firstMoversHtml = `
+      <div style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h3 style="margin:0;font-size:16px;font-weight:700;color:#0F1222;">Klanten (${profiles.length}) · <span style="color:#2F5DD9;">${fmCount} First Mover${fmCount !== 1 ? 's' : ''}</span></h3>
+        </div>
+        ${profileRows || '<div class="empty-state">Nog geen klanten.</div>'}
+      </div>`;
+  }
 
   const waitlist = (state.waitlist || []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -2735,14 +2927,20 @@ function renderAdmin() {
   ` : '';
 
   return `
-    ${pageHeader({ kicker: 'Beheer', title: 'Aanmeldingen inzien.', sub: 'Een overzicht van iedereen die zich in deze browser heeft aangemeld, met hun ingevulde gegevens.' })}
+    ${pageHeader({ kicker: 'Beheer', title: 'Klantoverzicht.', sub: 'Realtime inzicht in aanmeldingen, voortgang en openstaande acties.' })}
+
+    ${kpisHtml}
 
     ${PRELAUNCH_MODE ? `
-      <h3 style="margin-top:32px;">Wachtlijst (${waitlist.length})</h3>
+      <h3 style="margin:0 0 12px;">Wachtlijst (${waitlist.length})</h3>
       ${partnerTableHtml}
       ${waitlistHtml}
       <div class="section-divider"></div>
     ` : ''}
+
+    ${firstMoversHtml}
+
+    <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#0F1222;">Activiteit (${signups.length})</h3>
     <div class="admin-list">${rowsHtml}</div>
     ${contactsOverviewHtml ? `<div class="section-divider"></div>${contactsOverviewHtml}` : ''}
   `;
@@ -3019,6 +3217,70 @@ function wireEvents() {
   document.querySelectorAll('[data-action="change-plan"]').forEach(btn => {
     btn.addEventListener('click', () => changeSubscriptionPlan(btn.getAttribute('data-plan')));
   });
+
+  document.querySelectorAll('[data-action="toggle-first-mover"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.getAttribute('data-id');
+      const newValue = btn.getAttribute('data-value') === 'true';
+      btn.disabled = true;
+      btn.textContent = 'Bezig...';
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/manage-first-mover', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_id: targetId, is_first_mover: newValue }),
+        });
+        const json = await res.json();
+        if (json.ok) {
+          // Update local adminProfiles state
+          if (state.adminProfiles) {
+            const p = state.adminProfiles.find(x => x.id === targetId);
+            if (p) p.is_first_mover = newValue;
+          }
+          flashToast(newValue ? 'First Mover status toegevoegd. Stripe-korting verwerkt.' : 'First Mover status verwijderd.');
+          render();
+        } else {
+          flashToast(json.error || 'Er ging iets mis.');
+          btn.disabled = false;
+          btn.textContent = newValue ? 'First Mover maken' : 'First Mover verwijderen';
+        }
+      } catch (e) {
+        flashToast('Er ging iets mis. Probeer opnieuw.');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  const cancelSubBtn = document.querySelector('[data-action="cancel-subscription"]');
+  if (cancelSubBtn) {
+    cancelSubBtn.addEventListener('click', async () => {
+      if (!confirm('Weet je zeker dat je wilt opzeggen? Je behoudt toegang tot het einde van je betaalperiode.')) return;
+      cancelSubBtn.disabled = true;
+      cancelSubBtn.textContent = 'Bezig...';
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/cancel-subscription', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        });
+        const json = await res.json();
+        if (json.ok) {
+          state.account.subscriptionStatus = 'canceling';
+          flashToast('Abonnement opgezegd. Je behoudt toegang tot het einde van je betaalperiode.');
+          render();
+        } else {
+          cancelSubBtn.disabled = false;
+          cancelSubBtn.textContent = 'Abonnement opzeggen';
+          flashToast(json.error || 'Er ging iets mis. Probeer opnieuw.');
+        }
+      } catch (e) {
+        cancelSubBtn.disabled = false;
+        cancelSubBtn.textContent = 'Abonnement opzeggen';
+        flashToast('Er ging iets mis. Probeer opnieuw.');
+      }
+    });
+  }
 
   const betalingToggle = document.querySelector('[data-action="toggle-betaling"]');
   if (betalingToggle) betalingToggle.addEventListener('click', () => {
