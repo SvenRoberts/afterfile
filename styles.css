@@ -1265,7 +1265,8 @@ footer.site-footer a:hover { color: var(--color-primary); }
   line-height: 1.5;
   color: var(--color-text-muted);
   padding: 6px 0 6px 18px;
-  po
+  position: relative;
+}
 /* ================================================================
    TABLET  (max-width: 768px) — iPad portrait + kleine laptops
    ================================================================ */
