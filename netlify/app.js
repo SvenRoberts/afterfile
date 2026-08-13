@@ -499,21 +499,6 @@ async function loadAccountFromSupabase(userId, email, attempt) {
 async function applySession(session) {
   if (session && session.user) {
     await loadAccountFromSupabase(session.user.id, session.user.email);
-    // Direct na het laden: als het account plan='basis' is én er een pending checkout is
-    // in localStorage (= net via het aanmeldformulier), stuur dan direct door naar Stripe.
-    // Dit is betrouwbaarder dan user_metadata lezen (die wordt door Supabase niet altijd
-    // gevuld voor magic links).
-    if (state.account && state.account.plan === 'basis') {
-      try {
-        const stored = localStorage.getItem('af_pending_checkout');
-        if (stored) {
-          const p = JSON.parse(stored);
-          if (p.billingPeriod) ui.billingPeriod = p.billingPeriod;
-          localStorage.removeItem('af_pending_checkout');
-          setTimeout(() => startCheckout(p.plan || 'compleet'), 200);
-        }
-      } catch(_) {}
-    }
   } else {
     state.account = null;
     state.assets = [];
@@ -542,12 +527,14 @@ async function startCheckout(planKey) {
   try {
     const referredBy = localStorage.getItem('af_ref') || null;
     const { data, error } = await supabase.functions.invoke('create-checkout-session', { body: { plan: planKey, billingPeriod: ui.billingPeriod || 'year', referredBy } });
-    if (error || !data || !data.url) throw error || new Error('Geen checkout-url ontvangen');
+    // Lees de foutmelding uit de response zodat we precies weten wat er mis gaat
+    const errMsg = (data && data.error) ? data.error : (error && (error.message || JSON.stringify(error))) || null;
+    if (errMsg || !data || !data.url) throw new Error(errMsg || 'Geen checkout-url ontvangen');
     window.location.href = data.url;
   } catch (e) {
     console.error('Stripe checkout starten mislukt:', e);
     ui.checkoutRedirecting = false;
-    flashToast('Kon de betaalpagina niet openen. Probeer het opnieuw.');
+    flashToast('Betaalpagina mislukt: ' + (e && e.message ? e.message : 'onbekende fout'));
     render();
   }
 }
@@ -578,24 +565,11 @@ async function changeSubscriptionPlan(planKey) {
   }
 }
 
-// Direct na een verse magic-link-login (niet bij een herstelde sessie bij het laden van de
-// pagina): als de gebruiker bij het aanmelden een betaald plan koos, sturen we hem nu meteen
-// door naar Stripe Checkout. state.account.plan staat op dit punt al klaar (loadAccountFromSupabase
-// is hierboven al uitgevoerd), dus iemand die al een betaald plan heeft slaat dit gewoon over.
-function maybeStartCheckout(session) {
-  if (!session || !session.user || !state.account) return;
-  // localStorage is betrouwbaarder dan user_metadata (werkt ook bij bestaande gebruikers)
-  let pendingPlan = null, pendingPeriod = null;
-  try {
-    const stored = localStorage.getItem('af_pending_checkout');
-    if (stored) { const p = JSON.parse(stored); pendingPlan = p.plan; pendingPeriod = p.billingPeriod; }
-  } catch(_) {}
-  const planKey = pendingPlan || (session.user.user_metadata && session.user.user_metadata.selected_plan);
-  if (!planKey || planKey === 'basis') return;
-  if (state.account.plan !== 'basis') return;
-  if (pendingPeriod) ui.billingPeriod = pendingPeriod;
-  try { localStorage.removeItem('af_pending_checkout'); } catch(_) {}
-  startCheckout(planKey);
+// maybeStartCheckout is niet meer nodig: betaling gebeurt nu VOOR account-aanmaak.
+// De stripe-webhook maakt het account aan na geslaagde betaling en stuurt een magic link.
+// Deze functie is leeg gelaten voor achterwaartse compatibiliteit met eventuele aanroepen.
+function maybeStartCheckout(_session) {
+  // geen actie meer nodig
 }
 
 let state = Object.assign(defaultState(), loadLocalDemoState());
@@ -640,7 +614,7 @@ render();
   const checkoutResult = params.get('checkout');
   if (!checkoutResult) return;
   if (checkoutResult === 'success') {
-    flashToast('Betaling gelukt. Je abonnement wordt geactiveerd, dit kan even duren.');
+    flashToast('Betaling gelukt. Je ontvangt zo een e-mail met een inloglink.');
   } else if (checkoutResult === 'cancelled') {
     flashToast('Betaling geannuleerd. Je kunt het op elk moment opnieuw proberen via je dashboard.');
   }
@@ -1289,27 +1263,8 @@ function renderSignup() {
   const betalingOpen = !!ui.betalingOpen;
   const pendingRef = (() => { try { return localStorage.getItem('af_ref'); } catch(_) { return null; } })();
 
-  if (ui.magicLinkSentTo) {
-    return `
-      <nav class="publicnav">
-        <div class="publicnav-inner">
-          <a href="#" class="brand" data-nav="landing"><span class="brand-mark">${logoMark(34)}</span> AfterFile</a>
-          <div class="publicnav-links"><a href="#" data-nav="landing">Home</a></div>
-        </div>
-      </nav>
-      <main class="page">
-        <div class="container checkout-container">
-          <div class="checkin-card status-ok">
-            <div class="checkin-card-top">
-              <h3>Check je e-mail</h3>
-              <span class="status-pill status-ok">Verzonden</span>
-            </div>
-            <p>We hebben een inloglink gestuurd naar <strong>${esc(ui.magicLinkSentTo)}</strong>. Klik op de link in die e-mail om verder te gaan, er is geen wachtwoord nodig.</p>
-          </div>
-        </div>
-      </main>
-    `;
-  }
+  // magicLinkSentTo wordt niet meer gebruikt bij aanmelding (betalen gaat voor account-aanmaak),
+  // maar we houden de variabele voor eventueel toekomstig gebruik.
 
   const paymentBadgesHtml = PAYMENT_METHODS.map(m => `<span class="payment-badge">${esc(m)}</span>`).join('');
   const planOptionsHtml = `
@@ -1373,7 +1328,7 @@ function renderSignup() {
                     </div>
                   </div>
                   ` : ''}
-                  <p class="payment-note" style="text-align:left; margin-top:0;">Klik op "Doorgaan", bevestig je e-mailadres via de link die je ontvangt, en je wordt direct doorgestuurd naar Stripe om veilig te betalen (iDEAL of creditcard). Je abonnement wordt automatisch verlengd tot je opzegt.</p>
+                  <p class="payment-note" style="text-align:left; margin-top:0;">Klik op "Doorgaan" om naar de betaalpagina te gaan. Na betaling ontvang je een inloglink per e-mail. Je abonnement wordt automatisch verlengd tot je opzegt.</p>
                 </div>
               </div>
 
@@ -3318,24 +3273,31 @@ function wireEvents() {
     ui.signupEmailError = null;
     ui.signupSubmitting = true;
     render();
-    // Sla plan + betaalperiode op in localStorage zodat maybeStartCheckout() na de
-    // magic-link-redirect betrouwbaar weet welk plan er gekozen was, ook als
-    // user_metadata niet (goed) bijgewerkt wordt voor bestaande gebruikers.
-    try { localStorage.setItem('af_pending_checkout', JSON.stringify({ plan: planKey, billingPeriod: ui.billingPeriod || 'year' })); } catch(_) {}
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { name, selected_plan: planKey } },
-    });
-    ui.signupSubmitting = false;
-    if (error) {
-      ui.signupEmailError = 'Er ging iets mis bij het versturen van de inloglink. Probeer het opnieuw.';
+    // Roep de Edge Function aan zonder authenticatie (nieuwe gebruiker bestaat nog niet).
+    // De Edge Function maakt een Stripe Checkout Session aan; na geslaagde betaling
+    // maakt de stripe-webhook automatisch het Supabase-account aan en stuurt een magic link.
+    try {
+      const referredBy = localStorage.getItem('af_ref') || '';
+      const res = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/create-checkout-session`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabase.supabaseKey,
+          },
+          body: JSON.stringify({ email, name, plan: planKey, billingPeriod: ui.billingPeriod || 'year', referredBy }),
+        },
+      );
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || 'Geen betaallink ontvangen');
+      window.location.href = data.url;
+      // geen render nodig, we redirecten
+    } catch (e) {
+      ui.signupSubmitting = false;
+      ui.signupEmailError = 'Betaalpagina kon niet worden geopend: ' + (e && e.message ? e.message : 'onbekende fout');
       render();
-      return;
     }
-    ui.magicLinkSentTo = email;
-    ui.signupDraftEmail = '';
-    ui.signupDraftName  = '';
-    render();
   });
 
   // Activeer Doorgaan-knop pas als e-mail, naam én betaalperiode zijn ingevuld
