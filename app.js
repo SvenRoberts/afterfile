@@ -1803,12 +1803,9 @@ function renderAssets() {
       ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.' })}
       <div style="background:#fff;border:1.5px solid rgba(47,93,217,.38);border-radius:8px;padding:24px 26px;max-width:520px;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div class="card-icon">${iconSvg('lock', 18)}</div>
-            <div>
-              <div style="font-size:15px;font-weight:700;color:#0F1222;letter-spacing:-.01em;">Kluis vergrendeld</div>
-              <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">Voer je sleutelcode in om toegang te krijgen.</div>
-            </div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#0F1222;letter-spacing:-.01em;">Kluis vergrendeld</div>
+            <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">Voer je sleutelcode in om toegang te krijgen.</div>
           </div>
           <div style="pointer-events:none;user-select:none;flex-shrink:0;opacity:.9;">${vaultDialSvg(false)}</div>
         </div>
@@ -2411,8 +2408,7 @@ function renderReport() {
     ${sectionCard('key',       'Persoonlijke gegevens',            piContent)}
     ${sectionCard('safe',      'Digitale &amp; financiële bezittingen', assetsContent)}
     ${sectionCard('users',     'Vertrouwde contacten',             contactsContent)}
-    ${sectionCard('file-text', 'Instructies &amp; wensen',         instrContent)}
-    ${sectionCard('info',      'Wanneer wordt dit gedeeld?',       procesContent)}
+    ${sectionCard('file-text', 'Instructies',                      instrContent)}
   `;
 }
 
