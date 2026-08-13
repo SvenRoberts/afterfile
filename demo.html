@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AfterFile — Interactieve Demo</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Demo-banner bovenaan ── */
+    #af-demo-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10000;
+      background: linear-gradient(90deg, #1B2C6B 0%, #2F5DD9 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 9px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .01em;
+      flex-wrap: wrap;
+    }
+    #af-demo-bar .sep { width: 1px; height: 14px; background: rgba(255,255,255,.28); flex-shrink: 0; }
+    #af-demo-bar a { color: #A8CAFF; text-decoration: none; font-weight: 600; }
+    #af-demo-bar a:hover { text-decoration: underline; }
+    body { padding-top: 42px; }
+
+    /* ── Checkout-modal ── */
+    #af-demo-checkout {
+      display: none;
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(15,18,34,.55);
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #af-demo-checkout.visible { display: flex; }
+    #af-demo-checkout .box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 36px 32px;
+      max-width: 400px; width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(15,18,34,.18);
+    }
+    #af-demo-checkout .emoji { font-size: 36px; margin-bottom: 14px; }
+    #af-demo-checkout h2 { font-size: 19px; font-weight: 700; color: #0F1222; margin: 0 0 8px; }
+    #af-demo-checkout p  { color: #7A8BB5; font-size: 14px; line-height: 1.6; margin: 0 0 22px; }
+    #af-demo-checkout .cta {
+      display: inline-block;
+      background: #2F5DD9; color: #fff;
+      font-weight: 600; font-size: 14px;
+      padding: 12px 26px; border-radius: 8px;
+      text-decoration: none;
+    }
+    #af-demo-checkout .back {
+      display: block; margin-top: 13px;
+      background: none; border: none;
+      color: #9AAAC8; cursor: pointer; font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Demo-banner -->
+<div id="af-demo-bar">
+  <span>🎯 Demo modus</span>
+  <span class="sep"></span>
+  <span>Klik gerust rond — niets wordt opgeslagen of verstuurd.</span>
+  <span class="sep"></span>
+  <a href="https://afterfile.nl" target="_blank" rel="noopener">Echte omgeving →</a>
+</div>
+
+<!-- Checkout-redirect modal -->
+<div id="af-demo-checkout">
+  <div class="box">
+    <div class="emoji">🎉</div>
+    <h2>Klaar om te beginnen?</h2>
+    <p>In de demo is betalen uitgeschakeld.<br>
+       Maak je echte account aan op AfterFile.nl.</p>
+    <a class="cta" href="https://afterfile.nl" target="_blank" rel="noopener">Naar AfterFile.nl →</a>
+    <button class="back" onclick="document.getElementById('af-demo-checkout').classList.remove('visible')">
+      Terug naar demo
+    </button>
+  </div>
+</div>
+
+<div id="root"></div>
+
+<!-- ════════════════════════════════════════════════════════════
+     Mock window.supabase  —  geladen VÓÓR app.js
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── Demo-data (snake_case, identiek aan DB-output) ── */
+  const UID = 'demo-user-2026';
+  const EMAIL = 'sanne@demo.afterfile.nl';
+
+  const PROFILE = {
+    id: UID, name: 'Sanne de Boer', email: EMAIL,
+    plan: 'compleet', subscription_status: 'active',
+    billing_period: 'year',
+    current_period_end: '2027-08-13T00:00:00Z',
+    stripe_subscription_id: 'sub_demo123',
+    ref_code: 'SANNE2026',
+    referral_count: 2, referral_discount_pct: 10,
+    active_referral_names: ['Emma V.', 'Thomas B.'],
+    pending_billing_period: null,
+    full_name: 'Sanne de Boer',
+    street: 'Keizersgracht 456', postal_code: '1017 EH', city: 'Amsterdam',
+    birth_date: '1978-06-15', phone: '0612345678',
+    instructions: 'Mijn wachtwoorden staan in Bitwarden. Het masterpassword staat op een briefje in de bovenste bureaula in de slaapkamer. Emma heeft een reservesleutel van het appartement.',
+    checkin_status: 'active', waiting_started_at: null,
+    completed_at: '2026-01-20T10:00:00Z',
+    role: 'user', created_at: '2026-01-10T00:00:00Z',
+  };
+
+  const ASSETS = [
+    { id: 'a1', account_id: UID, category_key: 'financial', type_key: 'bank',
+      type_label: 'Bankrekening', name: 'Betaalrekening ING',
+      extra: { bankName: 'ING' }, description: 'Dagelijkse betaalrekening',
+      location: '', notes: '', created_at: '2026-01-10T08:00:00Z' },
+    { id: 'a2', account_id: UID, category_key: 'financial', type_key: 'broker',
+      type_label: 'Broker', name: 'Beleggingsrekening DEGIRO',
+      extra: { platform: 'DEGIRO' }, description: '',
+      location: '', notes: 'Portefeuille PDF op laptop (map Financieel)', created_at: '2026-01-10T08:01:00Z' },
+    { id: 'a3', account_id: UID, category_key: 'digital', type_key: 'email',
+      type_label: 'E-mailaccount', name: 'Gmail privé',
+      extra: { provider: 'Gmail' }, description: '',
+      location: '', notes: '', created_at: '2026-01-10T08:02:00Z' },
+    { id: 'a4', account_id: UID, category_key: 'practical', type_key: 'phone',
+      type_label: 'Telefoon', name: 'iPhone 15 Pro',
+      extra: { brand: 'Apple iPhone 15 Pro' }, description: '',
+      location: '', notes: '', created_at: '2026-01-10T08:03:00Z' },
+    { id: 'a5', account_id: UID, category_key: 'other', type_key: 'password-manager',
+      type_label: 'Wachtwoordmanager', name: 'Wachtwoordkluis Bitwarden',
+      extra: { app: 'Bitwarden', keyLocation: 'Briefje in bureaula slaapkamer' },
+      description: '', location: '', notes: '', created_at: '2026-01-10T08:04:00Z' },
+  ];
+
+  const CONTACTS = [
+    { id: 'c1', account_id: UID, name: 'Emma Vos', email: 'emma.vos@example.nl',
+      relationship: 'Partner', address: 'Keizersgracht 456, Amsterdam',
+      birth_date: '1980-03-22', phone: '0698765432',
+      roles: ['verify', 'inform'], created_at: '2026-01-10T09:00:00Z' },
+    { id: 'c2', account_id: UID, name: 'Thomas de Boer', email: 'thomas.deboer@example.nl',
+      relationship: 'Kind', address: '',
+      birth_date: '2005-08-05', phone: '',
+      roles: ['inform'], created_at: '2026-01-10T09:01:00Z' },
+  ];
+
+  const PAYMENTS    = [{ paid_at: '2026-01-10T12:00:00Z' }];
+  const VAULT_DATA  = { id: 'vault-demo', user_id: UID, fragment_b: null,
+                        encrypted_blob: null, contact_email: 'emma.vos@example.nl' };
+
+  /* ── Chainable query-builder ── */
+  function makeTable(table, tableData) {
+    var _insert = null, _update = null, _capturedId = null, _del = false;
+
+    function result() {
+      if (_del)    return null;
+      if (_insert) return _insert;
+      if (_update) {
+        var base = null;
+        if (_capturedId && Array.isArray(tableData))
+          base = tableData.find(function(r){ return r.id === _capturedId; }) || null;
+        else if (!Array.isArray(tableData))
+          base = tableData;
+        var id = _capturedId || (base && base.id) || ('demo-' + Math.random().toString(36).slice(2));
+        return Object.assign({}, base || {}, _update, { id: id });
+      }
+      return tableData;
+    }
+
+    var q = {
+      select:  function()       { return q; },
+      eq:      function(col,val){ if(col==='id'||col==='user_id') _capturedId=val; return q; },
+      neq:     function()       { return q; },
+      gte:     function()       { return q; },
+      lte:     function()       { return q; },
+      order:   function()       { return q; },
+      limit:   function()       { return q; },
+      not:     function()       { return q; },
+
+      insert: function(row) {
+        _insert = Object.assign({}, row, {
+          id: 'demo-' + Math.random().toString(36).slice(2),
+          created_at: new Date().toISOString()
+        });
+        return q;
+      },
+      update: function(row) { _update = row; return q; },
+      delete: function()    { _del   = true; return q; },
+      upsert: function(row) {
+        _insert = Object.assign({ id: 'demo-' + Math.random().toString(36).slice(2) }, row);
+        return q;
+      },
+
+      maybeSingle: function() {
+        var d = result();
+        return Promise.resolve({ data: Array.isArray(d) ? (d[0] || null) : d, error: null });
+      },
+      single: function() {
+        var d = result();
+        return Promise.resolve({ data: Array.isArray(d) ? (d[0] || null) : d, error: null });
+      },
+
+      /* thenable — voor directe await én .then()-chains */
+      then:    function(res, rej) { return Promise.resolve({ data: result(), error: null }).then(res, rej); },
+      catch:   function(fn)       { return Promise.resolve({ data: result(), error: null }).catch(fn); },
+      finally: function(fn)       { return Promise.resolve({ data: result(), error: null }).finally(fn); },
+    };
+    return q;
+  }
+
+  /* ── Auth-state machine ── */
+  var _authCb = null;
+  var SESSION = { user: { id: UID, email: EMAIL }, access_token: 'demo-token' };
+
+  /* ── Mock window.supabase ── */
+  window.supabase = {
+    createClient: function(url, key) {
+      return {
+        auth: {
+          onAuthStateChange: function(cb) {
+            _authCb = cb;
+            /* Kleine vertraging zodat de landing page eerst rendert, dan auto-login */
+            setTimeout(function(){ cb('SIGNED_IN', SESSION); }, 180);
+            return { data: { subscription: { unsubscribe: function(){} } } };
+          },
+          signOut: function() {
+            if (_authCb) setTimeout(function(){ _authCb('SIGNED_OUT', null); }, 0);
+            return Promise.resolve({ error: null });
+          },
+          signInWithOtp: function(opts) {
+            /* In de demo: doe alsof de magic link is verstuurd */
+            return Promise.resolve({ data: {}, error: null });
+          },
+          getSession: function() {
+            return Promise.resolve({ data: { session: SESSION }, error: null });
+          },
+        },
+
+        from: function(table) {
+          var data = { profiles: PROFILE, assets: ASSETS, contacts: CONTACTS,
+                       payments: PAYMENTS, vault_data: VAULT_DATA }[table];
+          return makeTable(table, data !== undefined ? data : null);
+        },
+
+        rpc: function(name, params) {
+          /* is_bypass_email → false: gebruiker gaat naar normale wachtlijst in demo */
+          return Promise.resolve({ data: false, error: null });
+        },
+
+        functions: {
+          invoke: function(name, opts) {
+            if (name === 'create-checkout-session') {
+              /* Toon checkout-modal na korte vertraging */
+              setTimeout(function(){
+                document.getElementById('af-demo-checkout').classList.add('visible');
+              }, 300);
+              /* Geef null-url terug zodat startCheckout() de error-toast toont en reset */
+              return Promise.resolve({ data: null, error: new Error('Demo: betaling uitgeschakeld') });
+            }
+            /* Alle andere Edge Functions slagen stil */
+            return Promise.resolve({ data: { ok: true }, error: null });
+          }
+        },
+      };
+    }
+  };
+
+  /* ── fetch-interceptor voor directe Edge Function-aanroepen ── */
+  var _realFetch = window.fetch;
+  window.fetch = function(url, opts) {
+    if (typeof url === 'string' && url.indexOf('supabase.co/functions') !== -1) {
+      /* vault-claim → demo-payload */
+      if (url.indexOf('vault-claim') !== -1) {
+        return Promise.resolve(new Response(
+          JSON.stringify({ ok: true, assets: [], contacts: [], instructions: '', personalInfo: {} }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        ));
+      }
+      /* vault-setup → fake fragment_b */
+      if (url.indexOf('vault-setup') !== -1) {
+        return Promise.resolve(new Response(
+          JSON.stringify({ fragment_b: btoa('DEMO_FRAGMENT_B') }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        ));
+      }
+      /* cancel-subscription / change-billing-period → ok */
+      return Promise.resolve(new Response(
+        JSON.stringify({ ok: true }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      ));
+    }
+    /* Netlify Forms: stil laten slagen */
+    if (typeof url === 'string' && url === '/') {
+      return Promise.resolve(new Response('', { status: 200 }));
+    }
+    return _realFetch.apply(this, arguments);
+  };
+
+})();
+</script>
+
+<!-- De echte app — laadt en werkt volledig met de mock hierboven -->
+<script src="app.js"></script>
+
+</body>
+</html>
