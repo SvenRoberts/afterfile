@@ -569,9 +569,17 @@ async function changeSubscriptionPlan(planKey) {
 // is hierboven al uitgevoerd), dus iemand die al een betaald plan heeft slaat dit gewoon over.
 function maybeStartCheckout(session) {
   if (!session || !session.user || !state.account) return;
-  const planKey = session.user.user_metadata && session.user.user_metadata.selected_plan;
+  // localStorage is betrouwbaarder dan user_metadata (werkt ook bij bestaande gebruikers)
+  let pendingPlan = null, pendingPeriod = null;
+  try {
+    const stored = localStorage.getItem('af_pending_checkout');
+    if (stored) { const p = JSON.parse(stored); pendingPlan = p.plan; pendingPeriod = p.billingPeriod; }
+  } catch(_) {}
+  const planKey = pendingPlan || (session.user.user_metadata && session.user.user_metadata.selected_plan);
   if (!planKey || planKey === 'basis') return;
   if (state.account.plan !== 'basis') return;
+  if (pendingPeriod) ui.billingPeriod = pendingPeriod;
+  try { localStorage.removeItem('af_pending_checkout'); } catch(_) {}
   startCheckout(planKey);
 }
 
@@ -2153,7 +2161,7 @@ function renderAssets() {
             const detailRow = (label, val, pw = false) =>
               `<div style="padding:6px 0;border-bottom:1px solid #EEF2FF;">
                 <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">${label}</div>
-                <div style="font-size:13px;color:#0F1222;word-break:break-word;">${pw ? '••••••••' : val}</div>
+                <div style="font-size:13px;color:#0F1222;word-break:break-word;">${pw && !window.AF_DEMO_MODE ? '••••••••' : val}</div>
               </div>`;
             const detailRows = [
               ...(type?.extraFields || []).filter(ef => (a.extra || {})[ef.key]).map(ef =>
@@ -3295,11 +3303,12 @@ function wireEvents() {
     ui.signupEmailError = null;
     ui.signupSubmitting = true;
     render();
+    // Sla plan + betaalperiode op in localStorage zodat maybeStartCheckout() na de
+    // magic-link-redirect betrouwbaar weet welk plan er gekozen was, ook als
+    // user_metadata niet (goed) bijgewerkt wordt voor bestaande gebruikers.
+    try { localStorage.setItem('af_pending_checkout', JSON.stringify({ plan: planKey, billingPeriod: ui.billingPeriod || 'year' })); } catch(_) {}
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      // selected_plan reizen mee in de Supabase Auth user_metadata, zodat we na de
-      // magic-link-redirect (zie maybeStartCheckout()) weten of er nog een Stripe Checkout
-      // gestart moet worden voor een betaald plan.
       options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { name, selected_plan: planKey } },
     });
     ui.signupSubmitting = false;
