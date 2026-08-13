@@ -1289,7 +1289,10 @@ function renderSignup() {
   }
 
   const paymentBadgesHtml = PAYMENT_METHODS.map(m => `<span class="payment-badge">${esc(m)}</span>`).join('');
-  const planOptionsHtml = PLANS.map(p => `<option value="${p.key}" ${p.key === planKey ? 'selected' : ''}>${esc(p.name)}, ${esc(p.price)}${esc(p.period)}</option>`).join('');
+  const planOptionsHtml = `
+    <option value="year"  ${ui.billingPeriod === 'year'  ? 'selected' : ''}>Compleet, €39,95 / jaar</option>
+    <option value="month" ${ui.billingPeriod === 'month' ? 'selected' : ''}>Compleet, €3,95 / maand</option>
+  `;
 
   return `
     <nav class="publicnav">
@@ -3454,7 +3457,7 @@ function wireEvents() {
 
   const planSelect = document.getElementById('select-plan');
   if (planSelect) planSelect.addEventListener('change', () => {
-    ui.selectedPlanKey = planSelect.value;
+    ui.billingPeriod = planSelect.value;
     render();
   });
 
