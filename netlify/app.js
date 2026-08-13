@@ -165,7 +165,6 @@ const WAITING_PERIOD_DAYS = 30;
 
 const TRUST_LINE = 'Jouw digitale nalatenschap veilig geregeld.';
 
-const LAUNCH_OFFER_MONTHS = 6;
 
 // Vóór de echte lancering bieden we i.p.v. de volledige betaalflow alleen een wachtlijst
 // aan. Alle bestaande checkout-/signup-code blijft volledig intact en functioneel: zet
@@ -182,15 +181,9 @@ let partnerRef = '';
 
 const PLANS = [
   {
-    key: 'basis', name: 'Basis', price: '€0', period: '/ maand', billing: 'Altijd gratis te gebruiken',
-    features: ['Tot 3 bezittingen vastleggen', '1 vertrouwd contact', 'Eenvoudige instructies'],
-    missingFeatures: ['Geen Legacy Report (PDF)', 'Geen e-mailherinneringen'],
-    cta: 'Begin gratis', featured: false,
-  },
-  {
     key: 'compleet', name: 'Compleet', price: '€3,95', period: '/ maand', billing: 'Jaarlijks gefactureerd: €39,95, bespaar 16%',
     features: ['Onbeperkt bezittingen', 'Tot 5 vertrouwde contacten', 'Volledig Legacy Report (PDF)', 'Jaarlijkse reminder om gegevens bij te werken'],
-    cta: 'Aan de slag', featured: true, launchEligible: true,
+    cta: 'Aan de slag', featured: true,
   },
 ];
 
@@ -957,7 +950,6 @@ function renderLanding() {
       <h3>${esc(p.name)}</h3>
       <div class="plan-price-row"><span class="plan-price">${esc(p.price)}</span><span class="plan-period">${esc(p.period)}</span></div>
       <p class="plan-billing">${esc(p.billing)}</p>
-      ${p.launchEligible ? `<span class="plan-launch-note">${iconSvg('check', 12)} Eerste ${LAUNCH_OFFER_MONTHS} maanden gratis</span>` : ''}
       <ul class="plan-features">
         ${p.features.map(f => `<li>${iconSvg('check', 14)}<span>${esc(f)}</span></li>`).join('')}
         ${(p.missingFeatures || []).map(f => `<li style="color:var(--color-text-faint);">${iconSvg('x', 14)}<span>${esc(f)}</span></li>`).join('')}
@@ -992,7 +984,6 @@ function renderLanding() {
         <div class="publicnav-links">
           ${PRELAUNCH_MODE ? `<a href="#" data-nav="waitlist">Voor naasten</a>` : `<a href="#" data-nav="death-report">Voor naasten</a>`}
           <a href="#" data-nav="partner" style="font-weight:500;">Voor partners</a>
-          <button class="btn btn-secondary btn-sm" data-nav="signup" data-plan="basis">Aanmelden</button>
           <button class="btn btn-primary btn-sm" data-nav="signup" data-plan="compleet">Nu abonneren</button>
         </div>
       </div>
@@ -1011,7 +1002,7 @@ function renderLanding() {
             <ul class="check-list">${checkListHtml}</ul>
             <div class="hero-cta-row">
               <button class="btn btn-primary btn-lg" data-nav="signup" data-plan="compleet">Aan de slag</button>
-              <span class="hero-cta-note">Begin gratis, of upgrade met onze lanceringsaanbieding: de eerste ${LAUNCH_OFFER_MONTHS} maanden gratis op Compleet</span>
+              <span class="hero-cta-note">Kies jaarlijks en bespaar 16% — of begin maandelijks en pas later aan.</span>
             </div>
           </div>
         </div>
@@ -1053,10 +1044,9 @@ function renderLanding() {
         <section class="pricing-section">
           <div class="section-heading">
             <span class="kicker">Pakketten</span>
-            <h2>Kies het pakket dat bij je past</h2>
-            <p>Begin gratis, of kies direct voor volledige bescherming.</p>
+            <h2>Compleet geregeld, voor iedereen</h2>
+            <p>Één pakket, alles inbegrepen. Kies jaarlijks voor de beste prijs, of begin maandelijks.</p>
           </div>
-          <div class="launch-banner">${iconSvg('check', 14)} Lanceringsaanbieding: de eerste ${LAUNCH_OFFER_MONTHS} maanden gratis op Compleet. Geen verplichtingen, op elk moment stop te zetten.</div>
           <div class="pricing-grid">${plansHtml}</div>
           <p class="control-line">${iconSvg('lock', 13)} Overzicht voor jezelf. Rust voor wie je lief is. Dat is AfterFile.</p>
           <p class="payment-row">Visa · Mastercard · iDEAL</p>
@@ -1294,7 +1284,7 @@ function renderSignup() {
   }
 
   const paymentBadgesHtml = PAYMENT_METHODS.map(m => `<span class="payment-badge">${esc(m)}</span>`).join('');
-  const planOptionsHtml = PLANS.map(p => `<option value="${p.key}" ${p.key === planKey ? 'selected' : ''}>${esc(p.name)}, ${esc(p.price)}${esc(p.period)}${p.launchEligible ? ` (eerste ${LAUNCH_OFFER_MONTHS} mnd gratis)` : ''}</option>`).join('');
+  const planOptionsHtml = PLANS.map(p => `<option value="${p.key}" ${p.key === planKey ? 'selected' : ''}>${esc(p.name)}, ${esc(p.price)}${esc(p.period)}</option>`).join('');
 
   return `
     <nav class="publicnav">
@@ -1355,9 +1345,7 @@ function renderSignup() {
                     </div>
                   </div>
                   ` : ''}
-                  <p class="payment-note" style="text-align:left; margin-top:0;">${plan.key === 'basis'
-                    ? 'Het Basis-pakket is gratis: er is geen betaalstap nodig.'
-                    : `Klik op "Doorgaan", bevestig je e-mailadres via de link die je ontvangt, en je wordt direct daarna automatisch doorgestuurd naar Stripe om veilig te betalen (creditcard of iDEAL). De eerste ${LAUNCH_OFFER_MONTHS} maanden zijn gratis; daarna wordt het abonnement automatisch verlengd via SEPA-incasso, tot je opzegt.`}</p>
+                  <p class="payment-note" style="text-align:left; margin-top:0;">Klik op "Doorgaan", bevestig je e-mailadres via de link die je ontvangt, en je wordt direct doorgestuurd naar Stripe om veilig te betalen (iDEAL of creditcard). Je abonnement wordt automatisch verlengd tot je opzegt.</p>
                 </div>
               </div>
             </form>
@@ -1365,17 +1353,13 @@ function renderSignup() {
 
           <aside class="checkout-summary">
             <div class="summary-card">
-              ${plan.launchEligible ? `<div class="summary-launch-banner">${iconSvg('check', 13)} Lanceringsaanbieding: eerste ${LAUNCH_OFFER_MONTHS} maanden gratis</div>` : ''}
               <div class="summary-plan-row">
                 <div>
                   <h3>${esc(plan.name)}</h3>
-                  <p class="summary-billing">${plan.key === 'compleet'
-                    ? (ui.billingPeriod === 'month' ? 'Maandelijks opzegbaar' : 'Jaarlijks gefactureerd, bespaar 16%')
-                    : (plan.launchEligible ? `Daarna: ${esc(plan.billing)}` : esc(plan.billing))}</p>
+                  <p class="summary-billing">${ui.billingPeriod === 'month' ? 'Maandelijks opzegbaar' : 'Jaarlijks gefactureerd — bespaar 16%'}</p>
                 </div>
                 <div class="summary-price-col">
-                  ${plan.launchEligible ? `<div class="summary-price-old">${plan.key === 'compleet' && ui.billingPeriod === 'month' ? '€3,95 / maand' : `${esc(plan.price)}${esc(plan.period)}`}</div>` : ''}
-                  <div class="summary-price">${plan.launchEligible ? '€0' : (plan.key === 'compleet' ? (ui.billingPeriod === 'month' ? '€3,95' : '€39,95') : esc(plan.price))}<span>${plan.launchEligible ? '/ maand' : (plan.key === 'compleet' ? (ui.billingPeriod === 'month' ? '/ maand' : '/ jaar') : esc(plan.period))}</span></div>
+                  <div class="summary-price">${ui.billingPeriod === 'month' ? '€3,95' : '€39,95'}<span>${ui.billingPeriod === 'month' ? '/ maand' : '/ jaar'}</span></div>
                 </div>
               </div>
               <div class="summary-change-plan">
@@ -1402,9 +1386,15 @@ function renderSignup() {
 
               <div class="summary-divider"></div>
 
+              <div style="background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:7px;padding:10px 13px;font-size:12px;color:#2F5DD9;line-height:1.5;">
+                ${iconSvg('check', 13)} <strong>Bespaar extra via referrals.</strong> Nodig een vriend uit met jouw persoonlijke code en ontvang 5% korting per actief lid — tot 100%.
+              </div>
+
+              <div class="summary-divider"></div>
+
               <div class="summary-subtotal-row">
                 <span>Subtotaal (incl. btw)</span>
-                <strong>${plan.launchEligible ? '€0' : esc(plan.price)}</strong>
+                <strong>${ui.billingPeriod === 'month' ? '€3,95' : '€39,95'}</strong>
               </div>
             </div>
           </aside>
@@ -1450,12 +1440,12 @@ function renderWaitlist() {
         <h3>Je staat op de wachtlijst</h3>
         <span class="status-pill status-ok">Aangemeld</span>
       </div>
-      <p>We laten je via e-mail weten zodra AfterFile live gaat. Als wachtlijst-lid krijg je de eerste ${LAUNCH_OFFER_MONTHS} maanden gratis.</p>
+      <p>We laten je via e-mail weten zodra AfterFile live gaat. Als wachtlijst-lid krijg je als eerste toegang.</p>
     </div>
   ` : `
     <div class="checkout-step">
       <h2 class="checkout-step-title">Schrijf je in voor de wachtlijst</h2>
-      <p style="color:var(--color-text-muted); margin-top:-4px;">We lanceren binnenkort. Meld je nu aan voor je digitale nalatenschap en je krijgt als eerste toegang, plus ${LAUNCH_OFFER_MONTHS} maanden gratis.</p>
+      <p style="color:var(--color-text-muted); margin-top:-4px;">We lanceren binnenkort. Meld je nu aan en krijg als eerste toegang tot AfterFile.</p>
     </div>
     <form id="waitlist-form" novalidate>
       <div class="field">
@@ -1917,7 +1907,7 @@ function renderDashboard() {
         <span style="font-size:12px;color:#7A8BB5;">Upgrade naar Compleet voor onbeperkt bezittingen en een volledig Legacy Report.</span>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
-        ${PLANS.filter(p => p.launchEligible).map(p => `
+        ${PLANS.map(p => `
           <button type="button" style="padding:6px 14px;border-radius:6px;border:none;background:${p.featured ? '#2F5DD9' : 'rgba(47,93,217,.1)'};color:${p.featured ? '#fff' : '#2F5DD9'};font-size:12px;font-weight:600;cursor:pointer;" data-action="upgrade-plan" data-plan="${p.key}" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig…' : `${esc(p.name)} — ${esc(p.price)}${esc(p.period)}`}</button>
         `).join('')}
       </div>
