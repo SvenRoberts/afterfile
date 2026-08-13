@@ -170,7 +170,7 @@ const LAUNCH_OFFER_MONTHS = 6;
 // Vóór de echte lancering bieden we i.p.v. de volledige betaalflow alleen een wachtlijst
 // aan. Alle bestaande checkout-/signup-code blijft volledig intact en functioneel: zet
 // deze vlag na de lancering op false en alle knoppen werken weer zoals voorheen.
-const PRELAUNCH_MODE = true;
+const PRELAUNCH_MODE = false;
 
 // Partner-referral: ingesteld via ?partner=slug in de URL (bijv. afterfile.nl?partner=notariskantoor-x).
 // Wordt opgeslagen voor de sessie en getoond als welkomstbanner op de wachtlijstpagina.
