@@ -466,6 +466,7 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     stripeSubscriptionId: profile.stripe_subscription_id || null,
     lastPaymentAt: (lastPayments && lastPayments[0]) ? lastPayments[0].paid_at : null,
     isFirstMover: profile.is_first_mover || false,
+    billingPeriod: profile.billing_period || 'year',
   };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
@@ -589,7 +590,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
