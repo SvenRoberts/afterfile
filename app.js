@@ -1434,21 +1434,6 @@ function renderWaitlist() {
         <input id="wl-email" name="email" type="email" placeholder="naam@voorbeeld.nl" autocomplete="email" required>
       </div>
       ${ui.waitlistEmailError ? `<p class="field-error">${esc(ui.waitlistEmailError)}</p>` : ''}
-      <div class="field">
-        <label for="wl-referral">Hoe heeft u AfterFile gevonden?</label>
-        <select id="wl-referral" name="referral_source">
-          <option value="" disabled ${!autoReferral ? 'selected' : ''}>Maak een keuze...</option>
-          <option value="notaris" ${autoReferral === 'notaris' ? 'selected' : ''}>Via een notaris</option>
-          <option value="advocaat" ${autoReferral === 'advocaat' ? 'selected' : ''}>Via een advocaat</option>
-          <option value="social" ${autoReferral === 'social' ? 'selected' : ''}>Via social media (LinkedIn / X)</option>
-          <option value="vriend" ${autoReferral === 'vriend' ? 'selected' : ''}>Via vriend of familie</option>
-          <option value="anders">Anders, namelijk...</option>
-        </select>
-      </div>
-      <div class="field" id="wl-referral-other-wrap" style="display:none">
-        <label for="wl-referral-other">Namelijk</label>
-        <input id="wl-referral-other" name="referral_other" type="text" placeholder="Bijv. via Google, via een beurs...">
-      </div>
       <div class="checkout-actions">
         <button type="submit" class="btn btn-primary btn-lg">Op de wachtlijst</button>
       </div>
@@ -3187,6 +3172,7 @@ function wireEvents() {
     // Eerste keer dat de gegevens compleet zijn: ga automatisch door naar Bezittingen,
     // in plaats van op dit formulier te blijven staan.
     if (!wasComplete && personalInfoComplete()) state.view = 'assets';
+    else state.view = 'dashboard';
     syncCurrentSignupRecord();
     saveLocalDemoState();
     render();

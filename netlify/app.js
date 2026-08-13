@@ -3187,6 +3187,7 @@ function wireEvents() {
     // Eerste keer dat de gegevens compleet zijn: ga automatisch door naar Bezittingen,
     // in plaats van op dit formulier te blijven staan.
     if (!wasComplete && personalInfoComplete()) state.view = 'assets';
+    else state.view = 'dashboard';
     syncCurrentSignupRecord();
     saveLocalDemoState();
     render();
