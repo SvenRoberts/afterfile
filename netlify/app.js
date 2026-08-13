@@ -990,7 +990,7 @@ function renderLanding() {
         <section class="security-section">
           <div class="section-heading">
             <span class="kicker">Beveiliging</span>
-            <h2>Je gegevens zijn nergens veiliger</h2>
+            <h2>Niemand komt erbij, totdat het moet.</h2>
             <p>Beveiliging staat voorop, het is de basis van een betrouwbare digitale nalatenschap.</p>
           </div>
           <div class="security-grid">
