@@ -2342,17 +2342,11 @@ function renderReport() {
       ${a.notes       ? `<div style="font-size:13px;color:#9AAAC8;margin-top:4px;font-style:italic;">${esc(a.notes)}</div>` : ''}
     </div>`;
 
-  const contactRow = c => {
-    const initials = (c.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
-    return `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(47,93,217,.07);">
-      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2F5DD9,#5B8DEF);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">${initials}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(c.name)}<span style="font-weight:400;color:#9AAAC8;"> · ${esc(c.relationship || 'Contact')}</span></div>
-        <div style="font-size:13px;color:#9AAAC8;margin-top:1px;">${esc(c.email)} · ${esc(rolesLabel(c.roles))}</div>
-      </div>
+  const contactRow = c => `
+    <div style="padding:10px 0;border-bottom:1px solid rgba(47,93,217,.07);">
+      <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(c.name)}<span style="font-weight:400;color:#9AAAC8;"> · ${esc(c.relationship || 'Contact')}</span></div>
+      <div style="font-size:13px;color:#9AAAC8;margin-top:1px;">${esc(c.email)} · ${esc(rolesLabel(c.roles))}</div>
     </div>`;
-  };
 
   const empty = t => `<div style="font-size:13px;color:#9AAAC8;font-style:italic;padding:12px 0;">${t}</div>`;
 
@@ -2408,73 +2402,132 @@ function renderReport() {
     ${sectionCard('key',       'Persoonlijke gegevens',            piContent)}
     ${sectionCard('safe',      'Digitale &amp; financiële bezittingen', assetsContent)}
     ${sectionCard('users',     'Vertrouwde contacten',             contactsContent)}
-    ${sectionCard('file-text', 'Instructies',                      instrContent)}
+    ${instrTxt ? sectionCard('file-text', 'Instructies', instrContent) : ''}
   `;
 }
 
 function downloadReportPDF() {
-  const p = state.personalInfo || {};
+  const p    = state.personalInfo || {};
   const name = p.fullName || 'Onbekend';
   const date = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const adres = [p.street, p.postalCode, p.city].filter(Boolean).join(', ');
 
-  const assetsRows = state.assets.length
-    ? state.assets.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.typeLabel)}</td><td>${esc(a.location || '')}</td></tr>`).join('')
-    : '<tr><td colspan="3" style="color:#888;">Geen bezittingen toegevoegd.</td></tr>';
+  const sec = (title, content) => `
+    <div class="sec">
+      <div class="sec-head">${title}</div>
+      ${content}
+    </div>`;
 
-  const contactRows = state.contacts.length
-    ? state.contacts.map(c => `<tr><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td>${esc(rolesLabel(c.roles))}</td></tr>`).join('')
-    : '<tr><td colspan="3" style="color:#888;">Geen contacten toegevoegd.</td></tr>';
+  const piRows = [
+    p.fullName  ? `<div class="row"><span class="lbl">Naam</span><span>${esc(p.fullName)}</span></div>` : '',
+    adres       ? `<div class="row"><span class="lbl">Adres</span><span>${esc(adres)}</span></div>` : '',
+    p.birthDate ? `<div class="row"><span class="lbl">Geboortedatum</span><span>${esc(toNlDate(p.birthDate))}</span></div>` : '',
+    p.phone     ? `<div class="row"><span class="lbl">Telefoon</span><span>${esc(p.phone)}</span></div>` : '',
+  ].join('') || '<div class="empty">Geen gegevens ingevuld.</div>';
 
-  const instructies = state.instructions.trim() ? esc(state.instructions).replace(/\n/g, '<br>') : '<span style="color:#888;">Geen instructies geschreven.</span>';
+  const assetsHtml = state.assets.length
+    ? state.assets.map(a => `
+        <div class="item">
+          <div class="item-title">${esc(a.name)} <span class="badge">${esc(a.typeLabel)}</span></div>
+          ${a.location    ? `<div class="item-sub">Locatie/login: ${esc(a.location)}</div>` : ''}
+          ${a.institution ? `<div class="item-sub">Instelling: ${esc(a.institution)}</div>` : ''}
+          ${a.value       ? `<div class="item-sub">Waarde: ${esc(a.value)}</div>` : ''}
+          ${a.notes       ? `<div class="item-note">${esc(a.notes)}</div>` : ''}
+        </div>`).join('')
+    : '<div class="empty">Geen bezittingen toegevoegd.</div>';
+
+  const contactsHtml = state.contacts.length
+    ? state.contacts.map(c => `
+        <div class="item">
+          <div class="item-title">${esc(c.name)}<span style="font-weight:400;color:#6B7A9A;"> · ${esc(c.relationship || 'Contact')}</span></div>
+          <div class="item-sub">${esc(c.email)} · ${esc(rolesLabel(c.roles))}</div>
+        </div>`).join('')
+    : '<div class="empty">Geen contacten toegevoegd.</div>';
+
+  const instrTxt = state.instructions.trim();
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<title>Legacy Report – ${esc(name)}</title>
+<title>Rapport – ${esc(name)}</title>
 <style>
-  body { font-family: Georgia, serif; font-size: 13px; color: #111; margin: 0; padding: 40px; }
-  h1 { font-size: 22px; margin-bottom: 4px; }
-  .sub { color: #666; font-size: 12px; margin-bottom: 32px; }
-  h2 { font-size: 15px; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-top: 28px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  th { text-align: left; font-size: 11px; color: #666; padding: 4px 8px; border-bottom: 1px solid #eee; }
-  td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-  .instructions { white-space: pre-wrap; line-height: 1.6; margin-top: 10px; }
-  .footer { margin-top: 40px; font-size: 11px; color: #aaa; border-top: 1px solid #eee; padding-top: 12px; }
-  @media print { body { padding: 20px; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13px; color: #0F1222; background: #fff; padding: 0; }
+
+  /* Header */
+  .header { background: #2F5DD9; padding: 28px 40px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .header-logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 36px; height: 36px; background: rgba(255,255,255,.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 20px; height: 20px; color: #fff; }
+  .logo-name { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
+  .header-meta { text-align: right; }
+  .header-title { font-size: 15px; font-weight: 600; color: #fff; }
+  .header-sub { font-size: 12px; color: rgba(255,255,255,.65); margin-top: 2px; }
+
+  /* Body */
+  .body { padding: 32px 40px 48px; }
+
+  /* Sections */
+  .sec { margin-bottom: 28px; }
+  .sec-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #2F5DD9; border-bottom: 1.5px solid #2F5DD9; padding-bottom: 6px; margin-bottom: 12px; }
+
+  /* Data rows (persoonlijke gegevens) */
+  .row { display: flex; gap: 16px; padding: 7px 0; border-bottom: 1px solid #EEF1F8; font-size: 13px; }
+  .lbl { font-weight: 600; color: #6B7A9A; min-width: 110px; flex-shrink: 0; }
+
+  /* List items (bezittingen, contacten) */
+  .item { padding: 10px 0; border-bottom: 1px solid #EEF1F8; }
+  .item-title { font-size: 13.5px; font-weight: 600; color: #0F1222; margin-bottom: 2px; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; color: #2F5DD9; background: #EFF4FF; padding: 1px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+  .item-sub { font-size: 12px; color: #6B7A9A; margin-top: 2px; }
+  .item-note { font-size: 12px; color: #9AAAC8; font-style: italic; margin-top: 3px; }
+  .empty { font-size: 12px; color: #9AAAC8; font-style: italic; padding: 6px 0; }
+
+  /* Instructies */
+  .instructions { font-size: 13px; line-height: 1.75; color: #0F1222; white-space: pre-wrap; }
+
+  /* Footer */
+  .footer { border-top: 1px solid #EEF1F8; padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; }
+  .footer-left { font-size: 11px; color: #9AAAC8; }
+  .footer-right { font-size: 11px; color: #9AAAC8; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 </head>
 <body>
-  <h1>Legacy Report</h1>
-  <div class="sub">Opgesteld voor ${esc(name)} &nbsp;·&nbsp; ${date} &nbsp;·&nbsp; AfterFile</div>
 
-  <h2>Persoonlijke gegevens</h2>
-  <table>
-    <tr><th>Naam</th><th>Adres</th><th>Geboortedatum</th></tr>
-    <tr>
-      <td>${esc(p.fullName || '')}</td>
-      <td>${esc([p.street, p.postalCode, p.city].filter(Boolean).join(', ') || '')}</td>
-      <td>${esc(toNlDate(p.birthDate) || '')}</td>
-    </tr>
-  </table>
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
+        <circle cx="8.5" cy="14" r="2.4"/><path d="M10.4 12.1 17 5.5"/><path d="M14.5 7.5 16.5 9.5M12.5 9.5l1.5 1.5"/>
+      </svg>
+    </div>
+    <div class="logo-name">AfterFile</div>
+  </div>
+  <div class="header-meta">
+    <div class="header-title">Digitale nalatenschap</div>
+    <div class="header-sub">Opgesteld voor ${esc(name)} &nbsp;·&nbsp; ${date}</div>
+  </div>
+</div>
 
-  <h2>Digitale &amp; financiële bezittingen</h2>
-  <table>
-    <tr><th>Naam</th><th>Type</th><th>Locatie / login</th></tr>
-    ${assetsRows}
-  </table>
+<div class="body">
+  ${sec('Persoonlijke gegevens', piRows)}
+  ${sec('Digitale &amp; financiële bezittingen', assetsHtml)}
+  ${sec('Vertrouwde contacten', contactsHtml)}
+  ${instrTxt ? sec('Instructies', `<div class="instructions">${esc(instrTxt)}</div>`) : ''}
+</div>
 
-  <h2>Vertrouwde contacten</h2>
-  <table>
-    <tr><th>Naam</th><th>E-mail</th><th>Rol</th></tr>
-    ${contactRows}
-  </table>
+<div class="footer">
+  <div class="footer-left">AfterFile &mdash; afterfile.nl</div>
+  <div class="footer-right">Bewaar dit document op een veilige plek.</div>
+</div>
 
-  <h2>Instructies &amp; wensen</h2>
-  <div class="instructions">${instructies}</div>
-
-  <div class="footer">Dit document is gegenereerd via AfterFile (afterfile.nl). Bewaar het op een veilige plek.</div>
 </body>
 </html>`;
 
