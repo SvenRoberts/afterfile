@@ -1801,21 +1801,23 @@ function renderAssets() {
   if (ui.vaultState === 'locked') {
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.' })}
-      <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:28px 32px 32px;max-width:520px;background:#fff;box-shadow:0 4px 16px rgba(47,93,217,.08);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;">
-          <div>
-            <div style="font-size:15px;font-weight:700;color:#0F1222;letter-spacing:-.01em;">Kluis vergrendeld</div>
-            <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">Voer je sleutelcode in om toegang te krijgen.</div>
+      <div style="background:linear-gradient(to bottom,#2F5DD9,transparent);border-radius:10px;padding:2px;max-width:520px;">
+        <div style="background:#EFF4FF;border-radius:9px;padding:28px 32px 32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;">
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#0F1222;letter-spacing:-.01em;">Kluis vergrendeld</div>
+              <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">Voer je sleutelcode in om toegang te krijgen.</div>
+            </div>
+            <div style="pointer-events:none;user-select:none;flex-shrink:0;opacity:.9;">${vaultDialSvg(false)}</div>
           </div>
-          <div style="pointer-events:none;user-select:none;flex-shrink:0;opacity:.9;">${vaultDialSvg(false)}</div>
+          <div style="height:1px;background:rgba(47,93,217,.1);margin-bottom:20px;"></div>
+          <form id="vk-unlock-form">
+            <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Sleutelcode</div>
+            <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="width:100%;box-sizing:border-box;font-family:'Courier New',monospace;font-size:13px;resize:none;padding:10px 12px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;"></textarea>
+            <div id="vk-unlock-err" style="color:var(--color-danger);font-size:13px;display:none;margin-top:8px;">Ongeldige code. Controleer of je de juiste code hebt geplakt.</div>
+            <button type="submit" class="btn btn-primary" style="margin-top:16px;">Kluis openen</button>
+          </form>
         </div>
-        <div style="height:1px;background:rgba(47,93,217,.1);margin-bottom:20px;"></div>
-        <form id="vk-unlock-form">
-          <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Sleutelcode</div>
-          <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="width:100%;box-sizing:border-box;font-family:'Courier New',monospace;font-size:13px;resize:none;padding:10px 12px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;"></textarea>
-          <div id="vk-unlock-err" style="color:var(--color-danger);font-size:13px;display:none;margin-top:8px;">Ongeldige code. Controleer of je de juiste code hebt geplakt.</div>
-          <button type="submit" class="btn btn-primary" style="margin-top:16px;">Kluis openen</button>
-        </form>
       </div>`;
   }
   // vaultState === 'unlocked' → normale bezittingen
