@@ -944,19 +944,27 @@ function renderLanding() {
   ];
   const checkListHtml = checks.map(c => `<li>${iconSvg('check', 16)}<span>${esc(c)}</span></li>`).join('');
 
-  const plansHtml = PLANS.map(p => `
-    <div class="plan-card ${p.featured ? 'plan-card--featured' : ''}">
-      ${p.featured ? '<span class="plan-badge">Meest gekozen</span>' : ''}
-      <h3>${esc(p.name)}</h3>
-      <div class="plan-price-row"><span class="plan-price">${esc(p.price)}</span><span class="plan-period">${esc(p.period)}</span></div>
-      <p class="plan-billing">${esc(p.billing)}</p>
-      <ul class="plan-features">
-        ${p.features.map(f => `<li>${iconSvg('check', 14)}<span>${esc(f)}</span></li>`).join('')}
-        ${(p.missingFeatures || []).map(f => `<li style="color:var(--color-text-faint);">${iconSvg('x', 14)}<span>${esc(f)}</span></li>`).join('')}
-      </ul>
-      <button class="btn ${p.featured ? 'btn-primary' : 'btn-secondary'} btn-block" data-nav="signup" data-plan="${p.key}">${esc(p.cta)}</button>
+  const sharedFeatures = PLANS[0].features;
+  const featureListHtml = sharedFeatures.map(f => `<li>${iconSvg('check', 14)}<span>${esc(f)}</span></li>`).join('');
+  const plansHtml = `
+    <div class="plan-card">
+      <h3>Maandelijks</h3>
+      <div class="plan-price-row"><span class="plan-price">€3,95</span><span class="plan-period">/ maand</span></div>
+      <p class="plan-billing">Maandelijks opzegbaar</p>
+      <ul class="plan-features">${featureListHtml}</ul>
+      <button class="btn btn-secondary btn-block" data-nav="signup" data-plan="compleet" data-billing="month">Aan de slag</button>
     </div>
-  `).join('');
+    <div class="plan-card plan-card--featured">
+      <span class="plan-badge">Meest gekozen</span>
+      <h3>Jaarlijks</h3>
+      <div class="plan-price-row"><span class="plan-price">€39,95</span><span class="plan-period">/ jaar</span></div>
+      <p class="plan-billing" style="display:flex;align-items:center;gap:6px;">
+        Jaarlijks gefactureerd
+        <span style="background:#2F5DD9;color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.03em;">BESPAAR 16%</span>
+      </p>
+      <ul class="plan-features">${featureListHtml}</ul>
+      <button class="btn btn-primary btn-block" data-nav="signup" data-plan="compleet" data-billing="year">Aan de slag</button>
+    </div>`;
 
   const faqs = [
     { q: 'Wat is AfterFile?', a: 'AfterFile is een veilige, persoonlijke plek om je digitale nalatenschap te regelen: je bezittingen, accounts en instructies vastgelegd voor de mensen die je vertrouwt, voor het moment dat jij dat zelf niet meer kan.' },
@@ -3231,8 +3239,10 @@ function wireEvents() {
       ui.accountMenuOpen = false;
       let target = el.getAttribute('data-nav');
       const planHint = el.getAttribute('data-plan');
+      const billingHint = el.getAttribute('data-billing');
       if (target === 'signup') {
         ui.selectedPlanKey = planHint || ui.selectedPlanKey || 'compleet';
+        if (billingHint === 'month' || billingHint === 'year') ui.billingPeriod = billingHint;
         ui.signupEmailError = null;
         ui.betalingOpen = false;
         if (PRELAUNCH_MODE) target = 'waitlist';
