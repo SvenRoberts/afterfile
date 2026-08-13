@@ -2156,8 +2156,8 @@ footer.site-footer a:hover { color: var(--color-primary); }
 
 /* ── Vault gate schermen ── */
 .vault-gate-card {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: #fff;
+  border: 1px solid rgba(47,93,217,.22);
   border-radius: var(--radius-md);
   padding: 36px 32px;
   max-width: 520px;
