@@ -596,7 +596,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, signupDraftEmail: '', signupDraftName: '', magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1317,7 +1317,7 @@ function renderSignup() {
               <div class="checkout-step">
                 <h2 class="checkout-step-title">1. Uw e-mailadres <span class="info-dot" title="Je e-mailadres wordt gebruikt om in te loggen en voor herinneringen.">${iconSvg('info', 17)}</span></h2>
                 <div class="field ${emailError ? 'invalid' : ''}">
-                  <input id="su-email" name="email" type="email" placeholder="E-mailadres" autocomplete="email" autofocus>
+                  <input id="su-email" name="email" type="email" placeholder="E-mailadres" autocomplete="email" autofocus value="${esc(ui.signupDraftEmail)}">
                 </div>
                 ${emailError ? `<p class="field-error">${esc(emailError)}</p>` : ''}
               </div>
@@ -1334,7 +1334,7 @@ function renderSignup() {
                 <div class="checkout-betaling-body">
                   <div class="field">
                     <label for="su-name">Je naam</label>
-                    <input id="su-name" name="name" type="text" placeholder="Sven Bakker" autocomplete="name">
+                    <input id="su-name" name="name" type="text" placeholder="Sven Bakker" autocomplete="name" value="${esc(ui.signupDraftName)}">
                   </div>
                   ${plan.key !== 'basis' ? `
                   <div class="field">
@@ -3318,6 +3318,8 @@ function wireEvents() {
       return;
     }
     ui.magicLinkSentTo = email;
+    ui.signupDraftEmail = '';
+    ui.signupDraftName  = '';
     render();
   });
 
@@ -3453,8 +3455,17 @@ function wireEvents() {
     });
   }
 
+  // Bewaart de huidige veldwaarden zodat ze na een re-render teruggezet worden
+  function saveSignupDraft() {
+    const emailEl = document.getElementById('su-email');
+    const nameEl  = document.getElementById('su-name');
+    if (emailEl) ui.signupDraftEmail = emailEl.value;
+    if (nameEl)  ui.signupDraftName  = nameEl.value;
+  }
+
   const betalingToggle = document.querySelector('[data-action="toggle-betaling"]');
   if (betalingToggle) betalingToggle.addEventListener('click', () => {
+    saveSignupDraft();
     ui.betalingOpen = !ui.betalingOpen;
     render();
   });
@@ -3467,6 +3478,7 @@ function wireEvents() {
 
   document.querySelectorAll('[name="billing-period"]').forEach(radio => {
     radio.addEventListener('change', () => {
+      saveSignupDraft();
       ui.billingPeriod = radio.value;
       render();
     });
