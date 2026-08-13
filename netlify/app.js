@@ -465,8 +465,10 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     currentPeriodEnd: profile.current_period_end || null,
     stripeSubscriptionId: profile.stripe_subscription_id || null,
     lastPaymentAt: (lastPayments && lastPayments[0]) ? lastPayments[0].paid_at : null,
-    isFirstMover: profile.is_first_mover || false,
     billingPeriod: profile.billing_period || 'year',
+    refCode: profile.ref_code || null,
+    referralCount: profile.referral_count || 0,
+    referralDiscountPct: profile.referral_discount_pct || 0,
   };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
@@ -528,7 +530,8 @@ async function startCheckout(planKey) {
   ui.checkoutRedirecting = true;
   render();
   try {
-    const { data, error } = await supabase.functions.invoke('create-checkout-session', { body: { plan: planKey, billingPeriod: ui.billingPeriod || 'year' } });
+    const referredBy = localStorage.getItem('af_ref') || null;
+    const { data, error } = await supabase.functions.invoke('create-checkout-session', { body: { plan: planKey, billingPeriod: ui.billingPeriod || 'year', referredBy } });
     if (error || !data || !data.url) throw error || new Error('Geen checkout-url ontvangen');
     window.location.href = data.url;
   } catch (e) {
@@ -593,6 +596,15 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
 let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
+
+// Sla ref-code op als aanwezig in URL (?ref=CODE)
+(function readRefParam() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) localStorage.setItem('af_ref', ref.toUpperCase());
+  } catch (_) {}
+})();
 
 // Render meteen, synchroon, met de lokale staat — de site is zo altijd direct zichtbaar
 // en werkt volledig op zichzelf, zonder op Supabase te wachten of daarvan af te hangen.
@@ -1255,6 +1267,7 @@ function renderSignup() {
   const plan = PLANS.find(p => p.key === planKey) || PLANS[1];
   const emailError = ui.signupEmailError;
   const betalingOpen = !!ui.betalingOpen;
+  const pendingRef = (() => { try { return localStorage.getItem('af_ref'); } catch(_) { return null; } })();
 
   if (ui.magicLinkSentTo) {
     return `
@@ -1300,6 +1313,7 @@ function renderSignup() {
                 </div>
                 ${emailError ? `<p class="field-error">${esc(emailError)}</p>` : ''}
               </div>
+              ${pendingRef ? `<div style="background:rgba(47,93,217,.06);border:1px solid rgba(47,93,217,.18);border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#2F5DD9;">Uitgenodigd via referral-code <strong>${esc(pendingRef)}</strong></div>` : ''}
               <div class="checkout-actions">
                 <button type="submit" class="btn btn-primary btn-lg" ${ui.signupSubmitting ? 'disabled' : ''}>${ui.signupSubmitting ? 'Bezig…' : 'Doorgaan'}</button>
               </div>
@@ -1608,22 +1622,13 @@ function renderAccountMenu(activeView) {
   `;
 }
 
-function firstMoverDiscount(createdAt) {
-  if (!createdAt) return 0;
-  const joinYear = new Date(createdAt).getFullYear();
-  const currentYear = new Date().getFullYear();
-  return 5 + Math.max(0, currentYear - joinYear);
-}
-
 async function loadAdminProfiles() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    const res = await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/manage-first-mover', {
-      headers: { 'Authorization': `Bearer ${session.access_token}` },
-    });
-    const json = await res.json();
-    state.adminProfiles = json.profiles || [];
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, email, plan, subscription_status, current_period_end, created_at, ref_code, referral_count, referral_discount_pct')
+      .order('created_at', { ascending: false });
+    state.adminProfiles = error ? [] : (data || []);
     render();
   } catch (e) {
     console.error('loadAdminProfiles fout:', e);
@@ -1681,6 +1686,11 @@ function renderSubscription() {
       dateRows = [
         { label: 'Laatste betaling', val: lastPayment },
         { label: 'Volgende verlenging', val: nextRenewal },
+      ];
+    } else if (currentPeriodEndIso) {
+      // Geen betaling geregistreerd (bijv. net omgezet van proefperiode) — gebruik Stripe's period end als fallback
+      dateRows = [
+        { label: 'Volgende verlenging', val: periodEnd },
       ];
     }
   }
@@ -1792,26 +1802,44 @@ function renderSubscription() {
       </div>`;
   }
 
-  const discount = state.account && state.account.isFirstMover ? firstMoverDiscount(state.account.createdAt) : 0;
-  const firstMoverCard = discount > 0 ? (() => {
-    const discountedPrice = (3.95 * (1 - discount / 100)).toFixed(2).replace('.', ',');
-    return `
-    <div style="background:linear-gradient(135deg,#0F1222 0%,#1A2240 100%);border-radius:8px;padding:22px 28px;max-width:520px;margin-bottom:20px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(47,93,217,.18);border-radius:50%;"></div>
-      <div style="position:absolute;bottom:-30px;right:30px;width:60px;height:60px;background:rgba(122,77,240,.15);border-radius:50%;"></div>
-      <div style="font-size:11px;font-weight:700;color:#7A8BB5;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">First Mover voordeel</div>
-      <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:4px;">Jouw loyaliteitskorting: ${discount}%</div>
-      <div style="font-size:13px;color:#7A8BB5;margin-bottom:14px;line-height:1.5;">Je was er als een van de eersten. Als dank groeit jouw korting elk jaar automatisch met 1%.</div>
-      <div style="display:flex;align-items:baseline;gap:10px;">
-        <span style="font-size:13px;color:#7A8BB5;text-decoration:line-through;">€3,95/mnd</span>
-        <span style="font-size:22px;font-weight:700;color:#2F5DD9;">€${discountedPrice}/mnd</span>
+  // Referral kaart
+  const refCode = state.account && state.account.refCode;
+  const referralCount = state.account ? state.account.referralCount : 0;
+  const referralDiscountPct = state.account ? state.account.referralDiscountPct : 0;
+  const refLink = refCode ? `https://afterfile.nl/?ref=${refCode}` : '';
+
+  let referralProgressText = '';
+  if (referralDiscountPct >= 100) {
+    referralProgressText = `<span style="font-size:13px;font-weight:700;color:#2F5DD9;">Je abonnement is volledig gratis via referrals!</span>`;
+  } else if (referralCount === 0) {
+    referralProgressText = `<span style="font-size:12px;color:#9AAAC8;">Nodig iemand uit en ontvang 5% korting op je abonnement voor iedere betalende aanmelding. Maximaal 100% korting (gratis).</span>`;
+  } else {
+    const nextPct = Math.min((referralCount + 1) * 5, 100);
+    referralProgressText = `<span style="font-size:12px;color:#9AAAC8;">Nog 1 betalende referral voor ${nextPct}% korting${nextPct === 100 ? ' — volledig gratis!' : ''}.</span>`;
+  }
+
+  const referralCard = refCode && plan !== 'basis' ? `
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:22px 28px;max-width:520px;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Vrienden uitnodigen</div>
+      <div style="background:rgba(47,93,217,.04);border:1px solid rgba(47,93,217,.14);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-family:monospace;color:#0F1222;word-break:break-all;">${esc(refLink)}</span>
+        <button class="btn btn-secondary btn-sm" data-action="copy-ref-link" data-link="${esc(refLink)}" style="font-size:11px;padding:3px 10px;flex-shrink:0;">Kopiëren</button>
       </div>
-    </div>`;
-  })() : '';
+      ${referralCount > 0 ? `
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(47,93,217,.08);">
+        <span style="font-size:13px;color:#9AAAC8;">Betalende referrals</span>
+        <span style="font-size:13px;font-weight:700;color:#0F1222;">${referralCount}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(47,93,217,.08);margin-bottom:12px;">
+        <span style="font-size:13px;color:#9AAAC8;">Jouw korting</span>
+        <span style="font-size:13px;font-weight:700;color:#2F5DD9;">${referralDiscountPct}%</span>
+      </div>` : `<div style="margin-bottom:12px;"></div>`}
+      ${referralProgressText}
+    </div>` : '';
 
   return `
     ${pageHeader({ kicker: 'Abonnement', title: 'Mijn abonnement.' })}
-    ${firstMoverCard}
+    ${referralCard}
     ${planCard}
     ${cancelSection}`;
 }
@@ -2884,58 +2912,47 @@ function renderAdmin() {
     `;
   }).join('') : `<div class="empty-state">Nog geen aanmeldingen.</div>`;
 
-  // ── First Movers (Supabase) ───────────────────────────────────────────────
-  let firstMoversHtml = '';
+  // ── Klanten met referral stats (Supabase) ───────────────────────────────
+  let customersHtml = '';
   if (state.adminProfiles === null) {
-    // Trigger async load, show spinner
     loadAdminProfiles();
-    firstMoversHtml = `<div style="color:#9AAAC8;font-size:13px;padding:16px 0;">Klanten laden...</div>`;
+    customersHtml = `<div style="color:#9AAAC8;font-size:13px;padding:16px 0;">Klanten laden...</div>`;
   } else {
     const profiles = state.adminProfiles;
     const planLabel2 = (key) => { const p = PLANS.find(pl => pl.key === key); return p ? p.name : (key || 'Basis'); };
     const profileRows = profiles.map(p => {
-      const disc = firstMoverDiscount(p.created_at);
-      const fmBadge = p.is_first_mover
-        ? `<span style="font-size:11px;font-weight:700;color:#2F5DD9;background:#EFF4FF;padding:2px 8px;border-radius:20px;">First Mover ${disc}%</span>`
-        : '';
       const subBadge = p.subscription_status === 'canceling'
         ? `<span style="font-size:11px;font-weight:700;color:#92640A;background:#FFF3CD;padding:2px 8px;border-radius:20px;">Opgezegd</span>`
         : p.subscription_status === 'active' && p.plan !== 'basis'
         ? `<span style="font-size:11px;font-weight:700;color:#1F9D5C;background:#EDFAF4;padding:2px 8px;border-radius:20px;">Actief</span>`
+        : p.subscription_status === 'trialing'
+        ? `<span style="font-size:11px;font-weight:700;color:#2F5DD9;background:#EFF4FF;padding:2px 8px;border-radius:20px;">Proefperiode</span>`
+        : '';
+      const refBadge = (p.referral_count > 0)
+        ? `<span style="font-size:11px;font-weight:700;color:#7A4DF0;background:#F3EEFF;padding:2px 8px;border-radius:20px;">${p.referral_count} ref · ${p.referral_discount_pct}%</span>`
         : '';
       const endDate = p.current_period_end
         ? new Date(p.current_period_end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
         : '';
       return `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid rgba(47,93,217,.08);flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(47,93,217,.08);flex-wrap:wrap;">
           <div style="flex:1;min-width:200px;">
             <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(p.name || p.email)}</div>
-            <div style="font-size:12px;color:#9AAAC8;">${esc(p.email)}</div>
+            <div style="font-size:12px;color:#9AAAC8;">${esc(p.email)}${p.ref_code ? ` · <span style="font-family:monospace;">${esc(p.ref_code)}</span>` : ''}</div>
             <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
               <span class="admin-pill admin-pill--${p.plan || 'basis'}">${esc(planLabel2(p.plan))}</span>
-              ${fmBadge}
               ${subBadge}
+              ${refBadge}
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-            ${endDate ? `<span style="font-size:12px;color:#9AAAC8;">tot ${endDate}</span>` : ''}
-            <button type="button" class="btn btn-sm ${p.is_first_mover ? 'btn-secondary' : ''}"
-              style="font-size:12px;padding:5px 12px;"
-              data-action="toggle-first-mover"
-              data-id="${esc(p.id)}"
-              data-value="${p.is_first_mover ? 'false' : 'true'}">
-              ${p.is_first_mover ? 'First Mover verwijderen' : 'First Mover maken'}
-            </button>
-          </div>
+          ${endDate ? `<span style="font-size:12px;color:#9AAAC8;flex-shrink:0;">tot ${endDate}</span>` : ''}
         </div>`;
     }).join('');
 
-    const fmCount = profiles.filter(p => p.is_first_mover).length;
-    firstMoversHtml = `
+    const payingCount = profiles.filter(p => ['active','canceling','trialing'].includes(p.subscription_status)).length;
+    customersHtml = `
       <div style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <h3 style="margin:0;font-size:16px;font-weight:700;color:#0F1222;">Klanten (${profiles.length}) · <span style="color:#2F5DD9;">${fmCount} First Mover${fmCount !== 1 ? 's' : ''}</span></h3>
-        </div>
+        <h3 style="margin:0 0 12px;font-size:16px;font-weight:700;color:#0F1222;">Klanten (${profiles.length}) · <span style="color:#2F5DD9;">${payingCount} betalend</span></h3>
         ${profileRows || '<div class="empty-state">Nog geen klanten.</div>'}
       </div>`;
   }
@@ -3018,7 +3035,7 @@ function renderAdmin() {
       <div class="section-divider"></div>
     ` : ''}
 
-    ${firstMoversHtml}
+    ${customersHtml}
 
     <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:#0F1222;">Activiteit (${signups.length})</h3>
     <div class="admin-list">${rowsHtml}</div>
@@ -3298,37 +3315,15 @@ function wireEvents() {
     btn.addEventListener('click', () => changeSubscriptionPlan(btn.getAttribute('data-plan')));
   });
 
-  document.querySelectorAll('[data-action="toggle-first-mover"]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const targetId = btn.getAttribute('data-id');
-      const newValue = btn.getAttribute('data-value') === 'true';
-      btn.disabled = true;
-      btn.textContent = 'Bezig...';
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const res = await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/manage-first-mover', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ target_id: targetId, is_first_mover: newValue }),
-        });
-        const json = await res.json();
-        if (json.ok) {
-          // Update local adminProfiles state
-          if (state.adminProfiles) {
-            const p = state.adminProfiles.find(x => x.id === targetId);
-            if (p) p.is_first_mover = newValue;
-          }
-          flashToast(newValue ? 'First Mover status toegevoegd. Stripe-korting verwerkt.' : 'First Mover status verwijderd.');
-          render();
-        } else {
-          flashToast(json.error || 'Er ging iets mis.');
-          btn.disabled = false;
-          btn.textContent = newValue ? 'First Mover maken' : 'First Mover verwijderen';
-        }
-      } catch (e) {
-        flashToast('Er ging iets mis. Probeer opnieuw.');
-        btn.disabled = false;
-      }
+  document.querySelectorAll('[data-action="copy-ref-link"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const link = btn.getAttribute('data-link') || '';
+      navigator.clipboard.writeText(link).then(() => {
+        btn.textContent = 'Gekopieerd!';
+        setTimeout(() => { btn.textContent = 'Kopiëren'; }, 2000);
+      }).catch(() => {
+        flashToast('Kopiëren mislukt. Kopieer de link handmatig.');
+      });
     });
   });
 
