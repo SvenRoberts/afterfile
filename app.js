@@ -1691,7 +1691,7 @@ function renderDashboard() {
     ${progressHtml}
     <div style="background:linear-gradient(to bottom,#2F5DD9,transparent);border-radius:10px;padding:2px;margin-bottom:28px;">
       <div style="background:#EFF4FF;border-radius:9px;padding:11px;">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div class="dash-cards-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
           ${card('info',   'Mijn gegevens',        gegevensSubtitle, 'gegevens', 'Aanpassen')}
           ${card('folder', 'Bezittingen',          assetsSubtitle,   'assets',   'Toevoegen')}
           ${card('users',  'Vertrouwde contacten', contactsSubtitle, 'contacts', 'Toevoegen')}

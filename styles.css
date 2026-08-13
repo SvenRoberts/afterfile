@@ -1267,57 +1267,77 @@ footer.site-footer a:hover { color: var(--color-primary); }
   padding: 6px 0 6px 18px;
   po
 /* ================================================================
-   MOBIELE STIJLEN  (max-width: 640px)
+   TABLET  (max-width: 768px) — iPad portrait + kleine laptops
    ================================================================ */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
 
   /* --- Algemeen --- */
-  .container { padding: 0 16px; }
-  main.page { padding: 24px 0 52px; }
-  .section-divider { margin: 36px 0; }
+  .container { padding: 0 20px; }
+  main.page { padding: 32px 0 64px; }
 
-  /* --- Public nav --- */
-  .publicnav-inner { padding: 12px 16px; }
-  .publicnav-links { gap: 8px; }
-  .publicnav-links > a { display: none; }           /* verberg tekstlinks, bewaar knoppen */
-  .publicnav-links .btn { padding: 8px 12px; font-size: 13px; }
+  /* --- Public nav: verberg tekstlinks op tablet, bewaar CTA-knoppen --- */
+  .publicnav-inner { padding: 16px 20px; }
+  .publicnav-links { gap: 10px; }
+  .publicnav-links > a { display: none; }
+  .publicnav-links .btn { font-size: 13.5px; padding: 8px 14px; }
 
-  /* --- Signed-in nav --- */
-  .topnav-inner { padding: 10px 12px; }
-  .nav-links { gap: 0; }
-  .nav-link { padding: 6px 8px; font-size: 13px; }
+  /* --- Signed-in nav: brand + account op rij 1, nav-links scrollen op rij 2 --- */
+  .topnav-inner { flex-wrap: wrap; padding: 10px 16px; gap: 0; }
+  .nav-links {
+    order: 3;
+    width: 100%;
+    border-top: 1px solid var(--color-border);
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 0 2px;
+    gap: 0;
+  }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-link { font-size: 13.5px; padding: 7px 10px; white-space: nowrap; }
 
-  /* --- Hero: foto boven tekst --- */
+  /* --- Hero: één kolom, foto boven tekst --- */
   .hero-split {
     grid-template-columns: 1fr;
-    gap: 20px;
-    padding: 12px 0 36px;
+    gap: 24px;
+    padding: 12px 0 40px;
   }
   .hero-photo {
-    aspect-ratio: 4 / 3;             /* minder plat dan 16/9 */
+    aspect-ratio: 16 / 9;
     border-radius: var(--radius-sm);
     order: -1;
+    max-height: 260px;
+    overflow: hidden;
   }
-  .hero-content h1 { font-size: 24px; line-height: 1.22; }
+  .hero-content h1 { font-size: 26px; line-height: 1.2; }
   .hero-sub { font-size: 15px; }
   .check-list { grid-template-columns: 1fr; gap: 8px; }
-  .hero-cta-row { flex-direction: column; align-items: stretch; }
+  .hero-cta-row { flex-direction: column; align-items: stretch; gap: 12px; }
   .hero-cta-row .btn { text-align: center; justify-content: center; }
   .hero-cta-note { text-align: center; font-size: 13px; }
 
   /* --- Secties --- */
-  .section { padding: 32px 0; }
+  .section { padding: 40px 0; }
   .section-heading h2 { font-size: 22px; }
   .security-grid { grid-template-columns: 1fr; gap: 12px; }
   .voor-wie-grid { grid-template-columns: 1fr; }
-  .pricing-grid { grid-template-columns: 1fr; gap: 16px; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 420px; gap: 16px; }
+  .plan-card--featured { transform: none; }
 
   /* --- Checkout --- */
   .checkout-grid { grid-template-columns: 1fr; }
+  .checkout-summary { position: static; }
+
+  /* --- Auth kaart --- */
+  .auth-card { width: 100%; }
+  .card { padding: 24px 20px; }
+  .auth-wrap { padding: 0; }
 
   /* --- App (ingelogd) --- */
   .page-header h1 { font-size: 22px; }
-  .dash-grid { grid-template-columns: 1fr; }
+  .page-header p { font-size: 14.5px; }
+  .dash-cards-grid { grid-template-columns: 1fr !important; }
   .asset-type-grid { grid-template-columns: repeat(2, 1fr); }
   .type-tiles { grid-template-columns: repeat(2, 1fr); }
   .item-list { grid-template-columns: 1fr; }
@@ -1331,21 +1351,67 @@ footer.site-footer a:hover { color: var(--color-primary); }
 
   /* --- Waitlist tabs --- */
   .wl-tabs { width: 100%; }
-  .wl-tab { flex: 1; text-align: center; padding: 8px 8px; font-size: 13px; }
+  .wl-tab { flex: 1; text-align: center; padding: 8px; font-size: 13px; }
 
   /* --- Footer --- */
-  footer.site-footer { padding: 24px 16px; }
+  footer.site-footer { padding: 24px 20px; }
 
   /* --- Cards / forms --- */
-  .asset-picker-panel { padding: 16px 16px 12px; }
   .inline-form-card { padding: 20px; }
   .item-card { padding: 14px; }
-  .plan-card--featured { transform: none; }
 
   /* --- Kluis --- */
   .va { padding: 20px 16px 28px !important; }
-  .vd-dial { display: none; }        /* verberg kluisschijf op kleine schermen */
+  .vd-dial { display: none; }
   .va-header { flex-direction: column; }
+
+  /* --- Partner sectie --- */
+  .partner-landing-inner { grid-template-columns: 1fr; gap: 24px; }
+  .partner-landing-section { padding: 28px 20px; }
+}
+
+/* ================================================================
+   MOBIEL  (max-width: 480px) — telefoon
+   ================================================================ */
+@media (max-width: 480px) {
+
+  /* --- Algemeen --- */
+  .container { padding: 0 14px; }
+  main.page { padding: 20px 0 48px; }
+
+  /* --- Public nav --- */
+  .publicnav-inner { padding: 12px 14px; }
+  .publicnav-links .btn { font-size: 12.5px; padding: 7px 10px; }
+
+  /* --- Signed-in nav --- */
+  .topnav-inner { padding: 8px 14px; }
+  .nav-link { font-size: 13px; padding: 6px 8px; }
+  .brand { font-size: 16px; }
+
+  /* --- Hero --- */
+  .hero-content h1 { font-size: 22px; }
+  .hero-photo { display: none; }      /* op kleine telefoon foto weglaten, tekst centraal */
+
+  /* --- Secties --- */
+  .section-heading h2 { font-size: 20px; }
+  .section-heading p { font-size: 14px; }
+  .security-card { padding: 18px 16px; }
+  .voor-wie-card { padding: 24px 20px; }
+
+  /* --- Auth --- */
+  .card { padding: 20px 16px; }
+
+  /* --- App (ingelogd) --- */
+  .page-header h1 { font-size: 20px; }
+  .asset-type-grid { grid-template-columns: repeat(2, 1fr); }
+  .type-tiles { grid-template-columns: repeat(2, 1fr); }
+
+  /* --- Cards / forms --- */
+  .asset-picker-panel { padding: 14px 14px 10px; }
+  .item-card { padding: 12px; }
+
+  /* --- Footer --- */
+  footer.site-footer { padding: 20px 14px; }
 }
 
 /* ================================================================
