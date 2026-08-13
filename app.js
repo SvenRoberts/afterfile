@@ -974,6 +974,7 @@ function renderLanding() {
     { q: 'Kan ik op elk moment opzeggen?', a: 'Ja. Je kunt je abonnement op elk moment stopzetten. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.' },
     { q: 'Is de cloud niet onveiliger dan opslaan op mijn eigen apparaat?', a: 'Nee, en voor digitale nalatenschap geldt juist het omgekeerde. Apps die alles lokaal opslaan lossen het technische opslagprobleem op, maar creëren een groter probleem: hoe krijgen je naasten ooit toegang tot een bestand op een apparaat dat zij niet kennen, niet kunnen ontgrendelen, of dat al jaren geleden kapot is gegaan? AfterFile versleutelt je gegevens in de cloud (AES-256) én koppelt vrijgave aan een gecontroleerde verificatieprocedure. Zo zijn je gegevens tijdens je leven beschermd tegen ongeoorloofde toegang, en na je overlijden gegarandeerd bereikbaar voor de juiste mensen. Lokale opslag is veilig voor jezelf. AfterFile is veilig voor wat er daarna komt.' },
     { q: 'Welke betaalmethoden worden ondersteund?', a: 'We ondersteunen iDEAL, Visa en Mastercard.' },
+    { q: 'Worden mijn gegevens verkocht of gebruikt voor advertenties?', a: 'Nee. We verkopen of delen je gegevens nooit met derden, en gebruiken ze nooit voor advertenties.' },
   ];
   const faqHtml = faqs.map((f, i) => `
     <div class="faq-item ${ui.openFaqIndex === i ? 'open' : ''}">
@@ -992,6 +993,7 @@ function renderLanding() {
         <div class="publicnav-links">
           ${PRELAUNCH_MODE ? `<a href="#" data-nav="waitlist">Voor naasten</a>` : `<a href="#" data-nav="death-report">Voor naasten</a>`}
           <a href="#" data-nav="partner" style="font-weight:500;">Voor partners</a>
+          <a class="btn btn-secondary btn-sm" href="demo.html" target="_blank" rel="noopener" style="margin-right:6px;">Demo</a>
           <button class="btn btn-primary btn-sm" data-nav="signup" data-plan="compleet">Nu abonneren</button>
         </div>
       </div>
@@ -1038,11 +1040,6 @@ function renderLanding() {
               <div class="card-icon">${iconSvg('eye-off', 18)}</div>
               <h3>Strikte toegangscontrole</h3>
               <p>Jij hebt altijd toegang. Je vertrouwde contacten krijgen toegang na verificatie van een officieel overlijdensbericht.</p>
-            </div>
-            <div class="security-card">
-              <div class="card-icon">${iconSvg('ban', 18)}</div>
-              <h3>Geen verkoop, geen tracking</h3>
-              <p>We verkopen of delen je gegevens nooit met derden, en gebruiken ze nooit voor advertenties.</p>
             </div>
           </div>
         </section>
@@ -1314,9 +1311,6 @@ function renderSignup() {
                 ${emailError ? `<p class="field-error">${esc(emailError)}</p>` : ''}
               </div>
               ${pendingRef ? `<div style="background:rgba(47,93,217,.06);border:1px solid rgba(47,93,217,.18);border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#2F5DD9;">Uitgenodigd via referral-code <strong>${esc(pendingRef)}</strong></div>` : ''}
-              <div class="checkout-actions">
-                <button type="submit" class="btn btn-primary btn-lg" ${ui.signupSubmitting ? 'disabled' : ''}>${ui.signupSubmitting ? 'Bezig…' : 'Doorgaan'}</button>
-              </div>
 
               <div class="section-divider checkout-divider"></div>
 
@@ -1328,7 +1322,7 @@ function renderSignup() {
                 </button>
                 <div class="checkout-betaling-body">
                   <div class="field">
-                    <label for="su-name">Je naam <span style="color:var(--color-text-faint); font-weight:400;">(optioneel)</span></label>
+                    <label for="su-name">Je naam</label>
                     <input id="su-name" name="name" type="text" placeholder="Sven Bakker" autocomplete="name">
                   </div>
                   ${plan.key !== 'basis' ? `
@@ -1355,6 +1349,10 @@ function renderSignup() {
                   ` : ''}
                   <p class="payment-note" style="text-align:left; margin-top:0;">Klik op "Doorgaan", bevestig je e-mailadres via de link die je ontvangt, en je wordt direct doorgestuurd naar Stripe om veilig te betalen (iDEAL of creditcard). Je abonnement wordt automatisch verlengd tot je opzegt.</p>
                 </div>
+              </div>
+
+              <div class="checkout-actions">
+                <button id="su-submit" type="submit" class="btn btn-primary btn-lg" disabled ${ui.signupSubmitting ? 'disabled' : ''}>${ui.signupSubmitting ? 'Bezig…' : 'Doorgaan'}</button>
               </div>
             </form>
           </div>
@@ -3244,7 +3242,7 @@ function wireEvents() {
         ui.selectedPlanKey = planHint || ui.selectedPlanKey || 'compleet';
         if (billingHint === 'month' || billingHint === 'year') ui.billingPeriod = billingHint;
         ui.signupEmailError = null;
-        ui.betalingOpen = false;
+        ui.betalingOpen = true;
         if (PRELAUNCH_MODE) target = 'waitlist';
       }
       navigate(target);
@@ -3306,6 +3304,24 @@ function wireEvents() {
     ui.magicLinkSentTo = email;
     render();
   });
+
+  // Activeer Doorgaan-knop pas als e-mail, naam én betaalperiode zijn ingevuld
+  if (signupForm) {
+    function checkSignupReady() {
+      const emailEl = document.getElementById('su-email');
+      const nameEl  = document.getElementById('su-name');
+      const btn     = document.getElementById('su-submit');
+      if (!btn) return;
+      const emailOk   = emailEl && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((emailEl.value || '').trim());
+      const nameOk    = nameEl && (nameEl.value || '').trim().length > 0;
+      const billingOk = !!document.querySelector('[name="billing-period"]:checked');
+      btn.disabled = !(emailOk && nameOk && billingOk) || !!ui.signupSubmitting;
+    }
+    document.getElementById('su-email')?.addEventListener('input', checkSignupReady);
+    document.getElementById('su-name')?.addEventListener('input', checkSignupReady);
+    document.querySelectorAll('[name="billing-period"]').forEach(r => r.addEventListener('change', checkSignupReady));
+    checkSignupReady();
+  }
 
   document.querySelectorAll('[data-action="upgrade-plan"]').forEach(btn => {
     btn.addEventListener('click', () => startCheckout(btn.getAttribute('data-plan')));
