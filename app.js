@@ -1371,11 +1371,6 @@ function renderSignup() {
                   <div class="summary-price">${ui.billingPeriod === 'month' ? '€3,95' : '€39,95'}<span>${ui.billingPeriod === 'month' ? '/ maand' : '/ jaar'}</span></div>
                 </div>
               </div>
-              <div class="summary-change-plan">
-                <select id="select-plan" aria-label="Pakket wijzigen">${planOptionsHtml}</select>
-                <span class="summary-change-plan-ico">${iconSvg('chevron-down', 16)}</span>
-              </div>
-
               <div class="summary-plan-features">
                 <h4>Inbegrepen bij ${esc(plan.name)}</h4>
                 <ul>
