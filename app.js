@@ -1209,7 +1209,7 @@ function renderDeathReport() {
                   <label for="dr-vault-code" style="font-size:13px;font-weight:600;color:#0F1222;">Jouw persoonlijke code (Fragment C)</label>
                   <textarea id="dr-vault-code" rows="4"
                     placeholder="Plak hier de code uit de e-mail die je ontving toen je als kluiscontact werd aangewezen…"
-                    style="font-family:monospace;font-size:11px;resize:vertical;"></textarea>
+                    style="font-family:monospace;font-size:11px;resize:none;"></textarea>
                 </div>
                 <p id="dr-vault-err" class="vk-err hidden"></p>
                 <button type="submit" class="btn btn-secondary" style="display:flex;align-items:center;gap:6px;">
@@ -1808,7 +1808,7 @@ function renderAssets() {
         <form id="vk-unlock-form" class="vault-setup-form">
           <div class="field">
             <label for="vk-frag-a-input">Sleutelcode</label>
-            <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="font-family:monospace;font-size:13px;resize:vertical;"></textarea>
+            <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="font-family:monospace;font-size:13px;resize:none;"></textarea>
           </div>
           <div id="vk-unlock-err" style="color:var(--color-danger);font-size:13px;display:none;">Ongeldige code. Controleer of je de juiste code hebt geplakt.</div>
           <button type="submit" class="btn btn-primary">Kluis openen</button>
@@ -2091,7 +2091,7 @@ function renderVaultClaim() {
         <label class="vk-label">Jouw persoonlijke code</label>
         <textarea id="vk-claim-code" class="vk-input" rows="4"
           placeholder="Plak hier de code uit de e-mail die je ontving toen je als kluiscontact werd aangewezen..."
-          style="font-family:monospace;font-size:11px;resize:vertical"></textarea>
+          style="font-family:monospace;font-size:11px;resize:none"></textarea>
         <input type="hidden" id="vk-claim-token" value="${esc(token)}" />
         <p id="vk-claim-err" class="vk-err hidden"></p>
         <button type="submit" class="vk-btn-primary" style="width:100%;margin-top:.5rem">
@@ -2309,43 +2309,49 @@ function renderInstructions() {
 
 function renderReport() {
   const isCompleet = state.account && state.account.plan !== 'basis';
-  const pct = computeCompletion();
+
+  const secLabel = t => `<div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">${t}</div>`;
+  const card     = c => `<div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:20px 22px;margin-bottom:12px;">${c}</div>`;
+  const row      = c => `<div style="padding:10px 0;border-bottom:1px solid rgba(47,93,217,.09);">${c}</div>`;
+  const empty    = t => `<div style="font-size:13px;color:#9AAAC8;padding:6px 0;">${t}</div>`;
+
+  const actionHtml = isCompleet
+    ? `<div style="margin-bottom:20px;">
+        <button type="button" class="btn btn-primary" data-action="download-report-pdf" style="display:inline-flex;align-items:center;gap:8px;">
+          ${iconSvg('file-text', 14)} Download als PDF
+        </button>
+      </div>`
+    : card(`<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <div style="font-size:14px;font-weight:600;color:#0F1222;margin-bottom:4px;">PDF download beschikbaar in Compleet</div>
+          <div style="font-size:13px;color:#9AAAC8;">Upgrade om jouw rapport als PDF te downloaden, bewaren of te delen.</div>
+        </div>
+        <button type="button" class="btn btn-primary" data-action="nav" data-page="plan" style="white-space:nowrap;">Bekijk abonnementen</button>
+      </div>`);
+
+  const assetsHtml = state.assets.length
+    ? state.assets.map(a => row(`
+        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(a.name)}<span style="font-weight:400;color:#9AAAC8;"> &middot; ${esc(a.typeLabel)}</span></div>
+        ${a.location ? `<div style="font-size:13px;color:#9AAAC8;margin-top:2px;">Locatie: ${esc(a.location)}</div>` : ''}
+      `)).join('')
+    : empty('Nog geen bezittingen toegevoegd.');
+
+  const contactsHtml = state.contacts.length
+    ? state.contacts.map(c => row(`
+        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(c.name)}<span style="font-weight:400;color:#9AAAC8;"> &middot; ${esc(c.relationship || 'Contact')}</span></div>
+        <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${esc(c.email)} &middot; ${esc(rolesLabel(c.roles))}</div>
+      `)).join('')
+    : empty('Nog geen vertrouwde contacten toegevoegd.');
+
+  const instructionsTxt = state.instructions.trim();
+
   return `
-    ${pageHeader({ kicker: 'Legacy Report', title: 'Alles op één plek, klaar om te delen.', sub: 'Een duidelijke, afdrukbare samenvatting voor de mensen die het nodig hebben, je familie, een executeur of een notaris.' })}
-    <div class="report-actions">
-      ${isCompleet ? `
-        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm btn-primary" data-action="download-report-pdf">
-            ${iconSvg('file-text', 14)} Download als PDF
-          </button>
-        </div>
-      ` : `
-        <div class="report-gate">
-          <p><strong>PDF download is beschikbaar in het Compleet abonnement.</strong></p>
-          <p>Upgrade om jouw Legacy Report als PDF te downloaden en te bewaren of te delen.</p>
-          <button type="button" class="btn btn-primary" data-action="nav" data-page="plan">Bekijk abonnementen</button>
-        </div>
-      `}
-    </div>
-    <div class="report-preview">
-      <h2>Digitale &amp; financiële bezittingen</h2>
-      ${state.assets.length ? state.assets.map(a => `
-        <div class="report-row"><div class="name">${esc(a.name)}<span style="color:var(--color-text-faint); font-weight:400;">, ${esc(a.typeLabel)}</span></div>
-        ${a.location ? `<div class="sub">Locatie: ${esc(a.location)}</div>` : ''}</div>
-      `).join('') : `<div class="report-row sub">Nog geen bezittingen toegevoegd.</div>`}
-
-      <h2>Vertrouwde contacten</h2>
-      ${state.contacts.length ? state.contacts.map(c => `
-        <div class="report-row"><div class="name">${esc(c.name)}<span style="color:var(--color-text-faint); font-weight:400;">, ${esc(c.relationship || 'Contact')}</span></div>
-        <div class="sub">${esc(c.email)} · ${esc(rolesLabel(c.roles))}</div></div>
-      `).join('') : `<div class="report-row sub">Nog geen vertrouwde contacten toegevoegd.</div>`}
-
-      <h2>Instructies</h2>
-      <div class="instructions-text">${state.instructions.trim() ? esc(state.instructions) : 'Nog geen instructies geschreven.'}</div>
-
-      <h2>Wanneer wordt dit gedeeld?</h2>
-      <div class="instructions-text">Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.</div>
-    </div>
+    ${pageHeader({ kicker: 'Rapport', title: 'Alles op één plek, klaar om te delen.', sub: 'Een duidelijke samenvatting voor familie, executeur of notaris.' })}
+    ${actionHtml}
+    ${card(secLabel('Digitale &amp; financiële bezittingen') + assetsHtml)}
+    ${card(secLabel('Vertrouwde contacten') + contactsHtml)}
+    ${card(secLabel('Instructies') + `<div style="font-size:14px;line-height:1.7;color:${instructionsTxt ? '#0F1222' : '#9AAAC8'};white-space:pre-wrap;">${instructionsTxt ? esc(instructionsTxt) : 'Nog geen instructies geschreven.'}</div>`)}
+    ${card(secLabel('Wanneer wordt dit gedeeld?') + `<div style="font-size:14px;line-height:1.7;color:#0F1222;">Een contact met de rol <strong>"Helpen bevestigen"</strong> kan via de <em>Overlijden melden</em>-pagina op afterfile.nl een melding indienen. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol <strong>"Informatie ontvangen"</strong>, doorgaans binnen 1 werkdag.</div>`)}
   `;
 }
 
