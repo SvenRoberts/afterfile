@@ -881,6 +881,7 @@ function render() {
       case 'instructions': content = renderInstructions(); break;
       case 'report': content = renderReport(); break;
       case 'faq': content = renderFaqPage(); break;
+      case 'subscription': content = renderSubscription(); break;
       case 'admin': content = renderAdmin(); break;
       default: content = renderDashboard();
     }
@@ -1579,6 +1580,7 @@ function renderAccountMenu(activeView) {
         <div class="account-menu-overlay"></div>
         <div class="account-menu-panel">
           ${menuLink('gegevens', 'Mijn gegevens')}
+          ${menuLink('subscription', 'Mijn abonnement')}
           ${menuLink('report', 'Rapport')}
           ${menuLink('faq', 'FAQ')}
           ${state.account && state.account.role === 'owner' ? menuLink('admin', 'Beheer') : ''}
@@ -1588,6 +1590,65 @@ function renderAccountMenu(activeView) {
       ` : ''}
     </div>
   `;
+}
+
+function renderSubscription() {
+  const plan = state.account ? state.account.plan : 'basis';
+  const isBasis = plan === 'basis';
+  const planData = PLANS.find(p => p.key === plan) || PLANS[0];
+  const compleetData = PLANS.find(p => p.key === 'compleet');
+
+  const since = state.account && state.account.createdAt
+    ? new Date(state.account.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '–';
+
+  const planCard = `
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;margin-bottom:20px;max-width:520px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Huidig pakket</div>
+          <div style="font-size:22px;font-weight:700;color:#0F1222;letter-spacing:-.02em;">${esc(planData.name)}</div>
+          <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${esc(planData.billing)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">${esc(planData.price)}</div>
+          <div style="font-size:12px;color:#9AAAC8;">${esc(planData.period)}</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#9AAAC8;border-top:1px solid rgba(47,93,217,.1);padding-top:14px;">
+        Lid sinds ${since}
+      </div>
+    </div>`;
+
+  if (isBasis) {
+    const upgradeCard = `
+      <div style="background:linear-gradient(135deg,#2F5DD9 0%,#7A4DF0 100%);border-radius:8px;padding:24px 28px;max-width:520px;color:#fff;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px;">Upgrade naar Compleet</div>
+        <div style="font-size:13px;opacity:.8;margin-bottom:18px;">${esc(compleetData.billing)}</div>
+        <ul style="list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:7px;">
+          ${compleetData.features.map(f => `<li style="font-size:13px;display:flex;align-items:flex-start;gap:8px;opacity:.92;">${iconSvg('check', 13)}<span>${esc(f)}</span></li>`).join('')}
+        </ul>
+        <button class="btn" style="background:#fff;color:#2F5DD9;font-weight:700;font-size:14px;" data-action="upgrade-plan" data-plan="compleet" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig...' : `Upgraden naar Compleet — ${esc(compleetData.price)}${esc(compleetData.period)}`}</button>
+      </div>`;
+    return `
+      ${pageHeader({ kicker: 'Abonnement', title: 'Mijn abonnement.' })}
+      ${planCard}
+      ${upgradeCard}`;
+  }
+
+  const cancelCard = `
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;max-width:520px;">
+      <div style="font-size:14px;font-weight:700;color:#0F1222;margin-bottom:8px;">Abonnement opzeggen</div>
+      <div style="font-size:13px;color:#9AAAC8;line-height:1.65;margin-bottom:18px;">
+        Stuur een e-mail naar <a href="mailto:info@afterfile.nl" style="color:#2F5DD9;font-weight:600;">info@afterfile.nl</a> en je abonnement wordt per einde van de lopende betaalperiode beëindigd. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.
+      </div>
+      <a href="mailto:info@afterfile.nl?subject=Abonnement%20opzeggen&body=Hallo%2C%0A%0AIk%20wil%20mijn%20AfterFile-abonnement%20opzeggen.%0AMijn%20e-mailadres%3A%20${encodeURIComponent(state.account ? state.account.email : '')}" class="btn btn-secondary btn-sm">E-mail sturen →</a>
+    </div>`;
+
+  return `
+    ${pageHeader({ kicker: 'Abonnement', title: 'Mijn abonnement.' })}
+    ${planCard}
+    ${cancelCard}`;
 }
 
 function renderFaqPage() {
