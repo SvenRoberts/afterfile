@@ -469,6 +469,7 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     refCode: profile.ref_code || null,
     referralCount: profile.referral_count || 0,
     referralDiscountPct: profile.referral_discount_pct || 0,
+    referralNames: Array.isArray(profile.active_referral_names) ? profile.active_referral_names : [],
   };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
@@ -1806,6 +1807,16 @@ function renderSubscription() {
   const refCode = state.account && state.account.refCode;
   const refLink = refCode ? `https://afterfile.nl/?ref=${refCode}` : '';
 
+  const referralNames = (state.account && state.account.referralNames) || [];
+  const referralNamesHtml = referralNames.length > 0
+    ? `<div style="margin-top:16px;border-top:1px solid rgba(47,93,217,.12);padding-top:14px;">
+        <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Mijn Refs</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${referralNames.map(n => `<span style="background:rgba(47,93,217,.07);border:1px solid rgba(47,93,217,.18);border-radius:20px;padding:3px 10px;font-size:12px;color:#0F1222;">${esc(n)}</span>`).join('')}
+        </div>
+      </div>`
+    : '';
+
   const referralCard = refCode && plan !== 'basis' ? `
     <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:22px 28px;max-width:520px;margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Vrienden uitnodigen</div>
@@ -1815,6 +1826,7 @@ function renderSubscription() {
       </div>
       <p style="font-size:13px;color:#4A5568;margin:0 0 8px;">Nodig iemand uit en ontvang 5% korting op je abonnement.</p>
       <a href="#" data-nav="faq" style="font-size:12px;color:#2F5DD9;text-decoration:none;font-weight:600;">Meer informatie →</a>
+      ${referralNamesHtml}
     </div>` : '';
 
   return `
