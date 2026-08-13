@@ -1801,7 +1801,7 @@ function renderAssets() {
   if (ui.vaultState === 'locked') {
     return `
       ${pageHeader({ kicker: 'Bezittingen', title: 'Jouw bezittingen.' })}
-      <div style="border:2.5px solid #2F5DD9;border-radius:16px;padding:28px 32px 32px;max-width:520px;background:#fff;box-shadow:0 4px 28px rgba(15,25,70,.09);">
+      <div style="border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:28px 32px 32px;max-width:520px;background:#fff;box-shadow:0 4px 16px rgba(47,93,217,.08);">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;">
           <div>
             <div style="font-size:15px;font-weight:700;color:#0F1222;letter-spacing:-.01em;">Kluis vergrendeld</div>
