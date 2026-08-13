@@ -1804,19 +1804,7 @@ function renderSubscription() {
 
   // Referral kaart
   const refCode = state.account && state.account.refCode;
-  const referralCount = state.account ? state.account.referralCount : 0;
-  const referralDiscountPct = state.account ? state.account.referralDiscountPct : 0;
   const refLink = refCode ? `https://afterfile.nl/?ref=${refCode}` : '';
-
-  let referralProgressText = '';
-  if (referralDiscountPct >= 100) {
-    referralProgressText = `<span style="font-size:13px;font-weight:700;color:#2F5DD9;">Je abonnement is volledig gratis via referrals!</span>`;
-  } else if (referralCount === 0) {
-    referralProgressText = `<span style="font-size:12px;color:#9AAAC8;">Nodig iemand uit en ontvang 5% korting op je abonnement voor iedere betalende aanmelding. Maximaal 100% korting (gratis).</span>`;
-  } else {
-    const nextPct = Math.min((referralCount + 1) * 5, 100);
-    referralProgressText = `<span style="font-size:12px;color:#9AAAC8;">Nog 1 betalende referral voor ${nextPct}% korting${nextPct === 100 ? ' — volledig gratis!' : ''}.</span>`;
-  }
 
   const referralCard = refCode && plan !== 'basis' ? `
     <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:22px 28px;max-width:520px;margin-bottom:20px;">
@@ -1825,16 +1813,8 @@ function renderSubscription() {
         <span style="font-size:12px;font-family:monospace;color:#0F1222;word-break:break-all;">${esc(refLink)}</span>
         <button class="btn btn-secondary btn-sm" data-action="copy-ref-link" data-link="${esc(refLink)}" style="font-size:11px;padding:3px 10px;flex-shrink:0;">Kopiëren</button>
       </div>
-      ${referralCount > 0 ? `
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(47,93,217,.08);">
-        <span style="font-size:13px;color:#9AAAC8;">Betalende referrals</span>
-        <span style="font-size:13px;font-weight:700;color:#0F1222;">${referralCount}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(47,93,217,.08);margin-bottom:12px;">
-        <span style="font-size:13px;color:#9AAAC8;">Jouw korting</span>
-        <span style="font-size:13px;font-weight:700;color:#2F5DD9;">${referralDiscountPct}%</span>
-      </div>` : `<div style="margin-bottom:12px;"></div>`}
-      ${referralProgressText}
+      <p style="font-size:13px;color:#4A5568;margin:0 0 8px;">Nodig iemand uit en ontvang 5% korting op je abonnement.</p>
+      <a href="#" data-nav="faq" style="font-size:12px;color:#2F5DD9;text-decoration:none;font-weight:600;">Meer informatie →</a>
     </div>` : '';
 
   return `
@@ -1851,6 +1831,7 @@ function renderFaqPage() {
     { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.' },
     { q: 'Hoe meldt een vertrouwd contact een overlijden?', a: 'Via de link "Voor Naasten" in de menubalk. Daar vult het contact de naam en het e-mailadres in waarmee de overledene bij AfterFile bekend was, samen met zijn of haar eigen naam en contactgegevens, zodat dit gecontroleerd kan worden.' },
     { q: 'Kan ik op elk moment opzeggen?', a: 'Ja. Je kunt je abonnement op elk moment stopzetten. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.' },
+    { q: 'Hoe werkt de referral-korting?', a: 'Breng je eerste betalende vriend of bekende aan via jouw persoonlijke referral-link, en je ontvangt direct 5% korting op je eigen abonnement. Daarna geldt: voor iedere 5 extra betalende aanmeldingen die via jouw link binnenkomen, ontvang je nog eens 5% extra korting. Breng je 6 klanten aan → 10% korting. 11 klanten → 15%. 16 klanten → 20%. Enzovoort. Het maximum is 100% — dan is je abonnement volledig gratis. De korting wordt automatisch verrekend zodra een aanmelding betalend wordt.' },
     { q: 'Is de cloud niet onveiliger dan opslaan op mijn eigen apparaat?', a: 'Nee, en voor digitale nalatenschap geldt juist het omgekeerde. Apps die alles lokaal opslaan lossen het technische opslagprobleem op, maar creëren een groter probleem: hoe krijgen je naasten ooit toegang tot een bestand op een apparaat dat zij niet kennen, niet kunnen ontgrendelen, of dat al jaren geleden kapot is gegaan? AfterFile versleutelt je gegevens in de cloud (AES-256) én koppelt vrijgave aan een gecontroleerde verificatieprocedure. Zo zijn je gegevens tijdens je leven beschermd, en na je overlijden gegarandeerd bereikbaar voor de juiste mensen.' },
     { q: 'Welke betaalmethoden worden ondersteund?', a: 'We ondersteunen iDEAL, Visa en Mastercard.' },
     { q: 'Heb ik vragen of hulp nodig?', a: 'Stuur een e-mail naar info@afterfile.nl. We reageren doorgaans binnen één werkdag.' },
