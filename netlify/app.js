@@ -2312,49 +2312,104 @@ function renderInstructions() {
 
 function renderReport() {
   const isCompleet = state.account && state.account.plan !== 'basis';
+  const pi = state.personalInfo || {};
 
-  const secLabel = t => `<div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">${t}</div>`;
-  const card     = c => `<div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:20px 22px;margin-bottom:12px;">${c}</div>`;
-  const row      = c => `<div style="padding:10px 0;border-bottom:1px solid rgba(47,93,217,.09);">${c}</div>`;
-  const empty    = t => `<div style="font-size:13px;color:#9AAAC8;padding:6px 0;">${t}</div>`;
+  // Kaart met gekleurde sectie-header (dashboard-stijl)
+  const sectionCard = (icon, title, content) => `
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;background:rgba(47,93,217,.04);border-bottom:1px solid rgba(47,93,217,.1);">
+        <div class="card-icon" style="width:28px;height:28px;border-radius:7px;box-shadow:0 3px 8px rgba(47,93,217,.22);">${iconSvg(icon, 13)}</div>
+        <div style="font-size:14px;font-weight:700;color:#0F1222;letter-spacing:-.01em;">${title}</div>
+      </div>
+      <div style="padding:4px 20px 16px;">${content}</div>
+    </div>`;
 
+  const dataRow = (label, value) => !value ? '' : `
+    <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(47,93,217,.07);">
+      <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;min-width:110px;padding-top:2px;flex-shrink:0;">${label}</div>
+      <div style="font-size:14px;color:#0F1222;">${value}</div>
+    </div>`;
+
+  const assetRow = a => `
+    <div style="padding:12px 0;border-bottom:1px solid rgba(47,93,217,.07);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(a.name)}</div>
+        <div style="font-size:11px;font-weight:700;color:#2F5DD9;background:rgba(47,93,217,.09);padding:2px 8px;border-radius:20px;letter-spacing:.02em;">${esc(a.typeLabel)}</div>
+      </div>
+      ${a.location    ? `<div style="font-size:13px;color:#5B6880;margin-top:1px;">Locatie/login: <span style="color:#0F1222;">${esc(a.location)}</span></div>` : ''}
+      ${a.institution ? `<div style="font-size:13px;color:#5B6880;margin-top:1px;">Instelling: <span style="color:#0F1222;">${esc(a.institution)}</span></div>` : ''}
+      ${a.value       ? `<div style="font-size:13px;color:#5B6880;margin-top:1px;">Waarde: <span style="color:#0F1222;">${esc(a.value)}</span></div>` : ''}
+      ${a.notes       ? `<div style="font-size:13px;color:#9AAAC8;margin-top:4px;font-style:italic;">${esc(a.notes)}</div>` : ''}
+    </div>`;
+
+  const contactRow = c => {
+    const initials = (c.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    return `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(47,93,217,.07);">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2F5DD9,#5B8DEF);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">${initials}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(c.name)}<span style="font-weight:400;color:#9AAAC8;"> · ${esc(c.relationship || 'Contact')}</span></div>
+        <div style="font-size:13px;color:#9AAAC8;margin-top:1px;">${esc(c.email)} · ${esc(rolesLabel(c.roles))}</div>
+      </div>
+    </div>`;
+  };
+
+  const empty = t => `<div style="font-size:13px;color:#9AAAC8;font-style:italic;padding:12px 0;">${t}</div>`;
+
+  // Persoonlijke gegevens
+  const adres = [pi.street, pi.postalCode, pi.city].filter(Boolean).join(', ');
+  const piContent = [
+    dataRow('Naam',          esc(pi.fullName || '')),
+    dataRow('Adres',         adres ? esc(adres) : ''),
+    dataRow('Geboortedatum', pi.birthDate ? esc(toNlDate(pi.birthDate)) : ''),
+    dataRow('Telefoon',      esc(pi.phone || '')),
+  ].join('') || empty('Nog geen persoonlijke gegevens ingevuld.');
+
+  // Bezittingen
+  const assetsContent = state.assets.length
+    ? state.assets.map(assetRow).join('')
+    : empty('Nog geen bezittingen toegevoegd.');
+
+  // Contacten
+  const contactsContent = state.contacts.length
+    ? state.contacts.map(contactRow).join('')
+    : empty('Nog geen vertrouwde contacten toegevoegd.');
+
+  // Instructies
+  const instrTxt = state.instructions.trim();
+  const instrContent = instrTxt
+    ? `<div style="font-size:14px;line-height:1.8;color:#0F1222;white-space:pre-wrap;padding-top:8px;">${esc(instrTxt)}</div>`
+    : empty('Nog geen instructies geschreven.');
+
+  // Proces
+  const procesContent = `
+    <div style="padding-top:8px;font-size:14px;line-height:1.75;color:#5B6880;">
+      Een contact met de rol <strong style="color:#0F1222;">"Helpen bevestigen"</strong> kan via de <em>Overlijden melden</em>-pagina een melding indienen. AfterFile controleert dit en geeft de informatie vrij aan contacten met de rol <strong style="color:#0F1222;">"Informatie ontvangen"</strong>, doorgaans binnen 1 werkdag.
+    </div>`;
+
+  // PDF actie of upgrade-blok
   const actionHtml = isCompleet
     ? `<div style="margin-bottom:20px;">
         <button type="button" class="btn btn-primary" data-action="download-report-pdf" style="display:inline-flex;align-items:center;gap:8px;">
           ${iconSvg('file-text', 14)} Download als PDF
         </button>
       </div>`
-    : card(`<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:180px;">
-          <div style="font-size:14px;font-weight:600;color:#0F1222;margin-bottom:4px;">PDF download beschikbaar in Compleet</div>
-          <div style="font-size:13px;color:#9AAAC8;">Upgrade om jouw rapport als PDF te downloaden, bewaren of te delen.</div>
+    : `<div style="background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.15);border-radius:8px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:160px;">
+          <div style="font-size:13.5px;font-weight:600;color:#0F1222;">PDF beschikbaar in Compleet</div>
+          <div style="font-size:12.5px;color:#9AAAC8;margin-top:2px;">Upgrade om je rapport als PDF op te slaan of te delen.</div>
         </div>
-        <button type="button" class="btn btn-primary" data-action="nav" data-page="plan" style="white-space:nowrap;">Bekijk abonnementen</button>
-      </div>`);
-
-  const assetsHtml = state.assets.length
-    ? state.assets.map(a => row(`
-        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(a.name)}<span style="font-weight:400;color:#9AAAC8;"> &middot; ${esc(a.typeLabel)}</span></div>
-        ${a.location ? `<div style="font-size:13px;color:#9AAAC8;margin-top:2px;">Locatie: ${esc(a.location)}</div>` : ''}
-      `)).join('')
-    : empty('Nog geen bezittingen toegevoegd.');
-
-  const contactsHtml = state.contacts.length
-    ? state.contacts.map(c => row(`
-        <div style="font-size:14px;font-weight:600;color:#0F1222;">${esc(c.name)}<span style="font-weight:400;color:#9AAAC8;"> &middot; ${esc(c.relationship || 'Contact')}</span></div>
-        <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${esc(c.email)} &middot; ${esc(rolesLabel(c.roles))}</div>
-      `)).join('')
-    : empty('Nog geen vertrouwde contacten toegevoegd.');
-
-  const instructionsTxt = state.instructions.trim();
+        <button type="button" class="btn btn-primary" data-action="nav" data-page="plan" style="white-space:nowrap;font-size:13px;">Bekijk abonnementen</button>
+      </div>`;
 
   return `
-    ${pageHeader({ kicker: 'Rapport', title: 'Alles op één plek, klaar om te delen.', sub: 'Een duidelijke samenvatting voor familie, executeur of notaris.' })}
+    ${pageHeader({ kicker: 'Rapport', title: 'Alles op één plek, klaar om te delen.', sub: 'Een volledig overzicht voor familie, executeur of notaris.' })}
     ${actionHtml}
-    ${card(secLabel('Digitale &amp; financiële bezittingen') + assetsHtml)}
-    ${card(secLabel('Vertrouwde contacten') + contactsHtml)}
-    ${card(secLabel('Instructies') + `<div style="font-size:14px;line-height:1.7;color:${instructionsTxt ? '#0F1222' : '#9AAAC8'};white-space:pre-wrap;">${instructionsTxt ? esc(instructionsTxt) : 'Nog geen instructies geschreven.'}</div>`)}
-    ${card(secLabel('Wanneer wordt dit gedeeld?') + `<div style="font-size:14px;line-height:1.7;color:#0F1222;">Een contact met de rol <strong>"Helpen bevestigen"</strong> kan via de <em>Overlijden melden</em>-pagina op afterfile.nl een melding indienen. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol <strong>"Informatie ontvangen"</strong>, doorgaans binnen 1 werkdag.</div>`)}
+    ${sectionCard('key',       'Persoonlijke gegevens',            piContent)}
+    ${sectionCard('safe',      'Digitale &amp; financiële bezittingen', assetsContent)}
+    ${sectionCard('users',     'Vertrouwde contacten',             contactsContent)}
+    ${sectionCard('file-text', 'Instructies &amp; wensen',         instrContent)}
+    ${sectionCard('info',      'Wanneer wordt dit gedeeld?',       procesContent)}
   `;
 }
 
