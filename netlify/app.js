@@ -499,6 +499,21 @@ async function loadAccountFromSupabase(userId, email, attempt) {
 async function applySession(session) {
   if (session && session.user) {
     await loadAccountFromSupabase(session.user.id, session.user.email);
+    // Direct na het laden: als het account plan='basis' is én er een pending checkout is
+    // in localStorage (= net via het aanmeldformulier), stuur dan direct door naar Stripe.
+    // Dit is betrouwbaarder dan user_metadata lezen (die wordt door Supabase niet altijd
+    // gevuld voor magic links).
+    if (state.account && state.account.plan === 'basis') {
+      try {
+        const stored = localStorage.getItem('af_pending_checkout');
+        if (stored) {
+          const p = JSON.parse(stored);
+          if (p.billingPeriod) ui.billingPeriod = p.billingPeriod;
+          localStorage.removeItem('af_pending_checkout');
+          setTimeout(() => startCheckout(p.plan || 'compleet'), 200);
+        }
+      } catch(_) {}
+    }
   } else {
     state.account = null;
     state.assets = [];
