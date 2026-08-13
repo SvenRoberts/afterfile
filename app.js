@@ -470,6 +470,7 @@ async function loadAccountFromSupabase(userId, email, attempt) {
     referralCount: profile.referral_count || 0,
     referralDiscountPct: profile.referral_discount_pct || 0,
     referralNames: Array.isArray(profile.active_referral_names) ? profile.active_referral_names : [],
+    pendingBillingPeriod: profile.pending_billing_period || null,
   };
   state.personalInfo = {
     fullName: profile.full_name || '', street: profile.street || '', postalCode: profile.postal_code || '',
@@ -1712,19 +1713,25 @@ function renderSubscription() {
 
   // Facturatiemethode rij (met schakeloptie)
   const billingLabel = billingPeriod === 'month' ? 'Maandelijks gefactureerd' : 'Jaarlijks gefactureerd';
-  const switchLabel = billingPeriod === 'month' ? 'Omzetten naar jaarlijks' : 'Omzetten naar maandelijks';
   const switchTarget = billingPeriod === 'month' ? 'year' : 'month';
+  const switchLabel = billingPeriod === 'month' ? 'Omzetten naar jaarlijks' : 'Omzetten naar maandelijks';
+  const pendingBillingPeriod = state.account && state.account.pendingBillingPeriod;
   const canSwitch = !isCanceling && plan !== 'basis';
+  const pendingLabel = pendingBillingPeriod === 'month' ? 'maandelijks' : 'jaarlijks';
   const switchRow = canSwitch ? `
     <div style="${metaRowStyle}">
-      <span style="display:flex;align-items:center;gap:7px;">
-        <span style="font-size:13px;color:#9AAAC8;">${billingLabel}</span>
-        ${isTrialing ? `<span style="font-size:10px;font-weight:700;background:rgba(47,93,217,.1);color:#2F5DD9;padding:2px 7px;border-radius:20px;">Proefperiode</span>` : ''}
+      <span style="display:flex;flex-direction:column;gap:3px;">
+        <span style="display:flex;align-items:center;gap:7px;">
+          <span style="font-size:13px;color:#9AAAC8;">${billingLabel}</span>
+          ${isTrialing ? `<span style="font-size:10px;font-weight:700;background:rgba(47,93,217,.1);color:#2F5DD9;padding:2px 7px;border-radius:20px;">Proefperiode</span>` : ''}
+        </span>
+        ${pendingBillingPeriod ? `<span style="font-size:11px;color:#9AAAC8;">Wordt ${pendingLabel} na volgende verlenging</span>` : ''}
       </span>
-      <button class="btn btn-secondary btn-sm" data-action="switch-billing-period" data-period="${switchTarget}"
+      ${!pendingBillingPeriod ? `<button class="btn btn-secondary btn-sm" data-action="switch-billing-period" data-period="${switchTarget}"
         style="font-size:11px;padding:3px 10px;border-radius:5px;" ${ui.billingPeriodSwitching ? 'disabled' : ''}>
         ${ui.billingPeriodSwitching ? 'Bezig…' : switchLabel}
-      </button>
+      </button>` : `<button class="btn btn-secondary btn-sm" data-action="cancel-billing-switch"
+        style="font-size:11px;padding:3px 10px;border-radius:5px;">Annuleren</button>`}
     </div>` : `
     <div style="${metaRowStyle}">
       <span style="font-size:13px;color:#9AAAC8;">${billingLabel}</span>
@@ -3381,8 +3388,9 @@ function wireEvents() {
         });
         const json = await res.json();
         if (json.ok) {
-          state.account.billingPeriod = targetPeriod;
-          flashToast(targetPeriod === 'month' ? 'Omgezet naar maandelijkse facturatie.' : 'Omgezet naar jaarlijkse facturatie.');
+          state.account.pendingBillingPeriod = targetPeriod;
+          const label = targetPeriod === 'month' ? 'maandelijks' : 'jaarlijks';
+          flashToast(`Wijziging ingepland: wordt ${label} na je volgende verlenging.`);
         } else {
           flashToast(json.error || 'Er ging iets mis. Probeer opnieuw.');
         }
@@ -3390,6 +3398,25 @@ function wireEvents() {
         flashToast('Er ging iets mis. Probeer opnieuw.');
       }
       ui.billingPeriodSwitching = false;
+      render();
+    });
+  }
+
+  const cancelBillingSwitchBtn = document.querySelector('[data-action="cancel-billing-switch"]');
+  if (cancelBillingSwitchBtn) {
+    cancelBillingSwitchBtn.addEventListener('click', async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/change-billing-period', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ billing_period: state.account.billingPeriod }),
+        });
+        state.account.pendingBillingPeriod = null;
+        flashToast('Geplande wijziging geannuleerd.');
+      } catch (e) {
+        flashToast('Er ging iets mis. Probeer opnieuw.');
+      }
       render();
     });
   }
