@@ -1804,7 +1804,7 @@ function renderAssets() {
       <div class="vault-gate-card">
         <div style="pointer-events:none;user-select:none;margin-bottom:8px;">${vaultDialSvg(false)}</div>
         <h3>Kluis vergrendeld</h3>
-        <p>Je bent op een nieuw apparaat of de browser is gewist. Voer je persoonlijke sleutelcode in om toegang te krijgen tot je bezittingen.</p>
+        <p>Voer je persoonlijke sleutelcode in om je kluis te openen.</p>
         <form id="vk-unlock-form" class="vault-setup-form">
           <div class="field">
             <label for="vk-frag-a-input">Sleutelcode</label>
