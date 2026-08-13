@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AfterFile — Interactieve Demo</title>
+  <title>AfterFile , Interactieve Demo</title>
   <link rel="stylesheet" href="styles.css">
   <style>
     /* ── Demo-banner bovenaan ── */
@@ -68,7 +68,7 @@
 <div id="af-demo-bar">
   <span>🎯 Demo modus</span>
   <span class="sep"></span>
-  <span>Klik gerust rond — niets wordt opgeslagen of verstuurd.</span>
+  <span>Klik gerust rond , niets wordt opgeslagen of verstuurd.</span>
   <span class="sep"></span>
   <a href="https://afterfile.nl" target="_blank" rel="noopener">Echte omgeving →</a>
 </div>
@@ -90,9 +90,11 @@
 <div id="app">Laden…</div>
 
 <!-- ════════════════════════════════════════════════════════════
-     Mock window.supabase  —  geladen VÓÓR app.js
+     Mock window.supabase  ,  geladen VÓÓR app.js
      ════════════════════════════════════════════════════════════ -->
 <script>
+window.AF_DEMO_MODE = true;
+
 (function () {
   'use strict';
 
@@ -209,7 +211,7 @@
         return Promise.resolve({ data: Array.isArray(d) ? (d[0] || null) : d, error: null });
       },
 
-      /* thenable — voor directe await én .then()-chains */
+      /* thenable , voor directe await én .then()-chains */
       then:    function(res, rej) { return Promise.resolve({ data: result(), error: null }).then(res, rej); },
       catch:   function(fn)       { return Promise.resolve({ data: result(), error: null }).catch(fn); },
       finally: function(fn)       { return Promise.resolve({ data: result(), error: null }).finally(fn); },
@@ -308,7 +310,7 @@
 })();
 </script>
 
-<!-- De echte app — laadt en werkt volledig met de mock hierboven -->
+<!-- De echte app , laadt en werkt volledig met de mock hierboven -->
 <script src="app.js"></script>
 
 </body>

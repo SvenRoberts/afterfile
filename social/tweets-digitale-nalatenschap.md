@@ -1,13 +1,13 @@
 # Tweetthread: digitale nalatenschap (24 juni 2026)
 
-Aanleiding: NOS, 24-06-2026, 07:32 — "Wie erft jouw wachtwoorden en crypto? Kamerlid pleit voor meer bewustzijn". Kamerlid Barbara Kathmann pleit vandaag in de Tweede Kamer voor een kabinetscampagne over digitale nalatenschap; concreet voorstel volgt naar verwachting volgende week.
+Aanleiding: NOS, 24-06-2026, 07:32 , "Wie erft jouw wachtwoorden en crypto? Kamerlid pleit voor meer bewustzijn". Kamerlid Barbara Kathmann pleit vandaag in de Tweede Kamer voor een kabinetscampagne over digitale nalatenschap; concreet voorstel volgt naar verwachting volgende week.
 Bron: https://nos.nl/artikel/2620018-wie-erft-jouw-wachtwoorden-en-crypto-kamerlid-pleit-voor-meer-bewustzijn
 
 Let op vóór posten: vervang `[LINK INVOEGEN]` in tweet 4/4 door je eigen aanmeld-/wachtlijstlink.
 
 ---
 
-**Tweet 1/4** (254 tekens) — voeg `afterfile-website-preview.png` toe als afbeelding
+**Tweet 1/4** (254 tekens) , voeg `afterfile-website-preview.png` toe als afbeelding
 
 Vandaag op de radio en in de Tweede Kamer: digitale nalatenschap. Kamerlid Kathmann wil dat het kabinet hierover een grote bewustwordingscampagne start. Terecht: ruim 8 op de 10 mensen hebben niets geregeld voor wat er met hun digitale spullen gebeurt. 🧵
 
@@ -32,7 +32,7 @@ Wachten tot de overheid een campagne lanceert? Dat hoeft niet. Regel je digitale
 ---
 
 ## Logo-assets (in deze map)
-- `afterfile-logo-icon-1024.png` / `.svg` — vierkant icoon, voor profielfoto (werkt goed in de ronde crop van X)
-- `afterfile-logo-horizontal-transparent.png` — icoon + naam, transparante achtergrond (voor headers/overlays)
-- `afterfile-logo-horizontal-white.png` — dezelfde lockup met witte achtergrond
-- `afterfile-website-preview.png` — preview-afbeelding van de landingspagina (1600×1060), met "Binnenkort"-badge, te gebruiken bij tweet 1/4
+- `afterfile-logo-icon-1024.png` / `.svg` , vierkant icoon, voor profielfoto (werkt goed in de ronde crop van X)
+- `afterfile-logo-horizontal-transparent.png` , icoon + naam, transparante achtergrond (voor headers/overlays)
+- `afterfile-logo-horizontal-white.png` , dezelfde lockup met witte achtergrond
+- `afterfile-website-preview.png` , preview-afbeelding van de landingspagina (1600×1060), met "Binnenkort"-badge, te gebruiken bij tweet 1/4

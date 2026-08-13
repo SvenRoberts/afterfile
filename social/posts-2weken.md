@@ -1,4 +1,4 @@
-# AfterFile — Social Posts (2 weken)
+# AfterFile , Social Posts (2 weken)
 
 6 posts, LinkedIn + X/Twitter. Ritme: 1 per 2-3 dagen.
 Link staat altijd in de **eerste reactie** op LinkedIn, nooit in de post zelf.
@@ -18,7 +18,7 @@ Link staat altijd in de **eerste reactie** op LinkedIn, nooit in de post zelf.
 
 ---
 
-## Post #1 — Vraag aan de doelgroep
+## Post #1 , Vraag aan de doelgroep
 *Doel: engagement, reacties uitlokken*
 
 ### LinkedIn
@@ -50,7 +50,7 @@ Wat zou jij als eerste willen terugvinden? ↓
 
 ---
 
-## Post #2 — Statistiek
+## Post #2 , Statistiek
 *Doel: bewustwording, delen*
 
 ### LinkedIn
@@ -83,7 +83,7 @@ afterfile.nl
 
 ---
 
-## Post #3 — Persoonlijk verhaal
+## Post #3 , Persoonlijk verhaal
 *Doel: emotionele connectie, herkenning*
 
 ### LinkedIn
@@ -120,7 +120,7 @@ afterfile.nl
 
 ---
 
-## Post #4 — Feature spotlight
+## Post #4 , Feature spotlight
 *Doel: product uitleggen, vertrouwen opbouwen*
 
 ### LinkedIn
@@ -155,7 +155,7 @@ afterfile.nl
 
 ---
 
-## Post #5 — Tip
+## Post #5 , Tip
 *Doel: waarde leveren, autoriteit opbouwen*
 
 ### LinkedIn
@@ -188,7 +188,7 @@ afterfile.nl
 
 ---
 
-## Post #6 — Wachtlijst CTA
+## Post #6 , Wachtlijst CTA
 *Doel: aanmeldingen, urgentie*
 
 ### LinkedIn

@@ -1,4 +1,4 @@
-/* AfterFile — premium, calm, enterprise-grade design system */
+/* AfterFile , premium, calm, enterprise-grade design system */
 
 :root {
   --color-primary: #2F5DD9;
@@ -1268,7 +1268,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
   position: relative;
 }
 /* ================================================================
-   TABLET  (max-width: 768px) — iPad portrait + kleine laptops
+   TABLET  (max-width: 768px) , iPad portrait + kleine laptops
    ================================================================ */
 @media (max-width: 768px) {
 
@@ -1372,7 +1372,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
 }
 
 /* ================================================================
-   MOBIEL  (max-width: 480px) — telefoon
+   MOBIEL  (max-width: 480px) , telefoon
    ================================================================ */
 @media (max-width: 480px) {
 
@@ -1416,7 +1416,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
 }
 
 /* ================================================================
-   VAULT ACTIVE — dark, high-tech shell voor ontgrendelde kluis
+   VAULT ACTIVE , dark, high-tech shell voor ontgrendelde kluis
    ================================================================ */
 .vault-active {
   background: #0B1120;
@@ -1533,7 +1533,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
 .vault-asset-row.open { background: #EEF3FF; }
 .vault-asset-row svg { color: #2F5DD9; opacity: .75; flex-shrink: 0; display: inline-block; vertical-align: middle; }
 
-/* Hover-lift effect — dashboard kaarten + role-option kaarten + plan-kaarten */
+/* Hover-lift effect , dashboard kaarten + role-option kaarten + plan-kaarten */
 .lift { transition: box-shadow .18s ease, transform .18s ease; }
 .lift:hover { box-shadow: 0 4px 16px rgba(47,93,217,.18); transform: translateY(-2px); }
 .vault-asset-name { flex: 1; font-size: 13.5px; font-weight: 600; color: #0F1222; }
@@ -1695,7 +1695,7 @@ footer.site-footer a:hover { color: var(--color-primary); }
 
 
 /* ============================================================
-   VAULT  — AES-256-GCM wachtwoordkluis
+   VAULT  , AES-256-GCM wachtwoordkluis
    ============================================================ */
 .vk-page { background: var(--bg); }
 

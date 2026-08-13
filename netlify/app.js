@@ -1,5 +1,5 @@
-// AfterFile app.js — build 2026-08-01 09:46:35
-// AfterFile — webapp met een echte Supabase-backend (database + login via magic link, geen
+// AfterFile app.js , build 2026-08-01 09:46:35
+// AfterFile , webapp met een echte Supabase-backend (database + login via magic link, geen
 // wachtwoord). Accountgegevens (account, bezittingen, contacten, instructies, persoonsgegevens)
 // leven in Supabase, niet meer alleen in deze browser. De Beheer-pagina en de "meld een
 // overlijden"-demo zijn nog niet gemigreerd en werken voorlopig nog lokaal, zie saveState().
@@ -90,7 +90,7 @@ const ASSET_CATEGORIES = [
 ];
 
 // ---------- icons ----------
-// Hand-drawn line-icon set (no emoji, no external icon font) — consistent
+// Hand-drawn line-icon set (no emoji, no external icon font) , consistent
 // 24x24 stroke style so the whole product reads as one deliberate system.
 const ICON_PATHS = {
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path>',
@@ -127,7 +127,7 @@ function iconSvg(name, size) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${inner}</svg>`;
 }
 
-// Wordmark glyph: a shield with a key — the AfterFile mark.
+// Wordmark glyph: a shield with a key , the AfterFile mark.
 // Refined shield proportions, a soft drop shadow and a subtle top sheen,
 // with a simple line-art key (access/legacy) instead of a checkmark.
 let _logoGradSeq = 0;
@@ -212,12 +212,12 @@ const SUPABASE_URL = 'https://prkwfuiadjfpdmcorfas.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_hqegYtKJNyF6z09_-kXcUg_nJMfkXW3';
 
 // ============================================================
-// VAULT — driedelige sleutelsplitsing + AES-256-GCM
+// VAULT , driedelige sleutelsplitsing + AES-256-GCM
 // Fragment A: localStorage  |  B: Supabase  |  C: email contact
 // Elke 2 van 3 fragmenten reconstrueren sleutel K
 // ============================================================
 const VK_FRAG_A  = 'af_v_fragA';   // localStorage: fragment A (base64)
-const VK_FRAG_C  = 'af_v_fragC';   // localStorage: fragment C (base64) — voor kluiscontact
+const VK_FRAG_C  = 'af_v_fragC';   // localStorage: fragment C (base64) , voor kluiscontact
 const VK_BLOB_ID = 'af_v_blobId';  // localStorage: vault_data id (voor auto-unlock)
 const VK_DATA_LS  = 'af_v_data';    // localStorage: cache van ontsleutelde data
 const VK_CONTACT  = 'af_v_contact';  // localStorage: email kluiscontact (legacy)
@@ -317,7 +317,7 @@ async function vkAutoUnlock() {
     const { data, error } = await supabase
       .from('vault_data').select('fragment_b, encrypted_blob').eq('user_id', state.account.id).single();
     if (error || !data) {
-      // Supabase heeft geen vault_data meer — localStorage opruimen
+      // Supabase heeft geen vault_data meer , localStorage opruimen
       sessionStorage.removeItem(VK_FRAG_A);
       localStorage.removeItem(VK_CONTACT);
       localStorage.removeItem(VK_DATA_LS);
@@ -380,7 +380,7 @@ let supabase;
 try {
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (e) {
-  console.error('Supabase-client aanmaken faalde — site blijft verder lokaal werken:', e);
+  console.error('Supabase-client aanmaken faalde , site blijft verder lokaal werken:', e);
 }
 
 // state.signups/state.waitlist zijn de nog-niet-gemigreerde demo-onderdelen (Beheer-pagina,
@@ -512,7 +512,7 @@ async function applySession(session) {
   if (state.account && ['landing', 'signup', 'waitlist'].includes(state.view)) state.view = 'dashboard';
   if (!state.account && ['dashboard', 'gegevens', 'assets', 'contacts', 'instructions', 'report', 'admin'].includes(state.view)) state.view = 'landing';
   render();
-  // Start vault initialisatie na render (async — vkInit roept zelf render() aan als klaar)
+  // Start vault initialisatie na render (async , vkInit roept zelf render() aan als klaar)
   if (state.account) vkInit();
 }
 
@@ -601,7 +601,7 @@ let completionHideTimer = null;
   } catch (_) {}
 })();
 
-// Render meteen, synchroon, met de lokale staat — de site is zo altijd direct zichtbaar
+// Render meteen, synchroon, met de lokale staat , de site is zo altijd direct zichtbaar
 // en werkt volledig op zichzelf, zonder op Supabase te wachten of daarvan af te hangen.
 // Onvoorwaardelijk: zelfs als Supabase hierboven faalde verschijnt de site gewoon.
 render();
@@ -855,7 +855,7 @@ async function reportDeathViaSupabase(details) {
   if (row.result_status === 'shared') return { type: 'already-shared', deceasedName, real: true };
   if (row.result_status === 'waiting' && !row.is_new) return { type: 'already-waiting', deceasedName, hasCertificate: row.has_certificate, real: true };
   // Verse melding: stuur de vangnet-mail naar het account zelf (legt uit dat opnieuw inloggen
-  // de melding annuleert). Niet blokkerend voor de UI — als deze faalt, is de melding zelf al
+  // de melding annuleert). Niet blokkerend voor de UI , als deze faalt, is de melding zelf al
   // wel correct verwerkt door de RPC hierboven.
   supabase.functions.invoke('send-death-report-alert', {
     body: {
@@ -1012,7 +1012,7 @@ function renderLanding() {
             <ul class="check-list">${checkListHtml}</ul>
             <div class="hero-cta-row">
               <button class="btn btn-primary btn-lg" data-nav="signup" data-plan="compleet">Aan de slag</button>
-              <span class="hero-cta-note">Kies jaarlijks en bespaar 16% — of begin maandelijks en pas later aan.</span>
+              <span class="hero-cta-note">Kies jaarlijks en bespaar 16% , of begin maandelijks en pas later aan.</span>
             </div>
           </div>
         </div>
@@ -1215,7 +1215,7 @@ function renderDeathReport() {
             ${renderDeathReportResult()}
           </section>
 
-          <!-- Sectie 2: Kluis openen — alleen zichtbaar na goedkeuring (token vereist) -->
+          <!-- Sectie 2: Kluis openen , alleen zichtbaar na goedkeuring (token vereist) -->
           ${prefillToken ? `<section class="report-death-section" id="kluis-openen">
             <div class="section-heading">
               <span class="kicker">Kluistoegang</span>
@@ -1362,7 +1362,7 @@ function renderSignup() {
               <div class="summary-plan-row">
                 <div>
                   <h3>${esc(plan.name)}</h3>
-                  <p class="summary-billing">${ui.billingPeriod === 'month' ? 'Maandelijks opzegbaar' : 'Jaarlijks gefactureerd — bespaar 16%'}</p>
+                  <p class="summary-billing">${ui.billingPeriod === 'month' ? 'Maandelijks opzegbaar' : 'Jaarlijks gefactureerd , bespaar 16%'}</p>
                 </div>
                 <div class="summary-price-col">
                   <div class="summary-price">${ui.billingPeriod === 'month' ? '€3,95' : '€39,95'}<span>${ui.billingPeriod === 'month' ? '/ maand' : '/ jaar'}</span></div>
@@ -1393,7 +1393,7 @@ function renderSignup() {
               <div class="summary-divider"></div>
 
               <div style="background:rgba(47,93,217,.05);border:1px solid rgba(47,93,217,.14);border-radius:7px;padding:10px 13px;font-size:12px;color:#2F5DD9;line-height:1.5;">
-                ${iconSvg('check', 13)} <strong>Bespaar extra via referrals.</strong> Nodig een vriend uit met jouw persoonlijke code en ontvang 5% korting per actief lid — tot 100%.
+                ${iconSvg('check', 13)} <strong>Bespaar extra via referrals.</strong> Nodig een vriend uit met jouw persoonlijke code en ontvang 5% korting per actief lid , tot 100%.
               </div>
 
               <div class="summary-divider"></div>
@@ -1686,7 +1686,7 @@ function renderSubscription() {
         { label: 'Volgende verlenging', val: nextRenewal },
       ];
     } else if (currentPeriodEndIso) {
-      // Geen betaling geregistreerd (bijv. net omgezet van proefperiode) — gebruik Stripe's period end als fallback
+      // Geen betaling geregistreerd (bijv. net omgezet van proefperiode) , gebruik Stripe's period end als fallback
       dateRows = [
         { label: 'Volgende verlenging', val: periodEnd },
       ];
@@ -1761,7 +1761,7 @@ function renderSubscription() {
         <ul style="list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:7px;">
           ${compleetData.features.map(f => `<li style="font-size:13px;display:flex;align-items:flex-start;gap:8px;opacity:.92;">${iconSvg('check', 13)}<span>${esc(f)}</span></li>`).join('')}
         </ul>
-        <button class="btn" style="background:#fff;color:#2F5DD9;font-weight:700;font-size:14px;" data-action="upgrade-plan" data-plan="compleet" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig...' : `Upgraden naar Compleet — ${esc(compleetData.price)}${esc(compleetData.period)}`}</button>
+        <button class="btn" style="background:#fff;color:#2F5DD9;font-weight:700;font-size:14px;" data-action="upgrade-plan" data-plan="compleet" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig...' : `Upgraden naar Compleet , ${esc(compleetData.price)}${esc(compleetData.period)}`}</button>
       </div>`;
     return `
       ${pageHeader({ kicker: 'Abonnement', title: 'Mijn abonnement.' })}
@@ -1846,7 +1846,7 @@ function renderFaqPage() {
     { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.' },
     { q: 'Hoe meldt een vertrouwd contact een overlijden?', a: 'Via de link "Voor Naasten" in de menubalk. Daar vult het contact de naam en het e-mailadres in waarmee de overledene bij AfterFile bekend was, samen met zijn of haar eigen naam en contactgegevens, zodat dit gecontroleerd kan worden.' },
     { q: 'Kan ik op elk moment opzeggen?', a: 'Ja. Je kunt je abonnement op elk moment stopzetten. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.' },
-    { q: 'Hoe werkt de referral-korting?', a: 'Breng je eerste betalende vriend of bekende aan via jouw persoonlijke referral-link, en je ontvangt direct 5% korting op je eigen abonnement. Daarna geldt: voor iedere 5 extra betalende aanmeldingen die via jouw link binnenkomen, ontvang je nog eens 5% extra korting. Breng je 6 klanten aan → 10% korting. 11 klanten → 15%. 16 klanten → 20%. Enzovoort. Het maximum is 100% — dan is je abonnement volledig gratis. De korting wordt automatisch verrekend zodra een aanmelding betalend wordt.' },
+    { q: 'Hoe werkt de referral-korting?', a: 'Breng je eerste betalende vriend of bekende aan via jouw persoonlijke referral-link, en je ontvangt direct 5% korting op je eigen abonnement. Daarna geldt: voor iedere 5 extra betalende aanmeldingen die via jouw link binnenkomen, ontvang je nog eens 5% extra korting. Breng je 6 klanten aan → 10% korting. 11 klanten → 15%. 16 klanten → 20%. Enzovoort. Het maximum is 100% , dan is je abonnement volledig gratis. De korting wordt automatisch verrekend zodra een aanmelding betalend wordt.' },
     { q: 'Is de cloud niet onveiliger dan opslaan op mijn eigen apparaat?', a: 'Nee, en voor digitale nalatenschap geldt juist het omgekeerde. Apps die alles lokaal opslaan lossen het technische opslagprobleem op, maar creëren een groter probleem: hoe krijgen je naasten ooit toegang tot een bestand op een apparaat dat zij niet kennen, niet kunnen ontgrendelen, of dat al jaren geleden kapot is gegaan? AfterFile versleutelt je gegevens in de cloud (AES-256) én koppelt vrijgave aan een gecontroleerde verificatieprocedure. Zo zijn je gegevens tijdens je leven beschermd, en na je overlijden gegarandeerd bereikbaar voor de juiste mensen.' },
     { q: 'Welke betaalmethoden worden ondersteund?', a: 'We ondersteunen iDEAL, Visa en Mastercard.' },
     { q: 'Heb ik vragen of hulp nodig?', a: 'Stuur een e-mail naar info@afterfile.nl. We reageren doorgaans binnen één werkdag.' },
@@ -1914,12 +1914,12 @@ function renderDashboard() {
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
         ${PLANS.map(p => `
-          <button type="button" style="padding:6px 14px;border-radius:6px;border:none;background:${p.featured ? '#2F5DD9' : 'rgba(47,93,217,.1)'};color:${p.featured ? '#fff' : '#2F5DD9'};font-size:12px;font-weight:600;cursor:pointer;" data-action="upgrade-plan" data-plan="${p.key}" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig…' : `${esc(p.name)} — ${esc(p.price)}${esc(p.period)}`}</button>
+          <button type="button" style="padding:6px 14px;border-radius:6px;border:none;background:${p.featured ? '#2F5DD9' : 'rgba(47,93,217,.1)'};color:${p.featured ? '#fff' : '#2F5DD9'};font-size:12px;font-weight:600;cursor:pointer;" data-action="upgrade-plan" data-plan="${p.key}" ${ui.checkoutRedirecting ? 'disabled' : ''}>${ui.checkoutRedirecting ? 'Bezig…' : `${esc(p.name)} , ${esc(p.price)}${esc(p.period)}`}</button>
         `).join('')}
       </div>
     </div>` : '';
 
-  // Kaart-helper — drie losse klikbare kaarten naast elkaar
+  // Kaart-helper , drie losse klikbare kaarten naast elkaar
   const card = (icon, title, sub, nav, actionLabel) => `
     <a href="#" data-nav="${nav}" class="dash-card" style="display:flex;flex-direction:column;padding:16px;gap:10px;text-decoration:none;background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;">
       <span style="color:#2F5DD9;display:flex;">${iconSvg(icon, 16)}</span>
@@ -2063,7 +2063,8 @@ function renderAssets() {
           <div style="height:1px;background:rgba(47,93,217,.1);margin-bottom:20px;"></div>
           <form id="vk-unlock-form">
             <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Sleutelcode</div>
-            <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="width:100%;box-sizing:border-box;font-family:'Courier New',monospace;font-size:13px;resize:none;padding:10px 12px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;"></textarea>
+            ${window.AF_DEMO_MODE ? `<div style="background:#EFF4FF;border:1px solid rgba(47,93,217,.22);border-radius:6px;padding:8px 12px;font-size:12px;color:#2F5DD9;margin-bottom:10px;">${iconSvg('key', 13)} Demo , gebruik de onderstaande code (of typ iets willekeurigs):</div>` : ''}
+            <textarea id="vk-frag-a-input" rows="3" placeholder="Plak hier je sleutelcode…" style="width:100%;box-sizing:border-box;font-family:'Courier New',monospace;font-size:13px;resize:none;padding:10px 12px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;color:#0F1222;outline:none;">${window.AF_DEMO_MODE ? 'DEMO-SLEUTEL-2026' : ''}</textarea>
             <div id="vk-unlock-err" style="color:var(--color-danger);font-size:13px;display:none;margin-top:8px;">Ongeldige code. Controleer of je de juiste code hebt geplakt.</div>
             <button type="submit" class="btn btn-primary" style="margin-top:16px;">Kluis openen</button>
           </form>
@@ -2292,7 +2293,7 @@ function renderContactInviteModal() {
     <div style="margin:16px 0;padding:14px 16px;background:#EEF2FC;border-left:3px solid #2F5DD9;border-radius:6px;">
       <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#0F1222;">Jouw persoonlijke kluiscode</p>
       <p style="margin:0 0 10px;font-size:12px;color:#5B6172;">
-        ${esc(accountName)} heeft je aangewezen als kluiscontact. Bewaar de onderstaande code veilig —
+        ${esc(accountName)} heeft je aangewezen als kluiscontact. Bewaar de onderstaande code veilig ,
         je hebt hem nodig om toegang te krijgen tot de kluisinhoud van ${esc(accountName)} als dat moment aanbreekt.
       </p>
       <div style="font-family:monospace;font-size:12px;word-break:break-all;background:#fff;border:1px dashed #c7d2fe;border-radius:4px;padding:10px 12px;color:#1e293b;">${esc(fragC)}</div>
@@ -2305,7 +2306,7 @@ function renderContactInviteModal() {
     <div class="invite-modal-overlay" data-action="close-invite-preview"></div>
     <div class="invite-modal" role="dialog" aria-modal="true" aria-label="Voorbeeld e-mail aan vertrouwd contact">
       <div class="invite-modal-top">
-        <span>Contact opgeslagen — dit is de e-mail die verstuurd wordt</span>
+        <span>Contact opgeslagen , dit is de e-mail die verstuurd wordt</span>
         <button type="button" class="invite-modal-close" data-action="close-invite-preview" aria-label="Sluiten">${iconSvg('x', 16)}</button>
       </div>
       <div class="invite-mock">
@@ -3123,6 +3124,14 @@ function wireEvents() {
       errEl.style.display = 'none';
       const btn = vkUnlockForm.querySelector('button[type="submit"]');
       btn.disabled = true; btn.textContent = 'Even geduld…';
+      // Demo-modus: elke niet-lege code opent de kluis direct
+      if (window.AF_DEMO_MODE && input) {
+        ui.vaultData  = { assets: state.assets || [], contacts: state.contacts || [], instructions: state.instructions || '', personalInfo: state.personalInfo || {}, snapshotAt: new Date().toISOString() };
+        ui.vaultKey   = 'demo';
+        ui.vaultState = 'unlocked';
+        render();
+        return;
+      }
       try {
         const fragA = b64ToU8(input);
         const { data, error } = await supabase.from('vault_data')
