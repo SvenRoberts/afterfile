@@ -2458,8 +2458,7 @@ function downloadReportPDF() {
   /* Header */
   .header { background: #2F5DD9; padding: 28px 40px 24px; display: flex; align-items: center; justify-content: space-between; }
   .header-logo { display: flex; align-items: center; gap: 10px; }
-  .logo-mark { width: 36px; height: 36px; background: rgba(255,255,255,.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
-  .logo-mark svg { width: 20px; height: 20px; color: #fff; }
+  .logo-mark { display: flex; align-items: center; justify-content: center; }
   .logo-name { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
   .header-meta { text-align: right; }
   .header-title { font-size: 15px; font-weight: 600; color: #fff; }
@@ -2502,12 +2501,7 @@ function downloadReportPDF() {
 
 <div class="header">
   <div class="header-logo">
-    <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
-        <circle cx="8.5" cy="14" r="2.4"/><path d="M10.4 12.1 17 5.5"/><path d="M14.5 7.5 16.5 9.5M12.5 9.5l1.5 1.5"/>
-      </svg>
-    </div>
+    <div class="logo-mark">${logoMark(36)}</div>
     <div class="logo-name">AfterFile</div>
   </div>
   <div class="header-meta">
