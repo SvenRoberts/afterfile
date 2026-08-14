@@ -978,6 +978,7 @@ function render() {
       case 'report': content = renderReport(); break;
       case 'faq': content = renderFaqPage(); break;
       case 'subscription': content = renderSubscription(); break;
+      case 'invite': content = renderInvite(); break;
       case 'admin': content = renderAdmin(); break;
       default: content = renderDashboard();
     }
@@ -1662,7 +1663,7 @@ function renderAccountMenu(activeView) {
         <div class="account-menu-panel">
           ${menuLink('gegevens', 'Mijn gegevens')}
           ${menuLink('subscription', 'Mijn abonnement')}
-          ${state.account && state.account.refCode && state.account.plan !== 'basis' ? menuLink('subscription', 'Vrienden uitnodigen') : ''}
+          ${state.account && state.account.refCode && state.account.plan !== 'basis' ? menuLink('invite', 'Vrienden uitnodigen') : ''}
           ${menuLink('report', 'Rapport')}
           ${menuLink('faq', 'FAQ')}
           ${state.account && state.account.role === 'owner' ? menuLink('admin', 'Beheer') : ''}
@@ -1909,9 +1910,65 @@ function renderSubscription() {
 
   return `
     ${pageHeader({ kicker: 'Abonnement', title: 'Mijn abonnement.' })}
-    ${referralCard}
     ${planCard}
     ${cancelSection}`;
+}
+
+function renderInvite() {
+  const plan = state.account ? state.account.plan : 'basis';
+  const refCode = state.account && state.account.refCode;
+  const refLink = refCode ? `https://afterfile.nl/?ref=${refCode}` : '';
+
+  const referralNames = (state.account && state.account.referralNames) || [];
+  const referralNamesHtml = referralNames.length > 0
+    ? `<div style="margin-top:16px;border-top:1px solid rgba(47,93,217,.12);padding-top:14px;">
+        <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Mijn refs</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${referralNames.map(n => `<span style="background:rgba(47,93,217,.07);border:1px solid rgba(47,93,217,.18);border-radius:20px;padding:3px 10px;font-size:12px;color:#0F1222;">${esc(n)}</span>`).join('')}
+        </div>
+      </div>`
+    : '';
+
+  const inviteForm = ui.inviteFriendSent
+    ? `<div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.28);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-top:16px;">
+        ${iconSvg('check', 16)}
+        <span style="font-size:13px;color:#166534;font-weight:600;">Uitnodiging verstuurd!</span>
+      </div>`
+    : `<form id="invite-friend-form" novalidate style="margin-top:16px;">
+        <div style="font-size:12px;font-weight:600;color:#0F1222;margin-bottom:8px;">Vriend uitnodigen via e-mail</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input id="invite-friend-email" type="email" placeholder="E-mailadres van je vriend" autocomplete="off"
+            value="${esc(ui.inviteFriendEmail || '')}"
+            style="flex:1;min-width:180px;height:36px;padding:0 12px;border:1px solid rgba(47,93,217,.22);border-radius:6px;font-size:13px;color:#0F1222;outline:none;">
+          <button type="submit" class="btn btn-primary btn-sm"
+            style="font-size:12px;padding:0 16px;height:36px;flex-shrink:0;"
+            ${ui.inviteFriendSubmitting ? 'disabled' : ''}>
+            ${ui.inviteFriendSubmitting ? 'Bezig...' : 'Uitnodigen'}
+          </button>
+        </div>
+        ${ui.inviteFriendError ? `<p style="font-size:12px;color:#E53E3E;margin:6px 0 0;">${esc(ui.inviteFriendError)}</p>` : ''}
+      </form>`;
+
+  if (!refCode || plan === 'basis') {
+    return `
+      ${pageHeader({ kicker: 'Vrienden uitnodigen', title: 'Vrienden uitnodigen.' })}
+      <div style="background:#fff;border:1px solid rgba(47,93,217,.18);border-radius:8px;padding:24px 28px;max-width:520px;color:#555;font-size:14px;">
+        Vrienden uitnodigen is beschikbaar zodra je een actief abonnement hebt.
+      </div>`;
+  }
+
+  return `
+    ${pageHeader({ kicker: 'Vrienden uitnodigen', title: 'Vrienden uitnodigen.' })}
+    <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:22px 28px;max-width:520px;margin-bottom:20px;">
+      <p style="font-size:13px;color:#4A5568;margin:0 0 14px;">Nodig iemand uit via e-mail, hun referral-code is al ingevuld. Ontvang 5% korting per betalende vriend.</p>
+      <div style="background:rgba(47,93,217,.04);border:1px solid rgba(47,93,217,.14);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-family:monospace;color:#0F1222;word-break:break-all;">${esc(refLink)}</span>
+        <button class="btn btn-secondary btn-sm" data-action="copy-ref-link" data-link="${esc(refLink)}" style="font-size:11px;padding:3px 10px;flex-shrink:0;">Kopiëren</button>
+      </div>
+      ${inviteForm}
+      <a href="#" data-nav="faq" style="font-size:12px;color:#2F5DD9;text-decoration:none;font-weight:600;display:inline-block;margin-top:12px;">Meer informatie →</a>
+      ${referralNamesHtml}
+    </div>`;
 }
 
 function renderFaqPage() {
