@@ -15,28 +15,49 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Altijd hetzelfde neutrale antwoord teruggeven, ongeacht of het adres bestaat.
+// Zo lekt de functie geen informatie over welke e-mails geregistreerd zijn.
+const OK = new Response(JSON.stringify({ ok: true }), {
+  headers: { ...cors, 'Content-Type': 'application/json' },
+});
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
   try {
     const { email } = await req.json();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return new Response(JSON.stringify({ error: 'Ongeldig e-mailadres.' }), {
-        status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
-      });
+    const normalized = (email || '').trim().toLowerCase();
+
+    if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+      // Ongeldige invoer: ook hier generiek antwoord, geen foutdetail
+      return OK;
     }
 
+    // Controleer of er een profiel bestaat voor dit adres.
+    // Bestaat het niet: doe niets en return OK (geen e-mail sturen, geen account aanmaken).
+    // Zo is de functie niet te misbruiken om nep-accounts aan te maken of
+    // om te achterhalen welke e-mails geregistreerd zijn.
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', normalized)
+      .maybeSingle();
+
+    if (!profile) {
+      console.log(`send-login-link: onbekend adres ${normalized}, geen mail verstuurd.`);
+      return OK;
+    }
+
+    // Gebruiker bestaat: genereer magic link en stuur mail.
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
-      email: email.toLowerCase().trim(),
+      email: normalized,
       options: { redirectTo: SITE_URL },
     });
 
     if (linkErr || !linkData?.properties?.hashed_token) {
       console.error('generateLink mislukt:', linkErr?.message);
-      return new Response(JSON.stringify({ error: 'Kon geen inloglink aanmaken.' }), {
-        status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
-      });
+      return OK; // ook bij fout generiek antwoord
     }
 
     const hashedToken = linkData.properties.hashed_token;
@@ -47,7 +68,7 @@ Deno.serve(async (req: Request) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from:    'AfterFile <info@afterfile.nl>',
-        to:      [email],
+        to:      [normalized],
         subject: 'Jouw inloglink voor AfterFile',
         html: `
           <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px">
@@ -63,13 +84,9 @@ Deno.serve(async (req: Request) => {
       }),
     });
 
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { ...cors, 'Content-Type': 'application/json' },
-    });
+    return OK;
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
-    });
+    console.error('send-login-link fout:', e instanceof Error ? e.message : String(e));
+    return OK; // ook bij onverwachte fout generiek antwoord
   }
 });
