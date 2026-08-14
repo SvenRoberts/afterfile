@@ -896,6 +896,42 @@ function pageHeader(opts) {
 }
 
 // ---------- render ----------
+function renderLogin() {
+  return `
+    <nav class="publicnav">
+      <div class="publicnav-inner">
+        <a href="#" class="brand" data-nav="landing"><span class="brand-mark">${logoMark(34)}</span> AfterFile</a>
+        <div class="publicnav-links"><a href="#" data-nav="landing">Home</a></div>
+      </div>
+    </nav>
+    <main class="page">
+      <div class="container" style="max-width:440px;margin:80px auto;">
+        <div style="background:#fff;border:1px solid rgba(47,93,217,.18);border-radius:12px;padding:36px 32px;">
+          <div style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:4px;">Inloggen</div>
+          <p style="color:#555;margin:0 0 24px;font-size:15px;">Vul je e-mailadres in. We sturen je een inloglink, geen wachtwoord nodig.</p>
+          ${ui.loginEmailSent
+            ? `<div style="background:rgba(47,93,217,.06);border:1px solid rgba(47,93,217,.18);border-radius:8px;padding:20px;text-align:center;">
+                ${iconSvg('check', 20)}
+                <div style="font-weight:700;color:#0f172a;margin:10px 0 6px;font-size:16px;">Check je e-mail!</div>
+                <div style="color:#555;font-size:14px;">We hebben een inloglink verstuurd naar <strong>${esc(ui.loginEmailSent)}</strong>. Klik op de link om direct in te loggen.</div>
+                <p style="color:#888;font-size:12px;margin-top:14px;">Niet in je inbox? Controleer ook de map Ongewenste e-mail of Spam.</p>
+              </div>`
+            : `<form id="login-form" novalidate>
+                <div class="field${ui.loginEmailError ? ' invalid' : ''}">
+                  <input id="login-email" name="email" type="email" placeholder="E-mailadres" autocomplete="email" autofocus required>
+                </div>
+                ${ui.loginEmailError ? `<p class="field-error">${esc(ui.loginEmailError)}</p>` : ''}
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px;"${ui.loginSubmitting ? ' disabled' : ''}>${ui.loginSubmitting ? 'Even geduld...' : 'Stuur inloglink'}</button>
+              </form>`
+          }
+        </div>
+        <p style="text-align:center;margin-top:20px;font-size:13px;color:#888;">Nog geen account? <a href="#" data-nav="signup" style="color:#2F5DD9;font-weight:600;">Abonneer je hier</a></p>
+      </div>
+    </main>
+    ${renderSiteFooter()}
+  `;
+}
+
 function renderCheckoutSuccess() {
   return `
     <nav class="publicnav">
@@ -921,6 +957,7 @@ function render() {
     html = renderCheckoutSuccess();
   } else if (!state.account) {
     if (state.view === 'signup') html = renderSignup();
+    else if (state.view === 'login') html = renderLogin();
     else if (state.view === 'waitlist') html = renderWaitlist();
     else if (state.view === 'partner') html = renderPartner();
     else if (state.view === 'death-report') html = renderDeathReport();
@@ -1030,6 +1067,7 @@ function renderLanding() {
           ${PRELAUNCH_MODE ? `<a href="#" data-nav="waitlist">Voor naasten</a>` : `<a href="#" data-nav="death-report">Voor naasten</a>`}
           <a href="#" data-nav="partner" style="font-weight:500;">Voor partners</a>
           <a class="btn btn-secondary btn-sm" href="demo.html" target="_blank" rel="noopener" style="margin-right:6px;">Demo</a>
+          <button class="btn btn-secondary btn-sm" data-nav="login" style="margin-right:6px;">Aanmelden</button>
           <button class="btn btn-primary btn-sm" data-nav="signup" data-plan="compleet">Nu abonneren</button>
         </div>
       </div>
@@ -1330,10 +1368,7 @@ function renderSignup() {
                 </div>
                 ${emailError ? `<p class="field-error">${esc(emailError)}</p>` : ''}
               </div>
-              ${pendingRef
-                ? `<div style="background:rgba(47,93,217,.06);border:1px solid rgba(47,93,217,.18);border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#2F5DD9;">${iconSvg('check', 13)} Referral-code toegepast: <strong>${esc(pendingRef)}</strong></div>`
-                : `<div class="field" style="margin-top:10px"><label for="su-ref" style="font-size:13px;color:#888;">Referral-code <span style="font-weight:400">(optioneel)</span></label><input id="su-ref" name="ref" type="text" placeholder="bijv. SVEN5" autocomplete="off" style="text-transform:uppercase" value=""></div>`
-              }
+              <div class="field" style="margin-top:10px"><label for="su-ref" style="font-size:13px;color:#888;">Referral-code <span style="font-weight:400">(optioneel)</span></label><input id="su-ref" name="ref" type="text" placeholder="Code" autocomplete="off" style="text-transform:uppercase" value=""></div>
 
               <div class="section-divider checkout-divider"></div>
 
@@ -3272,6 +3307,11 @@ function wireEvents() {
         ui.betalingOpen = true;
         if (PRELAUNCH_MODE) target = 'waitlist';
       }
+      if (target === 'login') {
+        ui.loginEmailSent = null;
+        ui.loginEmailError = null;
+        ui.loginSubmitting = false;
+      }
       navigate(target);
     });
   });
@@ -3928,6 +3968,33 @@ function wireEvents() {
 
   document.querySelectorAll('[data-action="close-invite-preview"]').forEach(el => {
     el.addEventListener('click', () => { ui.contactInvitePreview = null; render(); });
+  });
+
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = ((document.getElementById('login-email')?.value) || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      ui.loginEmailError = 'Vul een geldig e-mailadres in.';
+      render();
+      return;
+    }
+    ui.loginEmailError = null;
+    ui.loginSubmitting = true;
+    render();
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-login-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error('Server error');
+      ui.loginEmailSent = email;
+    } catch(_) {
+      ui.loginEmailError = 'Er ging iets mis. Probeer het opnieuw.';
+    }
+    ui.loginSubmitting = false;
+    render();
   });
 
   const waitlistForm = document.getElementById('waitlist-form');
