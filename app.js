@@ -1330,7 +1330,10 @@ function renderSignup() {
                 </div>
                 ${emailError ? `<p class="field-error">${esc(emailError)}</p>` : ''}
               </div>
-              ${pendingRef ? `<div style="background:rgba(47,93,217,.06);border:1px solid rgba(47,93,217,.18);border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#2F5DD9;">Uitgenodigd via referral-code <strong>${esc(pendingRef)}</strong></div>` : ''}
+              ${pendingRef
+                ? `<div style="background:rgba(47,93,217,.06);border:1px solid rgba(47,93,217,.18);border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#2F5DD9;">${iconSvg('check', 13)} Referral-code toegepast: <strong>${esc(pendingRef)}</strong></div>`
+                : `<div class="field" style="margin-top:10px"><label for="su-ref" style="font-size:13px;color:#888;">Referral-code <span style="font-weight:400">(optioneel)</span></label><input id="su-ref" name="ref" type="text" placeholder="bijv. SVEN5" autocomplete="off" style="text-transform:uppercase" value=""></div>`
+              }
 
               <div class="section-divider checkout-divider"></div>
 
@@ -3316,7 +3319,9 @@ function wireEvents() {
     // De Edge Function maakt een Stripe Checkout Session aan; na geslaagde betaling
     // maakt de stripe-webhook automatisch het Supabase-account aan en stuurt een magic link.
     try {
-      const referredBy = localStorage.getItem('af_ref') || '';
+      const refInput = (document.getElementById('su-ref')?.value || '').trim().toUpperCase();
+      const referredBy = refInput || localStorage.getItem('af_ref') || '';
+      if (referredBy) localStorage.setItem('af_ref', referredBy);
       const res = await fetch(
         `${supabase.supabaseUrl}/functions/v1/create-checkout-session`,
         {
