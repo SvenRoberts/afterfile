@@ -86,7 +86,6 @@ Deno.serve(async (req: Request) => {
     sp.set('mode', 'subscription');
     sp.set('line_items[0][price]', priceId);
     sp.set('line_items[0][quantity]', '1');
-    sp.set('automatic_payment_methods[enabled]', 'true');
     sp.set('success_url', `${SITE_URL}?checkout=success`);
     sp.set('cancel_url',  `${SITE_URL}?checkout=cancelled`);
     // Plan in metadata zodat webhook het kan lezen
