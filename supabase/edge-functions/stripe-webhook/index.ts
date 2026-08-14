@@ -140,9 +140,12 @@ Deno.serve(async (req: Request) => {
       return new Response('ok', { status: 200 });
     }
 
-    const magicLink = linkData.properties.action_link;
+    // Gebruik hashed_token zodat de link naar afterfile.nl wijst (geen lelijke Supabase-URL)
+    // en e-mailscanners (ProtonMail e.d.) de token niet kunnen verbruiken door de URL te openen.
+    const hashedToken = linkData.properties.hashed_token;
+    const loginUrl = `${SITE_URL}?login=${encodeURIComponent(hashedToken)}`;
 
-    // Welkomstmail sturen via Resend met de magic link
+    // Welkomstmail sturen via Resend met de login-knop
     const planLabel = plan === 'premium' ? 'Premium' : 'Compleet';
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -156,8 +159,8 @@ Deno.serve(async (req: Request) => {
             <div style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:24px">AfterFile</div>
             <h2 style="margin:0 0 8px;color:#0f172a">Welkom bij AfterFile ${planLabel}!</h2>
             <p style="color:#555;margin:0 0 24px">Je betaling is gelukt. Je account staat klaar. Klik op de knop hieronder om in te loggen, er is geen wachtwoord nodig.</p>
-            <a href="${magicLink}" style="display:inline-block;background:#2F5DD9;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">Inloggen bij AfterFile</a>
-            <p style="color:#888;font-size:13px;margin-top:32px">Deze link is 1 uur geldig. Daarna kun je altijd een nieuwe aanvragen op <a href="${SITE_URL}">${SITE_URL}</a>.</p>
+            <a href="${loginUrl}" style="display:inline-block;background:#2F5DD9;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">Inloggen bij AfterFile</a>
+            <p style="color:#888;font-size:13px;margin-top:32px">Lukt het niet? Ga naar <a href="${SITE_URL}">${SITE_URL}</a> en klik op Aanmelden om een nieuwe link te ontvangen.</p>
             <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
             <p style="color:#aaa;font-size:12px">AfterFile BV</p>
           </div>

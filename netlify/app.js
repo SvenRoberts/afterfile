@@ -658,6 +658,25 @@ if (supabase) {
   }
 }
 
+// Detecteer ?login=TOKEN in de URL (magic link via AfterFile-URL, verstuurd vanuit de webhook).
+// E-mailscanners (ProtonMail e.d.) scannen HTML maar voeren geen JavaScript uit,
+// dus de token blijft intact totdat de gebruiker zelf klikt.
+// Na klik: verifyOtp verifieert de token en stuurt een SIGNED_IN-event naar onAuthStateChange.
+if (supabase) {
+  (function handleMagicLinkParam() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('login');
+    if (!token) return;
+    // URL direct opschonen zodat herladen de token niet opnieuw gebruikt
+    window.history.replaceState({}, '', window.location.pathname);
+    supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' })
+      .then(({ error }) => {
+        if (error) flashToast('Inloglink verlopen of ongeldig. Klik op Aanmelden voor een nieuwe link.');
+      })
+      .catch(() => flashToast('Inloglink kon niet worden verwerkt. Probeer opnieuw.'));
+  })();
+}
+
 function navigate(view) {
   if (view === 'admin') state.adminProfiles = null; // trigger fresh load on each visit
   state.view = view;
@@ -3917,11 +3936,12 @@ function wireEvents() {
     if (!supabase) { flashToast('Supabase niet beschikbaar.'); return; }
     const { data: isBypass } = await supabase.rpc('is_bypass_email', { check_email: email });
     if (isBypass) {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { name: name || email.split('@')[0] } },
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-login-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email }),
       });
-      if (error) { ui.waitlistEmailError = 'Er ging iets mis bij het versturen van de inloglink.'; render(); return; }
+      if (!res.ok) { ui.waitlistEmailError = 'Er ging iets mis bij het versturen van de inloglink.'; render(); return; }
       ui.magicLinkSentTo = email;
       render();
       return;
