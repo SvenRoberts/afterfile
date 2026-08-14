@@ -3554,22 +3554,20 @@ function wireEvents() {
       ui.billingPeriodSwitching = true;
       render();
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const res = await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/change-billing-period', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ billing_period: targetPeriod }),
+        const { data, error } = await supabase.functions.invoke('change-billing-period', {
+          body: { billing_period: targetPeriod },
         });
-        const json = await res.json();
-        if (json.ok) {
+        if (error) throw error;
+        if (data && data.ok) {
           state.account.billingPeriod = targetPeriod;
           state.account.pendingBillingPeriod = null;
           const label = targetPeriod === 'year' ? 'jaarlijks' : 'maandelijks';
           flashToast(`Abonnement omgezet naar ${label}.`);
         } else {
-          flashToast(json.error || 'Er ging iets mis. Probeer het opnieuw.');
+          flashToast((data && data.error) || 'Er ging iets mis. Probeer het opnieuw.');
         }
       } catch (e) {
+        console.error('change-billing-period fout:', e);
         flashToast('Er ging iets mis. Probeer het opnieuw.');
       }
       ui.billingPeriodSwitching = false;
@@ -3581,12 +3579,10 @@ function wireEvents() {
   if (cancelBillingSwitchBtn) {
     cancelBillingSwitchBtn.addEventListener('click', async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        await fetch('https://prkwfuiadjfpdmcorfas.supabase.co/functions/v1/change-billing-period', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ billing_period: state.account.billingPeriod }),
+        const { error } = await supabase.functions.invoke('change-billing-period', {
+          body: { billing_period: state.account.billingPeriod },
         });
+        if (error) throw error;
         state.account.pendingBillingPeriod = null;
         flashToast('Geplande wijziging geannuleerd.');
       } catch (e) {
