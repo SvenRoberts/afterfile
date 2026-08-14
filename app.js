@@ -3562,14 +3562,15 @@ function wireEvents() {
         });
         const json = await res.json();
         if (json.ok) {
-          state.account.pendingBillingPeriod = targetPeriod;
-          const label = targetPeriod === 'month' ? 'maandelijks' : 'jaarlijks';
-          flashToast(`Wijziging ingepland: wordt ${label} na je volgende verlenging.`);
+          state.account.billingPeriod = targetPeriod;
+          state.account.pendingBillingPeriod = null;
+          const label = targetPeriod === 'year' ? 'jaarlijks' : 'maandelijks';
+          flashToast(`Abonnement omgezet naar ${label}.`);
         } else {
-          flashToast(json.error || 'Er ging iets mis. Probeer opnieuw.');
+          flashToast(json.error || 'Er ging iets mis. Probeer het opnieuw.');
         }
       } catch (e) {
-        flashToast('Er ging iets mis. Probeer opnieuw.');
+        flashToast('Er ging iets mis. Probeer het opnieuw.');
       }
       ui.billingPeriodSwitching = false;
       render();
