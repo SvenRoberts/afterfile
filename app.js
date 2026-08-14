@@ -1760,7 +1760,7 @@ function renderSubscription() {
             <span style="font-size:22px;font-weight:700;color:#0F1222;letter-spacing:-.02em;">${esc(planData.name)}</span>
             ${statusBadge}
           </div>
-          <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${esc(planData.billing)}</div>
+          <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${billingPeriod === 'month' ? 'Maandelijks gefactureerd: €3,95/mnd' : 'Jaarlijks gefactureerd: €39,95, bespaar 16%'}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">${esc(planData.price)}</div>
