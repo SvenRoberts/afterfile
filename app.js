@@ -1662,6 +1662,7 @@ function renderAccountMenu(activeView) {
         <div class="account-menu-panel">
           ${menuLink('gegevens', 'Mijn gegevens')}
           ${menuLink('subscription', 'Mijn abonnement')}
+          ${state.account && state.account.refCode && state.account.plan !== 'basis' ? menuLink('subscription', 'Vrienden uitnodigen') : ''}
           ${menuLink('report', 'Rapport')}
           ${menuLink('faq', 'FAQ')}
           ${state.account && state.account.role === 'owner' ? menuLink('admin', 'Beheer') : ''}
