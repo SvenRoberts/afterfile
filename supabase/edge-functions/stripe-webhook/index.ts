@@ -48,6 +48,7 @@ Deno.serve(async (req: Request) => {
     const plan          = meta.af_plan || 'compleet';
     const name          = meta.af_name || '';
     const referredBy    = meta.af_referred_by || '';
+    const billingPeriod = meta.af_billing_period || 'year';
 
     // Haal klantgegevens op bij Stripe voor het e-mailadres
     const custRes  = await fetch(`https://api.stripe.com/v1/customers/${customerId}`, {
@@ -84,6 +85,18 @@ Deno.serve(async (req: Request) => {
       userId = existingUser.id;
     }
 
+    // Haal subscription op bij Stripe voor current_period_end
+    let currentPeriodEnd: string | null = null;
+    if (subscriptionId) {
+      const subRes = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+        headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` },
+      });
+      const subJson = await subRes.json();
+      if (subJson.current_period_end) {
+        currentPeriodEnd = new Date(subJson.current_period_end * 1000).toISOString();
+      }
+    }
+
     // Idempotentie: is dit abonnement al eerder verwerkt?
     // Stripe levert webhooks soms twee keer. Een tweede generateLink-aanroep maakt
     // de eerste link ongeldig. We slaan de magic link dus over als het profiel
@@ -109,6 +122,8 @@ Deno.serve(async (req: Request) => {
       stripe_subscription_id: subscriptionId ?? null,
       subscription_status:    'active',
       referred_by:            referredBy || null,
+      billing_period:         billingPeriod,
+      current_period_end:     currentPeriodEnd,
     }, { onConflict: 'id' });
 
     // Payments-tabel bijwerken
@@ -161,6 +176,7 @@ Deno.serve(async (req: Request) => {
             <p style="color:#555;margin:0 0 24px">Je betaling is gelukt. Je account staat klaar. Klik op de knop hieronder om in te loggen, er is geen wachtwoord nodig.</p>
             <a href="${loginUrl}" style="display:inline-block;background:#2F5DD9;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">Inloggen bij AfterFile</a>
             <p style="color:#888;font-size:13px;margin-top:32px">Lukt het niet? Ga naar <a href="${SITE_URL}">${SITE_URL}</a> en klik op Aanmelden om een nieuwe link te ontvangen.</p>
+            <p style="color:#888;font-size:13px;margin-top:8px">Staat deze mail niet in je inbox? Controleer dan je map Ongewenste e-mail of Spam, en markeer ons als betrouwbaar zodat je volgende mails direct aankomen.</p>
             <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
             <p style="color:#aaa;font-size:12px">AfterFile BV</p>
           </div>
@@ -182,6 +198,17 @@ Deno.serve(async (req: Request) => {
     const status     = sub.status as string;
     const meta       = (sub.metadata as Record<string, string>) ?? {};
     const plan       = meta.af_plan || 'compleet';
+    const interval   = (sub.items as Record<string, unknown>)
+      ? ((sub.items as Record<string, unknown[]>).data?.[0] as Record<string, unknown>)
+          ?.price && (((sub.items as Record<string, unknown[]>).data?.[0] as Record<string, unknown>)
+          ?.price as Record<string, unknown>)?.recurring
+          ? ((((sub.items as Record<string, unknown[]>).data?.[0] as Record<string, unknown>)
+              ?.price as Record<string, unknown>)?.recurring as Record<string, unknown>)?.interval as string
+          : null
+      : null;
+    const billingPeriod = interval === 'month' ? 'month' : 'year';
+    const periodEndTs = sub.current_period_end as number | null;
+    const currentPeriodEnd = periodEndTs ? new Date(periodEndTs * 1000).toISOString() : null;
 
     // Zoek profiel op Stripe customer ID
     const { data: profile } = await supabaseAdmin
@@ -196,6 +223,8 @@ Deno.serve(async (req: Request) => {
         plan:                   newPlan,
         stripe_subscription_id: subId,
         subscription_status:    status,
+        billing_period:         billingPeriod,
+        current_period_end:     currentPeriodEnd,
       }).eq('id', profile.id);
 
       await supabaseAdmin.from('payments').upsert({
