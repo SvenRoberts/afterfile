@@ -585,7 +585,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, signupDraftEmail: '', signupDraftName: '', magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, signupDraftEmail: '', signupDraftName: '', magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, checkoutSuccess: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -614,9 +614,9 @@ render();
   const checkoutResult = params.get('checkout');
   if (!checkoutResult) return;
   if (checkoutResult === 'success') {
-    flashToast('Betaling gelukt. Je ontvangt zo een e-mail met een inloglink.');
+    ui.checkoutSuccess = true;
   } else if (checkoutResult === 'cancelled') {
-    flashToast('Betaling geannuleerd. Je kunt het op elk moment opnieuw proberen via je dashboard.');
+    flashToast('Betaling geannuleerd. Je kunt het op elk moment opnieuw proberen.');
   }
   params.delete('checkout');
   const newSearch = params.toString();
@@ -877,10 +877,30 @@ function pageHeader(opts) {
 }
 
 // ---------- render ----------
+function renderCheckoutSuccess() {
+  return `
+    <nav class="publicnav">
+      <div class="publicnav-inner">
+        <a href="#" class="brand" data-nav="landing"><span class="brand-mark">${logoMark(34)}</span> AfterFile</a>
+      </div>
+    </nav>
+    <main class="page">
+      <div class="container" style="max-width:520px;margin:80px auto;text-align:center;">
+        <div style="font-size:48px;margin-bottom:16px;">${iconSvg('check', 48)}</div>
+        <h2 style="margin:0 0 12px;">Betaling gelukt!</h2>
+        <p style="color:#555;margin:0 0 24px;">Je ontvangt binnen een minuut een e-mail met een inloglink. Klik op die link om je AfterFile-account te openen, er is geen wachtwoord nodig.</p>
+        <p style="color:#888;font-size:14px;">Geen e-mail ontvangen? Check je spammap, of neem contact op via <a href="mailto:info@afterfile.nl">info@afterfile.nl</a>.</p>
+      </div>
+    </main>
+  `;
+}
+
 function render() {
   const root = document.getElementById('app');
   let html;
-  if (!state.account) {
+  if (ui.checkoutSuccess && !state.account) {
+    html = renderCheckoutSuccess();
+  } else if (!state.account) {
     if (state.view === 'signup') html = renderSignup();
     else if (state.view === 'waitlist') html = renderWaitlist();
     else if (state.view === 'partner') html = renderPartner();

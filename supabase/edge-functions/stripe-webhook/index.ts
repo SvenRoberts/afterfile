@@ -84,6 +84,21 @@ Deno.serve(async (req: Request) => {
       userId = existingUser.id;
     }
 
+    // Idempotentie: is dit abonnement al eerder verwerkt?
+    // Stripe levert webhooks soms twee keer. Een tweede generateLink-aanroep maakt
+    // de eerste link ongeldig. We slaan de magic link dus over als het profiel
+    // al een actief abonnement heeft met dit subscription-ID.
+    const { data: alreadyActive } = subscriptionId
+      ? await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('stripe_subscription_id', subscriptionId)
+          .eq('subscription_status', 'active')
+          .maybeSingle()
+      : { data: null };
+
+    const alreadyProcessed = !!alreadyActive;
+
     // Profiel bijwerken: plan + Stripe-IDs
     await supabaseAdmin.from('profiles').upsert({
       id:                     userId,
@@ -105,6 +120,11 @@ Deno.serve(async (req: Request) => {
         plan,
         status:          'active',
       }, { onConflict: 'stripe_subscription_id' });
+    }
+
+    if (alreadyProcessed) {
+      console.log(`Dubbele webhook voor ${email} (sub=${subscriptionId}), magic link overgeslagen.`);
+      return new Response('ok', { status: 200 });
     }
 
     // Magic link genereren
@@ -133,13 +153,13 @@ Deno.serve(async (req: Request) => {
         subject: 'Je AfterFile-account staat klaar',
         html: `
           <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px">
-            <img src="https://afterfile.nl/logo.png" alt="AfterFile" height="36" style="margin-bottom:24px">
-            <h2 style="margin:0 0 8px">Welkom bij AfterFile ${planLabel}!</h2>
+            <div style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:24px">AfterFile</div>
+            <h2 style="margin:0 0 8px;color:#0f172a">Welkom bij AfterFile ${planLabel}!</h2>
             <p style="color:#555;margin:0 0 24px">Je betaling is gelukt. Je account staat klaar. Klik op de knop hieronder om in te loggen, er is geen wachtwoord nodig.</p>
-            <a href="${magicLink}" style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">Inloggen bij AfterFile</a>
+            <a href="${magicLink}" style="display:inline-block;background:#2F5DD9;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">Inloggen bij AfterFile</a>
             <p style="color:#888;font-size:13px;margin-top:32px">Deze link is 1 uur geldig. Daarna kun je altijd een nieuwe aanvragen op <a href="${SITE_URL}">${SITE_URL}</a>.</p>
             <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
-            <p style="color:#aaa;font-size:12px">AfterFile BV, Amsterdam</p>
+            <p style="color:#aaa;font-size:12px">AfterFile BV</p>
           </div>
         `,
       }),
