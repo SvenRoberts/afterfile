@@ -1763,8 +1763,8 @@ function renderSubscription() {
           <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${billingPeriod === 'month' ? 'Maandelijks gefactureerd: €3,95/mnd' : 'Jaarlijks gefactureerd: €39,95, bespaar 16%'}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">${esc(planData.price)}</div>
-          <div style="font-size:12px;color:#9AAAC8;">${esc(planData.period)}</div>
+          <div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">${plan === 'basis' ? esc(planData.price) : (billingPeriod === 'month' ? '€3,95' : '€39,95')}</div>
+          <div style="font-size:12px;color:#9AAAC8;">${plan === 'basis' ? esc(planData.period) : (billingPeriod === 'month' ? '/ maand' : '/ jaar')}</div>
         </div>
       </div>
       ${metaRows}
