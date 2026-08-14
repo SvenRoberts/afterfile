@@ -50,7 +50,7 @@ Deno.serve(async (req: Request) => {
               Bekijk AfterFile
             </a>
             <p style="color:#888;font-size:13px;margin:0 0 6px;">
-              Je referral-code <strong style="font-family:monospace;color:#0f172a;">${code}</strong> is al voor je ingevuld, zodat je beiden van een korting profiteert.
+              Vul bij het aanmelden referral-code <strong style="font-family:monospace;color:#0f172a;">${code}</strong> in. Die staat dan al voor je ingevuld als je op de knop hierboven klikt.
             </p>
             <hr style="border:none;border-top:1px solid #eee;margin:28px 0;">
             <p style="color:#aaa;font-size:12px;margin:0;">AfterFile BV, info@afterfile.nl</p>

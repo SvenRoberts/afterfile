@@ -1368,7 +1368,7 @@ function renderSignup() {
                 </div>
                 ${emailError ? `<p class="field-error">${esc(emailError)}</p>` : ''}
               </div>
-              <div class="field" style="margin-top:10px"><label for="su-ref" style="font-size:13px;color:#888;">Referral-code <span style="font-weight:400">(optioneel)</span></label><input id="su-ref" name="ref" type="text" placeholder="Code" autocomplete="off" style="text-transform:uppercase" value=""></div>
+              <div class="field" style="margin-top:10px"><label for="su-ref" style="font-size:13px;color:#888;">Referral-code <span style="font-weight:400">(optioneel)</span></label><input id="su-ref" name="ref" type="text" placeholder="Code" autocomplete="off" style="text-transform:uppercase" value="${esc(pendingRef || '')}"></div>
 
               <div class="section-divider checkout-divider"></div>
 
