@@ -585,7 +585,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, signupDraftEmail: '', signupDraftName: '', magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, checkoutSuccess: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, signupDraftEmail: '', signupDraftName: '', magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, checkoutSuccess: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false, loginEmailSent: null, loginEmailError: null, loginSubmitting: false, inviteFriendEmail: '', inviteFriendSubmitting: false, inviteFriendSent: false, inviteFriendError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1873,15 +1873,36 @@ function renderSubscription() {
       </div>`
     : '';
 
+  const inviteForm = ui.inviteFriendSent
+    ? `<div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.28);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:10px;margin-top:16px;">
+        ${iconSvg('check', 16)}
+        <span style="font-size:13px;color:#166534;font-weight:600;">Uitnodiging verstuurd!</span>
+      </div>`
+    : `<form id="invite-friend-form" novalidate style="margin-top:16px;">
+        <div style="font-size:12px;font-weight:600;color:#0F1222;margin-bottom:8px;">Vriend uitnodigen via e-mail</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input id="invite-friend-email" type="email" placeholder="E-mailadres van je vriend" autocomplete="off"
+            value="${esc(ui.inviteFriendEmail || '')}"
+            style="flex:1;min-width:180px;height:36px;padding:0 12px;border:1px solid rgba(47,93,217,.22);border-radius:6px;font-size:13px;color:#0F1222;outline:none;">
+          <button type="submit" class="btn btn-primary btn-sm"
+            style="font-size:12px;padding:0 16px;height:36px;flex-shrink:0;"
+            ${ui.inviteFriendSubmitting ? 'disabled' : ''}>
+            ${ui.inviteFriendSubmitting ? 'Bezig...' : 'Uitnodigen'}
+          </button>
+        </div>
+        ${ui.inviteFriendError ? `<p style="font-size:12px;color:#E53E3E;margin:6px 0 0;">${esc(ui.inviteFriendError)}</p>` : ''}
+      </form>`;
+
   const referralCard = refCode && plan !== 'basis' ? `
     <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:22px 28px;max-width:520px;margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Vrienden uitnodigen</div>
-      <div style="background:rgba(47,93,217,.04);border:1px solid rgba(47,93,217,.14);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <p style="font-size:13px;color:#4A5568;margin:0 0 14px;">Nodig iemand uit via e-mail, hun code is al ingevuld. Ontvang 5% korting per betalende vriend.</p>
+      <div style="background:rgba(47,93,217,.04);border:1px solid rgba(47,93,217,.14);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;flex-wrap:wrap;">
         <span style="font-size:12px;font-family:monospace;color:#0F1222;word-break:break-all;">${esc(refLink)}</span>
         <button class="btn btn-secondary btn-sm" data-action="copy-ref-link" data-link="${esc(refLink)}" style="font-size:11px;padding:3px 10px;flex-shrink:0;">Kopiëren</button>
       </div>
-      <p style="font-size:13px;color:#4A5568;margin:0 0 8px;">Nodig iemand uit en ontvang 5% korting op je abonnement.</p>
-      <a href="#" data-nav="faq" style="font-size:12px;color:#2F5DD9;text-decoration:none;font-weight:600;">Meer informatie →</a>
+      ${inviteForm}
+      <a href="#" data-nav="faq" style="font-size:12px;color:#2F5DD9;text-decoration:none;font-weight:600;display:inline-block;margin-top:12px;">Meer informatie →</a>
       ${referralNamesHtml}
     </div>` : '';
 
@@ -3994,6 +4015,43 @@ function wireEvents() {
       ui.loginEmailError = 'Er ging iets mis. Probeer het opnieuw.';
     }
     ui.loginSubmitting = false;
+    render();
+  });
+
+  const inviteFriendForm = document.getElementById('invite-friend-form');
+  if (inviteFriendForm) inviteFriendForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const friendEmail = (document.getElementById('invite-friend-email')?.value || '').trim().toLowerCase();
+    ui.inviteFriendEmail = friendEmail;
+    ui.inviteFriendError = null;
+    if (!friendEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(friendEmail)) {
+      ui.inviteFriendError = 'Vul een geldig e-mailadres in.';
+      render();
+      return;
+    }
+    const refCode = (state.account && state.account.refCode) || '';
+    if (!refCode) { ui.inviteFriendError = 'Jouw referral-code kon niet worden opgehaald.'; render(); return; }
+    ui.inviteFriendSubmitting = true;
+    render();
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-referral-invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({
+          friendEmail,
+          refCode,
+          inviterName: (state.account && state.account.name) || '',
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok) throw new Error(json.error || 'Versturen mislukt');
+      ui.inviteFriendSent = true;
+      ui.inviteFriendEmail = '';
+      setTimeout(() => { ui.inviteFriendSent = false; render(); }, 5000);
+    } catch (err) {
+      ui.inviteFriendError = 'Er ging iets mis. Probeer het opnieuw.';
+    }
+    ui.inviteFriendSubmitting = false;
     render();
   });
 
