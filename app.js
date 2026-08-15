@@ -3840,6 +3840,7 @@ function wireEvents() {
       ui.draftContact = {};
       syncCurrentSignupRecord();
       saveLocalDemoState();
+      vkSave().catch(() => {});
       render();
       flashToast('Contact opgeslagen');
     } else {
@@ -3910,6 +3911,7 @@ function wireEvents() {
     state.contacts = state.contacts.filter(c => c.id !== id);
     syncCurrentSignupRecord();
     saveLocalDemoState();
+    vkSave().catch(() => {});
     render();
   });
 
@@ -3944,6 +3946,7 @@ function wireEvents() {
     else state.view = 'dashboard';
     syncCurrentSignupRecord();
     saveLocalDemoState();
+    vkSave().catch(() => {});
     render();
     flashToast('Gegevens opgeslagen');
   });
@@ -3961,6 +3964,7 @@ function wireEvents() {
         if (indicator) indicator.textContent = error ? 'Opslaan mislukt' : 'Opgeslagen';
         syncCurrentSignupRecord();
         saveLocalDemoState();
+        vkSave().catch(() => {});
       }, 600);
     });
   }
