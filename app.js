@@ -422,7 +422,7 @@ function rowToContact(row) {
   return {
     id: row.id, name: row.name, email: row.email, relationship: row.relationship,
     address: row.address, birthDate: row.birth_date, phone: row.phone,
-    roles: row.roles && row.roles.length ? row.roles : ['inform'], createdAt: row.created_at,
+    roles: row.roles && row.roles.length ? row.roles : ['verify'], createdAt: row.created_at,
   };
 }
 
@@ -1043,7 +1043,7 @@ function renderLanding() {
   const faqs = [
     { q: 'Wat is AfterFile?', a: 'AfterFile is een veilige, persoonlijke plek om je digitale nalatenschap te regelen: je bezittingen, accounts en instructies vastgelegd voor de mensen die je vertrouwt, voor het moment dat jij dat zelf niet meer kan.' },
     { q: 'Hoe werkt de beveiliging van mijn gegevens?', a: 'Stel je voor: je sleutel wordt in drie stukjes geknipt. Stuk A blijft op jouw apparaat. Stuk B bewaren wij bij AfterFile. Stuk C sturen we naar het contact dat jij aanwijst. Om de kluis te openen heb je twee van die drie stukjes nodig, maar nooit alle drie tegelijk. Zolang je leeft opent jouw apparaat (A) samen met AfterFile (B) de kluis automatisch als je inlogt. Gebeurt er iets met jou? Dan stuurt AfterFile stuk B naar jouw contact. Dat contact combineert B met hun eigen stuk C, en ziet alles. Jouw apparaat is dan niet meer nodig. Niemand kan de kluis alleen openen: niet AfterFile, niet jouw contact, en ook een hacker die één stukje steelt heeft er niks aan.' },
-    { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.' },
+    { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en stuurt het kluiscontact een toegangslink, doorgaans binnen 1 werkdag.' },
     { q: 'Hoe meldt een vertrouwd contact een overlijden?', a: 'Via de link "Voor Naasten" in de menubalk. Daar vult het contact de naam en het e-mailadres in waarmee de overledene bij AfterFile bekend was, samen met zijn of haar eigen naam en contactgegevens, zodat dit gecontroleerd kan worden.' },
     { q: 'Kan ik op elk moment opzeggen?', a: 'Ja. Je kunt je abonnement op elk moment stopzetten. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.' },
     { q: 'Is de cloud niet onveiliger dan opslaan op mijn eigen apparaat?', a: 'Nee, en voor digitale nalatenschap geldt juist het omgekeerde. Apps die alles lokaal opslaan lossen het technische opslagprobleem op, maar creëren een groter probleem: hoe krijgen je naasten ooit toegang tot een bestand op een apparaat dat zij niet kennen, niet kunnen ontgrendelen, of dat al jaren geleden kapot is gegaan? AfterFile versleutelt je gegevens in de cloud (AES-256) én koppelt vrijgave aan een gecontroleerde verificatieprocedure. Zo zijn je gegevens tijdens je leven beschermd tegen ongeoorloofde toegang, en na je overlijden gegarandeerd bereikbaar voor de juiste mensen. Lokale opslag is veilig voor jezelf. AfterFile is veilig voor wat er daarna komt.' },
@@ -1194,7 +1194,7 @@ function renderDeathReportResult() {
   } else if (r.type === 'shared-now') {
     cls = 'danger';
     label = 'Informatie gedeeld';
-    detail = `De verificatie is afgerond. De vastgelegde gegevens van ${esc(r.deceasedName)} zijn nu gedeeld met de contacten die de rol "Informatie ontvangen" hebben.`;
+    detail = `De verificatie is afgerond. De toegangslink is verstuurd naar het kluiscontact van ${esc(r.deceasedName)}.`;
   } else {
     cls = 'ok';
     label = 'Melding ontvangen';
@@ -1974,7 +1974,7 @@ function renderFaqPage() {
   const faqs = [
     { q: 'Wat is AfterFile?', a: 'AfterFile is een veilige, persoonlijke plek om je digitale nalatenschap te regelen: je bezittingen, accounts en instructies vastgelegd voor de mensen die je vertrouwt, voor het moment dat jij dat zelf niet meer kan.' },
     { q: 'Hoe werkt de beveiliging van mijn gegevens?', a: 'Je sleutel wordt in drie stukjes geknipt. Stuk A blijft op jouw apparaat. Stuk B bewaren wij bij AfterFile. Stuk C sturen we naar het contact dat jij aanwijst. Om de kluis te openen heb je twee van die drie stukjes nodig, maar nooit alle drie tegelijk. Zolang je leeft opent jouw apparaat (A) samen met AfterFile (B) de kluis automatisch als je inlogt. Gebeurt er iets met jou? Dan stuurt AfterFile stuk B naar jouw contact. Dat contact combineert B met hun eigen stuk C, en ziet alles. Niemand kan de kluis alleen openen: niet AfterFile, niet jouw contact, en ook een hacker die één stukje steelt heeft er niks aan.' },
-    { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en geeft de gegevens vrij aan contacten met de rol "Informatie ontvangen", doorgaans binnen 1 werkdag.' },
+    { q: 'Wanneer krijgen mijn vertrouwde contacten toegang?', a: 'Een contact met de rol "Helpen bevestigen" kan via de "Overlijden melden"-link op de AfterFile-website een melding indienen met een officieel overlijdensbericht. AfterFile controleert dit en stuurt het kluiscontact een toegangslink, doorgaans binnen 1 werkdag.' },
     { q: 'Hoe meldt een vertrouwd contact een overlijden?', a: 'Via de link "Voor Naasten" in de menubalk. Daar vult het contact de naam en het e-mailadres in waarmee de overledene bij AfterFile bekend was, samen met zijn of haar eigen naam en contactgegevens, zodat dit gecontroleerd kan worden.' },
     { q: 'Kan ik op elk moment opzeggen?', a: 'Ja. Je kunt je abonnement op elk moment stopzetten. Je gegevens blijven veilig bewaard totdat je ze zelf verwijdert.' },
     { q: 'Hoe werkt de referral-korting?', a: 'Breng je eerste betalende vriend of bekende aan via jouw persoonlijke referral-link, en je ontvangt direct 5% korting op je eigen abonnement. Daarna geldt: voor iedere 5 extra betalende aanmeldingen die via jouw link binnenkomen, ontvang je nog eens 5% extra korting. Breng je 6 klanten aan → 10% korting. 11 klanten → 15%. 16 klanten → 20%. Enzovoort. Het maximum is 100% , dan is je abonnement volledig gratis. De korting wordt automatisch verrekend zodra een aanmelding betalend wordt.' },
@@ -2512,14 +2512,22 @@ function renderClaimSnapshot(snap) {
 
   const assetRows = assets.length === 0
     ? '<p class="claim-empty">Geen bezittingen vastgelegd.</p>'
-    : assets.map(a => `
+    : assets.map(a => {
+      const cat = ASSET_CATEGORIES.find(c => c.key === (a.categoryKey || a.category_key));
+      const type = cat ? cat.types.find(t => t.key === (a.typeKey || a.type_key)) : null;
+      const extraHtml = type && a.extra ? type.fields.filter(ef => a.extra[ef.key]).map(ef =>
+        `<span class="claim-item-detail"><strong>${esc(ef.label)}:</strong> ${esc(a.extra[ef.key])}</span>`
+      ).join('') : '';
+      return `
       <div class="claim-item">
         <span class="claim-item-name">${esc(a.name || '')}</span>
         <span class="claim-item-cat">${esc(a.category || '')}</span>
         ${a.institution ? `<span class="claim-item-detail">${esc(a.institution)}</span>` : ''}
         ${a.value       ? `<span class="claim-item-detail">Waarde: ${esc(a.value)}</span>` : ''}
+        ${extraHtml}
         ${a.notes       ? `<span class="claim-item-notes">${esc(a.notes)}</span>` : ''}
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
   const contactRows = contacts.length === 0
     ? '<p class="claim-empty">Geen contacten vastgelegd.</p>'
@@ -2637,7 +2645,6 @@ function renderContacts() {
         </div>
         <div style="font-size:12.5px;color:#5B6880;margin-top:3px;">${esc(c.email)}${c.phone ? '<span style="color:#C8D0E0;"> · </span>' + esc(c.phone) : ''}</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:9px;">
-          ${c.roles.includes('inform') ? '<span class="ct-badge">Ontvangt informatie</span>' : ''}
           ${c.roles.includes('verify') ? '<span class="ct-badge ct-badge-verify">Helpt verifiëren</span>' : ''}
           ${c.roles.includes('vault') ? '<span class="ct-badge" style="background:rgba(47,93,217,.12);color:#2F5DD9;">Kluiscontact</span>' : ''}
         </div>
@@ -2768,7 +2775,7 @@ function renderReport() {
   // Proces
   const procesContent = `
     <div style="padding-top:8px;font-size:14px;line-height:1.75;color:#5B6880;">
-      Een contact met de rol <strong style="color:#0F1222;">"Helpen bevestigen"</strong> kan via de <em>Overlijden melden</em>-pagina een melding indienen. AfterFile controleert dit en geeft de informatie vrij aan contacten met de rol <strong style="color:#0F1222;">"Informatie ontvangen"</strong>, doorgaans binnen 1 werkdag.
+      Een contact met de rol <strong style="color:#0F1222;">"Helpen bevestigen"</strong> kan via de <em>Overlijden melden</em>-pagina een melding indienen. AfterFile controleert dit en stuurt het kluiscontact een toegangslink, doorgaans binnen 1 werkdag.
     </div>`;
 
   // PDF actie of upgrade-blok
@@ -3706,6 +3713,7 @@ function wireEvents() {
     ui.draftAsset = {};
     syncCurrentSignupRecord();
     saveLocalDemoState();
+    vkSave().catch(() => {});
     render();
     flashToast('Bezitting opgeslagen');
   });
@@ -3733,6 +3741,7 @@ function wireEvents() {
       if (ui.vaultOpenAsset === id) ui.vaultOpenAsset = null;
       syncCurrentSignupRecord();
       saveLocalDemoState();
+      vkSave().catch(() => {});
       render();
     });
   });
@@ -3820,7 +3829,7 @@ function wireEvents() {
       address: (fd.get('address') || '').trim(),
       birth_date: (fd.get('birthDate') || '').trim(),
       phone: (fd.get('phone') || '').trim(),
-      roles: roles.length ? roles : ['inform'],
+      roles: roles.length ? roles : ['verify'],
     };
     if (ui.editingContactId) {
       const { data, error } = await supabase.from('contacts').update(payload).eq('id', ui.editingContactId).select().single();
@@ -3972,7 +3981,7 @@ function wireEvents() {
   document.querySelectorAll('[data-action="approve-death-report"]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-id');
-      if (!confirm('Weet je zeker dat je de informatie wilt vrijgeven? Dit stuurt direct een e-mail naar alle contacten met de rol "Informatie ontvangen" en een kluislink naar het kluiscontact.')) return;
+      if (!confirm('Weet je zeker dat je de informatie wilt vrijgeven? Dit stuurt direct een toegangslink naar het kluiscontact.')) return;
       btn.disabled = true; btn.textContent = 'Bezig…';
       const { error } = await supabase.rpc('approve_death_report', { p_account_id: id });
       if (error) {
