@@ -2413,17 +2413,15 @@ function renderContactInviteModal() {
   if (!c) return '';
   const hasFragC = (c.roles || []).includes('vault') && !!localStorage.getItem(VK_FRAG_C);
   const roleLabels = [];
-  if ((c.roles || []).includes('inform')) roleLabels.push('informatie ontvangen');
   if ((c.roles || []).includes('verify')) roleLabels.push('overlijden melden');
   const roleText = roleLabels.length ? roleLabels.join(' en ') : 'vertrouwd contact';
 
-  const vaultLine = hasFragC ? `
-    <div style="display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px 14px;background:#EEF2FC;border-radius:8px;">
-      <span style="font-size:18px;flex-shrink:0;">🔑</span>
-      <span style="font-size:13px;color:#2F5DD9;line-height:1.5;">
-        <strong>${esc(c.name)}</strong> is ook jouw kluiscontact. Zij hebben een persoonlijke kluiscode ontvangen in dezelfde mail. Jij krijgt een bevestiging per e-mail.
-      </span>
-    </div>` : '';
+  const icon   = hasFragC ? '🔑' : '✉️';
+  const bg     = hasFragC ? '#EEF2FC' : '#F7F8FA';
+  const color  = hasFragC ? '#2F5DD9' : '#374151';
+  const msgText = hasFragC
+    ? `<strong>${esc(c.name)}</strong> heeft een uitnodigingsmail ontvangen met hun persoonlijke kluiscode en uitleg over hun rol. Jij krijgt een bevestiging per e-mail.`
+    : `<strong>${esc(c.name)}</strong> heeft een uitnodigingsmail ontvangen met uitleg over hun rol als <em>${roleText}</em>.`;
 
   return `
     <div class="invite-modal-overlay" data-action="close-invite-preview"></div>
@@ -2440,13 +2438,10 @@ function renderContactInviteModal() {
             <p style="margin:0;font-size:13px;color:#5B6172;">${esc(c.email)}</p>
           </div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#F7F8FA;border-radius:8px;margin-bottom:4px;">
-          <span style="font-size:18px;flex-shrink:0;">✉️</span>
-          <span style="font-size:13px;color:#374151;line-height:1.5;">
-            <strong>${esc(c.name)}</strong> heeft een uitnodigingsmail ontvangen met uitleg over hun rol als <em>${roleText}</em>.
-          </span>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:${bg};border-radius:8px;">
+          <span style="font-size:18px;flex-shrink:0;">${icon}</span>
+          <span style="font-size:13px;color:${color};line-height:1.5;">${msgText}</span>
         </div>
-        ${vaultLine}
       </div>
       <div class="invite-modal-actions">
         <button type="button" class="btn btn-primary btn-sm" data-action="close-invite-preview">Begrepen</button>
@@ -2600,19 +2595,15 @@ function renderContacts() {
         </div>
         <div style="margin-bottom:14px;">
           <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Rollen</div>
-          <label class="ct-role-opt">
-            <input type="checkbox" name="role-inform" ${ui.draftContact._touched ? (ui.draftContact.roleInform !== false ? 'checked' : '') : 'checked'}>
-            <span>Jouw informatie ontvangen</span>
-          </label>
+          ${localStorage.getItem(VK_FRAG_C) ? `<label class="ct-role-opt">
+            <input type="checkbox" name="role-vault" ${ui.draftContact.roleVault ? 'checked' : ''}>
+            <span>Kluiscontact <span style="font-size:10px;font-weight:600;color:#2F5DD9;background:rgba(47,93,217,.1);padding:1px 6px;border-radius:10px;margin-left:4px;">ontvangt persoonlijke kluiscode</span></span>
+          </label>` : ''}
           <label class="ct-role-opt">
             <input type="checkbox" name="role-verify" ${ui.draftContact.roleVerify ? 'checked' : ''}>
             <span>Helpen bevestigen wat er is gebeurd</span>
           </label>
-          ${localStorage.getItem(VK_FRAG_C) ? `<label class="ct-role-opt" style="margin-top:6px;border-top:1px solid rgba(47,93,217,.1);padding-top:8px;">
-            <input type="checkbox" name="role-vault" ${ui.draftContact.roleVault ? 'checked' : ''}>
-            <span>Kluiscontact <span style="font-size:10px;font-weight:600;color:#2F5DD9;background:rgba(47,93,217,.1);padding:1px 6px;border-radius:10px;margin-left:4px;">ontvangt persoonlijke kluiscode</span></span>
-          </label>` : ''}
-          <div style="font-size:11px;color:#9AAAC8;margin-top:8px;line-height:1.55;">Een contact met "Helpen bevestigen" kan via de "Overlijden melden"-pagina een officieel overlijdensbericht indienen. AfterFile controleert dit en geeft de gegevens vrij aan contacten met "Informatie ontvangen", doorgaans binnen 1 werkdag.</div>
+          <div style="font-size:11px;color:#9AAAC8;margin-top:8px;line-height:1.55;">Een contact met "Helpen bevestigen" kan via de "Overlijden melden"-pagina een overlijdensbericht indienen. AfterFile controleert dit en geeft de kluis vrij aan het kluiscontact, doorgaans binnen 1 werkdag.</div>
         </div>
         <div style="display:flex;gap:8px;">
           <button type="submit" class="btn btn-primary">${ui.editingContactId ? 'Wijzigingen opslaan' : 'Contact opslaan'}</button>
@@ -3782,7 +3773,6 @@ function wireEvents() {
         birthDate: fd.get('birthDate') || '',
         relationship: fd.get('relationship') || '',
         'relationship-other': fd.get('relationship-other') || '',
-        roleInform: contactForm.querySelector('[name="role-inform"]')?.checked ?? true,
         roleVerify: contactForm.querySelector('[name="role-verify"]')?.checked ?? false,
         roleVault: contactForm.querySelector('[name="role-vault"]')?.checked ?? false,
       };
@@ -3797,7 +3787,6 @@ function wireEvents() {
         birthDate: fd.get('birthDate') || '',
         relationship: fd.get('relationship') || '',
         'relationship-other': fd.get('relationship-other') || '',
-        roleInform: contactForm.querySelector('[name="role-inform"]')?.checked ?? true,
         roleVerify: contactForm.querySelector('[name="role-verify"]')?.checked ?? false,
         roleVault: contactForm.querySelector('[name="role-vault"]')?.checked ?? false,
       };
@@ -3806,9 +3795,8 @@ function wireEvents() {
     e.preventDefault();
     const fd = new FormData(contactForm);
     const roles = [];
-    if (fd.get('role-inform')) roles.push('inform');
-    if (fd.get('role-verify')) roles.push('verify');
     if (fd.get('role-vault')) roles.push('vault');
+    if (fd.get('role-verify')) roles.push('verify');
     const relationship = (fd.get('relationship') || '').trim() || (fd.get('relationship-other') || '').trim();
     const payload = {
       name: capitalizeWords((fd.get('name') || '').trim()),
@@ -3869,7 +3857,6 @@ function wireEvents() {
         birthDate: c.birthDate || '',
         address: c.address || '',
         relationship: c.relationship || '',
-        roleInform: (c.roles || []).includes('inform'),
         roleVerify: (c.roles || []).includes('verify'),
         roleVault: (c.roles || []).includes('vault'),
       };
