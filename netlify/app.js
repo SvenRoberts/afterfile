@@ -2208,11 +2208,18 @@ function renderAssets() {
   if (adding) {
     const cat = ASSET_CATEGORIES.find(c => c.key === adding.categoryKey);
     const type = findType(adding.categoryKey, adding.typeKey);
-    const vf = (id, label, name, type2, placeholder, value, required = false) =>
-      `<div class="vf">
+    const vf = (id, label, name, type2, placeholder, value, required = false) => {
+      const inputPart = type2 === 'password'
+        ? `<div style="display:flex;gap:6px;align-items:center;">
+            <input id="${id}" name="${name}" type="password" placeholder="${placeholder}" value="${esc(value)}"${required ? ' required autofocus' : ''} style="flex:1;min-width:0;">
+            <button type="button" style="padding:5px 10px;border:1px solid rgba(47,93,217,.22);border-radius:6px;background:#fff;font-size:11px;font-weight:600;color:#2F5DD9;cursor:pointer;white-space:nowrap;flex-shrink:0;" onclick="var i=this.parentElement.querySelector('input');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'Toon':'Verberg';">Toon</button>
+          </div>`
+        : `<input id="${id}" name="${name}" type="${type2}" placeholder="${placeholder}" value="${esc(value)}"${required ? ' required autofocus' : ''}>`;
+      return `<div class="vf">
         <label for="${id}">${label}${required ? '' : '<span class="vf-opt">(optioneel)</span>'}</label>
-        <input id="${id}" name="${name}" type="${type2}" placeholder="${placeholder}" value="${esc(value)}"${required ? ' required autofocus' : ''}>
+        ${inputPart}
       </div>`;
+    };
     const extraFieldsHtml = (type.extraFields || []).map(ef =>
       vf(`as-${ef.key}`, esc(ef.label), ef.key, ef.type || 'text', esc(ef.placeholder || ''), ui.draftAsset[ef.key] || '')).join('');
     formHtml = `
@@ -2283,14 +2290,22 @@ function renderAssets() {
           ${items.map(a => {
             const type = findType(a.categoryKey, a.typeKey);
             const assetOpen = ui.vaultOpenAsset === a.id;
-            const detailRow = (label, val, pw = false) =>
-              `<div style="padding:6px 0;border-bottom:1px solid #EEF2FF;">
+            const detailRow = (label, val, rawVal = null) => {
+              const isPw = rawVal !== null;
+              const valueHtml = isPw
+                ? `<div style="display:flex;align-items:center;gap:8px;">
+                    <span data-pw="${esc(rawVal)}" style="letter-spacing:.05em;">&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;</span>
+                    <button type="button" style="font-size:11px;font-weight:600;color:#2F5DD9;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;flex-shrink:0;" onclick="var s=this.previousElementSibling;var shown=s.dataset.shown;s.dataset.shown=shown?'':'1';s.textContent=shown?'&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;':s.dataset.pw;this.textContent=shown?'Toon':'Verberg';">Toon</button>
+                  </div>`
+                : val;
+              return `<div style="padding:6px 0;border-bottom:1px solid #EEF2FF;">
                 <div style="font-size:10.5px;font-weight:600;color:#9AAAC8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">${label}</div>
-                <div style="font-size:13px;color:#0F1222;word-break:break-word;">${pw && !window.AF_DEMO_MODE ? '••••••••' : val}</div>
+                <div style="font-size:13px;color:#0F1222;word-break:break-word;">${valueHtml}</div>
               </div>`;
+            };
             const detailRows = [
               ...(type?.extraFields || []).filter(ef => (a.extra || {})[ef.key]).map(ef =>
-                detailRow(esc(ef.label), esc(a.extra[ef.key]), ef.type === 'password')),
+                detailRow(esc(ef.label), esc(a.extra[ef.key]), ef.type === 'password' ? a.extra[ef.key] : null)),
               a.description ? detailRow('Beschrijving', esc(a.description)) : '',
               a.location    ? detailRow('Locatie', esc(a.location)) : '',
               a.notes       ? detailRow('Notities', esc(a.notes)) : '',
