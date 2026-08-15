@@ -18,6 +18,20 @@ const LOCAL_DEMO_KEY = 'afterfile_demo_extra_v1';
 // klein aantal extra, type-specifieke vakken: net genoeg om iets te herkennen of terug
 // te vinden. Wachtwoorden worden gemaskeerd weergegeven.
 const ASSET_CATEGORIES = [
+  { key: 'practical', label: 'Praktisch', types: [
+      { key: 'phone', label: 'Telefoon', icon: 'phone', namePlaceholder: 'bijv. iPhone 15 Pro', extraFields: [
+          { key: 'brand', label: 'Merk en model', placeholder: 'bijv. Apple iPhone 15 Pro' },
+          { key: 'pinCode', label: 'Pincode', placeholder: 'Optioneel', type: 'password' },
+      ]},
+      { key: 'laptop', label: 'Laptop', icon: 'laptop', namePlaceholder: 'bijv. MacBook Pro werk', extraFields: [
+          { key: 'brand', label: 'Merk en model', placeholder: 'bijv. Apple MacBook Pro 14"' },
+          { key: 'password', label: 'Inlogwachtwoord', placeholder: 'Optioneel', type: 'password' },
+      ]},
+      { key: 'email', label: 'E-mail', icon: 'mail', namePlaceholder: 'bijv. Persoonlijk e-mailaccount', extraFields: [
+          { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
+          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
+      ]},
+  ]},
   { key: 'financial', label: 'Financieel', types: [
       { key: 'bank', label: 'Bankrekening', icon: 'bank', namePlaceholder: 'bijv. Betaalrekening ING', extraFields: [
           { key: 'bankName', label: 'Bank', placeholder: 'bijv. ING, Rabobank, ABN AMRO' },
@@ -53,20 +67,6 @@ const ASSET_CATEGORIES = [
           { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
       { key: 'email', label: 'E-mailaccount', icon: 'mail', namePlaceholder: 'bijv. Gmail prive', extraFields: [
-          { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
-          { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
-      ]},
-  ]},
-  { key: 'practical', label: 'Praktisch', types: [
-      { key: 'phone', label: 'Telefoon', icon: 'phone', namePlaceholder: 'bijv. iPhone 15 Pro', extraFields: [
-          { key: 'brand', label: 'Merk en model', placeholder: 'bijv. Apple iPhone 15 Pro' },
-          { key: 'pinCode', label: 'Pincode', placeholder: 'Optioneel', type: 'password' },
-      ]},
-      { key: 'laptop', label: 'Laptop', icon: 'laptop', namePlaceholder: 'bijv. MacBook Pro werk', extraFields: [
-          { key: 'brand', label: 'Merk en model', placeholder: 'bijv. Apple MacBook Pro 14"' },
-          { key: 'password', label: 'Inlogwachtwoord', placeholder: 'Optioneel', type: 'password' },
-      ]},
-      { key: 'email', label: 'E-mail', icon: 'mail', namePlaceholder: 'bijv. Persoonlijk e-mailaccount', extraFields: [
           { key: 'provider', label: 'Provider', placeholder: 'bijv. Gmail, Outlook, Proton Mail' },
           { key: 'password', label: 'Wachtwoord', placeholder: 'Optioneel', type: 'password' },
       ]},
@@ -2420,7 +2420,7 @@ function renderContactInviteModal() {
   const bg     = hasFragC ? '#EEF2FC' : '#F7F8FA';
   const color  = hasFragC ? '#2F5DD9' : '#374151';
   const msgText = hasFragC
-    ? `<strong>${esc(c.name)}</strong> heeft een uitnodigingsmail ontvangen met hun persoonlijke kluiscode en uitleg over hun rol. Jij krijgt een bevestiging per e-mail.`
+    ? `<strong>${esc(c.name)}</strong> heeft een uitnodigingsmail ontvangen met een persoonlijke kluiscode en uitleg over de rol. Jij krijgt een bevestiging per e-mail.`
     : `<strong>${esc(c.name)}</strong> heeft een uitnodigingsmail ontvangen met uitleg over hun rol als <em>${roleText}</em>.`;
 
   return `

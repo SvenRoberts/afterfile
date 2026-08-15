@@ -168,8 +168,7 @@ Deno.serve(async (req: Request) => {
       roleRows.push(`
         <tr>
           <td style="padding:10px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-            <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#0F1222;">Helpen bevestigen</p>
-            <p style="margin:0;font-size:13px;line-height:1.6;color:#5B6880;">Je kunt een overlijden melden via <a href="https://afterfile.nl" style="color:#2F5DD9;text-decoration:none;">afterfile.nl</a> &mdash; vul de naam en het e-mailadres van ${esc(ownerName)} in, samen met je eigen gegevens ter verificatie.</p>
+            <p style="margin:0;font-size:13px;font-weight:600;color:#0F1222;">Helpen bevestigen</p>
           </td>
         </tr>`);
     }
@@ -204,7 +203,7 @@ Deno.serve(async (req: Request) => {
 
     const plainRoles: string[] = [];
     if (roles.includes("inform")) plainRoles.push("- Informatie ontvangen: zodra een overlijden is bevestigd, ontvang je de vastgelegde gegevens.");
-    if (roles.includes("verify")) plainRoles.push("- Helpen bevestigen: je kunt een overlijden melden via afterfile.nl.");
+    if (roles.includes("verify")) plainRoles.push("- Helpen bevestigen");
     const bodyText = [
       `Je bent toegevoegd als vertrouwd contact`,
       ``,
