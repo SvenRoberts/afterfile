@@ -155,7 +155,7 @@ Deno.serve(async (req: Request) => {
     body: JSON.stringify({
       from: 'AfterFile <info@afterfile.nl>',
       to: contact_email,
-      subject: `Kluistoegang beschikbaar &mdash; ${esc(deceased)}`,
+      subject: `Kluistoegang beschikbaar, ${esc(deceased)}`,
       html: emailShell(`De kluis van ${deceased} is nu toegankelijk. Gebruik jouw persoonlijke code om hem te openen.`, bodyHtml),
     })
   });
