@@ -1854,8 +1854,7 @@ function renderSubscription() {
   } else {
     cancelSection = `
       <div style="max-width:520px;padding-top:4px;">
-        <button class="btn btn-secondary btn-sm" data-action="open-cancel-confirm"
-          style="border-color:#E53E3E;color:#E53E3E;">
+        <button class="btn btn-secondary btn-sm" data-action="open-cancel-confirm">
           Abonnement opzeggen
         </button>
       </div>`;
@@ -2412,50 +2411,45 @@ function renderDeleteContactModal() {
 function renderContactInviteModal() {
   const c = ui.contactInvitePreview;
   if (!c) return '';
-  const accountName = ((state.personalInfo || {}).fullName || '').trim() || (state.account && state.account.name) || '';
-  const rolesParas = [];
-  if ((c.roles || []).includes('verify')) {
-    rolesParas.push(`Je kunt een overlijden melden via de pagina "Overlijden melden" op afterfile.nl. Vul daar de naam en het e-mailadres van ${esc(accountName)} in, samen met je eigen gegevens ter verificatie.`);
-  }
-  if ((c.roles || []).includes('inform')) {
-    rolesParas.push(`Zodra een overlijden is bevestigd en door AfterFile geverifieerd, ontvang je de gegevens die ${esc(accountName)} heeft vastgelegd.`);
-  }
-  const fragC = localStorage.getItem(VK_FRAG_C);
-  const fragCHtml = fragC ? `
-    <div style="margin:16px 0;padding:14px 16px;background:#EEF2FC;border-left:3px solid #2F5DD9;border-radius:6px;">
-      <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#0F1222;">Jouw persoonlijke kluiscode</p>
-      <p style="margin:0 0 10px;font-size:12px;color:#5B6172;">
-        ${esc(accountName)} heeft je aangewezen als kluiscontact. Bewaar de onderstaande code veilig ,
-        je hebt hem nodig om toegang te krijgen tot de kluisinhoud van ${esc(accountName)} als dat moment aanbreekt.
-      </p>
-      <div style="font-family:monospace;font-size:12px;word-break:break-all;background:#fff;border:1px dashed #c7d2fe;border-radius:4px;padding:10px 12px;color:#1e293b;">${esc(fragC)}</div>
-      <p style="margin:8px 0 0;font-size:11px;color:#9AA1B0;">
-        Bewaar deze code in je wachtwoordmanager of druk hem af.<br>
-        Als het zover is, ga je naar afterfile.nl en voer je de code in op de kluis-pagina van ${esc(accountName)}.
-      </p>
+  const hasFragC = (c.roles || []).includes('vault') && !!localStorage.getItem(VK_FRAG_C);
+  const roleLabels = [];
+  if ((c.roles || []).includes('inform')) roleLabels.push('informatie ontvangen');
+  if ((c.roles || []).includes('verify')) roleLabels.push('overlijden melden');
+  const roleText = roleLabels.length ? roleLabels.join(' en ') : 'vertrouwd contact';
+
+  const vaultLine = hasFragC ? `
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px 14px;background:#EEF2FC;border-radius:8px;">
+      <span style="font-size:18px;flex-shrink:0;">🔑</span>
+      <span style="font-size:13px;color:#2F5DD9;line-height:1.5;">
+        <strong>${esc(c.name)}</strong> is ook jouw kluiscontact. Zij hebben een persoonlijke kluiscode ontvangen in dezelfde mail. Jij krijgt een bevestiging per e-mail.
+      </span>
     </div>` : '';
+
   return `
     <div class="invite-modal-overlay" data-action="close-invite-preview"></div>
-    <div class="invite-modal" role="dialog" aria-modal="true" aria-label="Voorbeeld e-mail aan vertrouwd contact">
+    <div class="invite-modal" role="dialog" aria-modal="true" aria-label="Contact toegevoegd">
       <div class="invite-modal-top">
-        <span>Contact opgeslagen , dit is de e-mail die verstuurd wordt</span>
+        <span>Contact opgeslagen</span>
         <button type="button" class="invite-modal-close" data-action="close-invite-preview" aria-label="Sluiten">${iconSvg('x', 16)}</button>
       </div>
-      <div class="invite-mock">
-        <div class="invite-mock-meta">
-          <p><strong>Van:</strong> AfterFile &lt;info@afterfile.nl&gt;</p>
-          <p><strong>Aan:</strong> ${esc(c.email)}</p>
-          <p><strong>Onderwerp:</strong> ${esc(accountName)} heeft je toegevoegd als vertrouwd contact op AfterFile</p>
+      <div style="padding:24px 28px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+          <span style="font-size:22px;flex-shrink:0;">✅</span>
+          <div>
+            <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#0F1222;">${esc(c.name)} is toegevoegd</p>
+            <p style="margin:0;font-size:13px;color:#5B6172;">${esc(c.email)}</p>
+          </div>
         </div>
-        <div class="invite-mock-body">
-          <p><strong>${esc(accountName)}</strong> heeft je toegevoegd als vertrouwd contact op <strong>AfterFile</strong>, een dienst voor het veilig vastleggen en overdragen van digitale nalatenschap.</p>
-          ${rolesParas.map(p => `<p>• ${p}</p>`).join('')}
-          ${fragCHtml}
-          <p style="font-size:12px;color:#9AA1B0;">Vragen? Neem contact op met ${esc(accountName)} of stuur een e-mail naar info@afterfile.nl.</p>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:#F7F8FA;border-radius:8px;margin-bottom:4px;">
+          <span style="font-size:18px;flex-shrink:0;">✉️</span>
+          <span style="font-size:13px;color:#374151;line-height:1.5;">
+            <strong>${esc(c.name)}</strong> heeft een uitnodigingsmail ontvangen met uitleg over hun rol als <em>${roleText}</em>.
+          </span>
         </div>
+        ${vaultLine}
       </div>
       <div class="invite-modal-actions">
-        <button type="button" class="btn btn-secondary btn-sm" data-action="close-invite-preview">Sluiten</button>
+        <button type="button" class="btn btn-primary btn-sm" data-action="close-invite-preview">Begrepen</button>
       </div>
     </div>
   `;
@@ -2614,6 +2608,10 @@ function renderContacts() {
             <input type="checkbox" name="role-verify" ${ui.draftContact.roleVerify ? 'checked' : ''}>
             <span>Helpen bevestigen wat er is gebeurd</span>
           </label>
+          ${localStorage.getItem(VK_FRAG_C) ? `<label class="ct-role-opt" style="margin-top:6px;border-top:1px solid rgba(47,93,217,.1);padding-top:8px;">
+            <input type="checkbox" name="role-vault" ${ui.draftContact.roleVault ? 'checked' : ''}>
+            <span>Kluiscontact <span style="font-size:10px;font-weight:600;color:#2F5DD9;background:rgba(47,93,217,.1);padding:1px 6px;border-radius:10px;margin-left:4px;">ontvangt persoonlijke kluiscode</span></span>
+          </label>` : ''}
           <div style="font-size:11px;color:#9AAAC8;margin-top:8px;line-height:1.55;">Een contact met "Helpen bevestigen" kan via de "Overlijden melden"-pagina een officieel overlijdensbericht indienen. AfterFile controleert dit en geeft de gegevens vrij aan contacten met "Informatie ontvangen", doorgaans binnen 1 werkdag.</div>
         </div>
         <div style="display:flex;gap:8px;">
@@ -2635,6 +2633,7 @@ function renderContacts() {
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:9px;">
           ${c.roles.includes('inform') ? '<span class="ct-badge">Ontvangt informatie</span>' : ''}
           ${c.roles.includes('verify') ? '<span class="ct-badge ct-badge-verify">Helpt verifiëren</span>' : ''}
+          ${c.roles.includes('vault') ? '<span class="ct-badge" style="background:rgba(47,93,217,.12);color:#2F5DD9;">Kluiscontact</span>' : ''}
         </div>
       </div>
       <div class="ct-actions">
@@ -3785,6 +3784,7 @@ function wireEvents() {
         'relationship-other': fd.get('relationship-other') || '',
         roleInform: contactForm.querySelector('[name="role-inform"]')?.checked ?? true,
         roleVerify: contactForm.querySelector('[name="role-verify"]')?.checked ?? false,
+        roleVault: contactForm.querySelector('[name="role-vault"]')?.checked ?? false,
       };
     });
     contactForm.addEventListener('change', () => {
@@ -3799,6 +3799,7 @@ function wireEvents() {
         'relationship-other': fd.get('relationship-other') || '',
         roleInform: contactForm.querySelector('[name="role-inform"]')?.checked ?? true,
         roleVerify: contactForm.querySelector('[name="role-verify"]')?.checked ?? false,
+        roleVault: contactForm.querySelector('[name="role-vault"]')?.checked ?? false,
       };
     });
     contactForm.addEventListener('submit', async (e) => {
@@ -3807,6 +3808,7 @@ function wireEvents() {
     const roles = [];
     if (fd.get('role-inform')) roles.push('inform');
     if (fd.get('role-verify')) roles.push('verify');
+    if (fd.get('role-vault')) roles.push('vault');
     const relationship = (fd.get('relationship') || '').trim() || (fd.get('relationship-other') || '').trim();
     const payload = {
       name: capitalizeWords((fd.get('name') || '').trim()),
@@ -3839,7 +3841,7 @@ function wireEvents() {
       ui.draftContact = {};
       ui.contactInvitePreview = saved;
       render();
-      const _fragC = localStorage.getItem(VK_FRAG_C) || null;
+      const _fragC = saved.roles.includes('vault') ? (localStorage.getItem(VK_FRAG_C) || null) : null;
       supabase.functions.invoke('send-contact-invite', { body: { contactId: saved.id, fragment_c: _fragC } })
         .catch(err => console.error('send-contact-invite aanroep mislukt', err));
       // Als dit de kluiscontact is (fragment_c aanwezig), sla hun e-mail op in vault_data
@@ -3869,6 +3871,7 @@ function wireEvents() {
         relationship: c.relationship || '',
         roleInform: (c.roles || []).includes('inform'),
         roleVerify: (c.roles || []).includes('verify'),
+        roleVault: (c.roles || []).includes('vault'),
       };
       render();
     });
