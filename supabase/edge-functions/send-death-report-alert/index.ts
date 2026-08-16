@@ -73,7 +73,7 @@ function emailShell(preheader: string, bodyHtml: string, accentColor = "#2F5DD9"
     <tr>
       <td style="padding:20px 40px 28px;">
         <p style="margin:0 0 4px;font-size:12px;line-height:1.6;color:#9AAAC8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-          AfterFile &mdash; jouw digitale nalatenschap, veilig geregeld.
+          AfterFile, jouw digitale nalatenschap, veilig geregeld.
         </p>
         <p style="margin:0;font-size:12px;line-height:1.6;color:#B8C4D8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
           Vragen? <a href="mailto:info@afterfile.nl" style="color:#2F5DD9;text-decoration:none;">info@afterfile.nl</a>
@@ -181,6 +181,20 @@ Deno.serve(async (req: Request) => {
       "Belangrijk: er is een overlijdensmelding ingediend voor jouw AfterFile-account",
       emailShell("Er is een overlijdensmelding ingediend voor jouw account. Log in om dit te annuleren.", bodyHtml, "#1A2540")
     );
+
+    // Notify admin so Beheer can be checked promptly
+    const adminHtml = `<p style="font-family:sans-serif;font-size:14px;color:#333;">
+      <strong>Nieuwe overlijdensmelding ontvangen</strong><br><br>
+      Account: <strong>${esc(profile.email)}</strong> (${esc(profile.name || 'onbekend')})<br>
+      Ingediend door: <strong>${reporterDesc}</strong><br>
+      Tijdstip: ${new Date(report.reported_at as string).toLocaleString('nl-NL')}<br><br>
+      Controleer <a href="https://afterfile.nl/#view=beheer">Beheer</a> om de melding te verwerken.
+    </p>`;
+    await sendEmail(
+      'info@afterfile.nl',
+      `[AfterFile] Overlijdensmelding: ${esc(profile.email)}`,
+      adminHtml
+    ).catch(e => console.error('Admin notif mislukt:', e));
 
     return json({ ok: true });
   } catch (e) {

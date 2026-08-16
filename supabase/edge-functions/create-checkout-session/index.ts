@@ -102,10 +102,6 @@ Deno.serve(async (req: Request) => {
     sp.set('payment_method_types[0]', 'card');
     sp.set('payment_method_types[1]', 'ideal');
     sp.set('payment_method_options[ideal][setup_future_usage]', 'off_session');
-    sp.set('subscription_data[payment_settings][save_default_payment_method]', 'on_subscription');
-    sp.set('subscription_data[payment_settings][payment_method_types][0]', 'sepa_debit');
-    sp.set('subscription_data[payment_settings][payment_method_types][1]', 'ideal');
-    sp.set('subscription_data[payment_settings][payment_method_types][2]', 'card');
 
     const sessRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',

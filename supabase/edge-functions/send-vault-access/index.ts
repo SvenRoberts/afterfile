@@ -55,7 +55,7 @@ function emailShell(preheader: string, bodyHtml: string) {
     <tr>
       <td style="padding:20px 40px 28px;">
         <p style="margin:0 0 4px;font-size:12px;line-height:1.6;color:#9AAAC8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-          AfterFile &mdash; jouw digitale nalatenschap, veilig geregeld.
+          AfterFile, jouw digitale nalatenschap, veilig geregeld.
         </p>
         <p style="margin:0;font-size:12px;line-height:1.6;color:#B8C4D8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
           Vragen? <a href="mailto:info@afterfile.nl" style="color:#2F5DD9;text-decoration:none;">info@afterfile.nl</a>
@@ -121,7 +121,7 @@ Deno.serve(async (req: Request) => {
         <td style="background:#EFF4FF;border:1px solid rgba(47,93,217,.2);border-left:3px solid #2F5DD9;border-radius:6px;padding:16px 20px;">
           <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#9AAAC8;text-transform:uppercase;letter-spacing:.08em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">Wat je nodig hebt</p>
           <p style="margin:0;font-size:13px;line-height:1.6;color:#5B6880;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-            Jouw persoonlijke code (Fragment C) &mdash; die heb je eerder ontvangen toen je als kluiscontact werd aangewezen. Klik op de knop hieronder en voer de code in om toegang te krijgen.
+            Jouw persoonlijke code (Fragment C), die heb je eerder ontvangen toen je als kluiscontact werd aangewezen. Klik op de knop hieronder en voer de code in om toegang te krijgen.
           </p>
         </td>
       </tr>

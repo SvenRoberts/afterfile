@@ -671,7 +671,7 @@ if (supabase) {
     window.history.replaceState({}, '', window.location.pathname);
     supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' })
       .then(({ error }) => {
-        if (error) flashToast('Inloglink verlopen of ongeldig. Klik op Aanmelden voor een nieuwe link.');
+        if (error) flashToast('Inloglink verlopen of ongeldig. Klik op Inloggen voor een nieuwe link.');
       })
       .catch(() => flashToast('Inloglink kon niet worden verwerkt. Probeer opnieuw.'));
   })();
@@ -1068,7 +1068,7 @@ function renderLanding() {
           ${PRELAUNCH_MODE ? `<a href="#" data-nav="waitlist">Voor naasten</a>` : `<a href="#" data-nav="death-report">Voor naasten</a>`}
           <a href="#" data-nav="partner" style="font-weight:500;">Voor partners</a>
           <a class="btn btn-secondary btn-sm" href="demo.html" target="_blank" rel="noopener" style="margin-right:6px;">Demo</a>
-          <button class="btn btn-secondary btn-sm" data-nav="login" style="margin-right:6px;">Aanmelden</button>
+          <button class="btn btn-secondary btn-sm" data-nav="login" style="margin-right:6px;">Inloggen</button>
           <button class="btn btn-primary btn-sm" data-nav="signup" data-plan="compleet">Nu abonneren</button>
         </div>
       </div>
