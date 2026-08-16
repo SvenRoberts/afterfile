@@ -142,6 +142,58 @@ Deno.serve(async (req: Request) => {
       return new Response('ok', { status: 200 });
     }
 
+    // Referral verwerken: update referrer stats + stuur notificatie
+    if (referredBy) {
+      const { data: referrer } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email, name, referral_count, referral_discount_pct, active_referral_names')
+        .eq('ref_code', referredBy)
+        .maybeSingle();
+
+      if (referrer) {
+        const newCount   = (referrer.referral_count || 0) + 1;
+        const newDiscount = Math.min(newCount * 5, 100);
+        const existingNames: string[] = Array.isArray(referrer.active_referral_names) ? referrer.active_referral_names : [];
+        const newNames = [...existingNames, name || email.split('@')[0]];
+
+        await supabaseAdmin.from('profiles').update({
+          referral_count:         newCount,
+          referral_discount_pct:  newDiscount,
+          active_referral_names:  newNames,
+        }).eq('id', referrer.id);
+
+        // Notificatie naar de referrer
+        if (RESEND_API_KEY && referrer.email) {
+          const newUser = name || email.split('@')[0];
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from:    'AfterFile <info@afterfile.nl>',
+              to:      [referrer.email],
+              subject: 'Jouw referral-code is gebruikt!',
+              html: `
+                <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px">
+                  <div style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:24px">AfterFile</div>
+                  <h2 style="margin:0 0 8px;color:#0f172a">Jouw referral-code is gebruikt!</h2>
+                  <p style="color:#555;margin:0 0 16px">
+                    <strong>${newUser}</strong> heeft zich aangemeld via jouw referral-code.
+                    Je hebt nu <strong>${newCount} actieve referral${newCount === 1 ? '' : 's'}</strong> en ontvangt
+                    <strong>${newDiscount}% korting</strong> op je volgende verlenging.
+                  </p>
+                  <a href="${SITE_URL}/#view=invite" style="display:inline-block;background:#2F5DD9;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+                    Bekijk je referrals
+                  </a>
+                  <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
+                  <p style="color:#aaa;font-size:12px">AfterFile BV, info@afterfile.nl</p>
+                </div>
+              `,
+            }),
+          }).catch(e => console.error('Referral notif mislukt:', e));
+        }
+      }
+    }
+
     // Magic link genereren
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
       type:  'magiclink',
