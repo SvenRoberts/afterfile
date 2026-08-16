@@ -1676,10 +1676,8 @@ function renderAccountMenu(activeView) {
 
 async function loadAdminProfiles() {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, name, email, plan, subscription_status, current_period_end, created_at, ref_code, referral_count, referral_discount_pct')
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.rpc('get_admin_profiles');
+    if (error) console.error('loadAdminProfiles RPC fout:', error.message);
     state.adminProfiles = error ? [] : (data || []);
     render();
   } catch (e) {
@@ -2950,18 +2948,20 @@ function renderAdmin() {
   const signups = (state.signups || []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const planLabel = (key) => { const p = PLANS.find(pl => pl.key === key); return p ? p.name : key; };
 
-  // ── KPI's ────────────────────────────────────────────────────────────────
-  const totalKlanten   = signups.length;
-  const compleetCount  = signups.filter(s => s.plan !== 'basis').length;
+  // ── KPI's (berekend uit echte adminProfiles data) ────────────────────────
+  const allProfiles    = state.adminProfiles || [];
+  const totalKlanten   = allProfiles.length;
+  const betalend       = allProfiles.filter(p => ['active','trialing'].includes(p.subscription_status) && p.plan !== 'basis');
+  const compleetCount  = betalend.length;
   const basisCount     = totalKlanten - compleetCount;
-  const mrr            = (compleetCount * 3.95).toFixed(2).replace('.', ',');
+  // MRR: maandelijks equivalent per betalende klant
+  const mrrVal = betalend.reduce((sum, p) => {
+    if (p.billing_period === 'month') return sum + 3.95;
+    return sum + (39.95 / 12); // jaarlijks omrekenen naar maand
+  }, 0);
+  const mrr = mrrVal.toFixed(2).replace('.', ',');
+  const profileFilled  = allProfiles.filter(p => p.full_name || p.completed_at).length;
   const pendingReports = signups.filter(s => (s.checkins || {}).status === 'waiting').length;
-  const avgAssets      = totalKlanten ? (signups.reduce((t, s) => t + (s.assets || []).length, 0) / totalKlanten).toFixed(1) : '0';
-  const avgContacts    = totalKlanten ? (signups.reduce((t, s) => t + (s.contacts || []).length, 0) / totalKlanten).toFixed(1) : '0';
-  const profileFilled  = signups.filter(s => {
-    const p = s.personalInfo || {};
-    return ['fullName','street','postalCode','city','birthDate','phone'].every(k => (p[k]||'').trim());
-  }).length;
 
   const kpiCard = (label, value, sub, color) => `
     <div style="background:#fff;border:1px solid rgba(47,93,217,.18);border-radius:8px;padding:18px 20px;flex:1;min-width:120px;">
@@ -2972,10 +2972,8 @@ function renderAdmin() {
 
   const kpisHtml = `
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;">
-      ${kpiCard('Klanten', totalKlanten, `${compleetCount} Compleet · ${basisCount} Basis`)}
-      ${kpiCard('MRR', `€${mrr}`, `${compleetCount} betalend`,'#2F5DD9')}
-      ${kpiCard('Gem. bezittingen', avgAssets, 'per klant')}
-      ${kpiCard('Gem. contacten', avgContacts, 'per klant')}
+      ${kpiCard('Klanten', totalKlanten, `${compleetCount} betalend · ${basisCount} basis`)}
+      ${kpiCard('MRR', totalKlanten ? `€${mrr}` : '–', `${compleetCount} actief`,'#2F5DD9')}
       ${kpiCard('Profiel ingevuld', profileFilled, `van ${totalKlanten} klanten`)}
       ${pendingReports ? kpiCard('Openstaand', pendingReports, 'te beoordelen melding(en)', '#C4453F') : ''}
     </div>`;
