@@ -1187,11 +1187,9 @@ footer.site-footer a:hover { color: var(--color-primary); }
   background: var(--color-bg-alt);
 }
 .checkout-betaling-body {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.22s ease;
+  overflow: visible;
 }
-.betaling.open .checkout-betaling-body { max-height: 400px; }
+.betaling.open .checkout-betaling-body { max-height: none; }
 .checkout-betaling-body .field { margin-top: 22px; }
 .billing-period-options { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
 .billing-period-option { display: flex; align-items: center; gap: 12px; border: 1.5px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s; }
