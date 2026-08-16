@@ -142,25 +142,47 @@ Deno.serve(async (req: Request) => {
       return new Response('ok', { status: 200 });
     }
 
-    // Referral verwerken: update referrer stats + stuur notificatie
+    // Referral verwerken: update referrer stats + Stripe-coupon + notificatie
     if (referredBy) {
       const { data: referrer } = await supabaseAdmin
         .from('profiles')
-        .select('id, email, name, referral_count, referral_discount_pct, active_referral_names')
+        .select('id, email, name, referral_count, referral_discount_pct, active_referral_names, stripe_subscription_id')
         .eq('ref_code', referredBy)
         .maybeSingle();
 
       if (referrer) {
-        const newCount   = (referrer.referral_count || 0) + 1;
+        const newCount    = (referrer.referral_count || 0) + 1;
         const newDiscount = Math.min(newCount * 5, 100);
         const existingNames: string[] = Array.isArray(referrer.active_referral_names) ? referrer.active_referral_names : [];
         const newNames = [...existingNames, name || email.split('@')[0]];
 
         await supabaseAdmin.from('profiles').update({
-          referral_count:         newCount,
-          referral_discount_pct:  newDiscount,
-          active_referral_names:  newNames,
+          referral_count:        newCount,
+          referral_discount_pct: newDiscount,
+          active_referral_names: newNames,
         }).eq('id', referrer.id);
+
+        // Stripe-coupon aanmaken en koppelen aan het abonnement
+        if (referrer.stripe_subscription_id && STRIPE_SECRET_KEY) {
+          const couponId = `af-ref-${referrer.id.slice(0, 8)}-${newDiscount}pct`;
+          // Coupon aanmaken (negeer fout als hij al bestaat)
+          await fetch('https://api.stripe.com/v1/coupons', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              id:          couponId,
+              percent_off: String(newDiscount),
+              duration:    'forever',
+              name:        `AfterFile referral ${newDiscount}%`,
+            }).toString(),
+          }).catch(() => {});
+          // Coupon koppelen aan het actieve abonnement
+          await fetch(`https://api.stripe.com/v1/subscriptions/${referrer.stripe_subscription_id}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ 'discounts[0][coupon]': couponId }).toString(),
+          }).catch(e => console.error('Stripe coupon koppelen mislukt:', e));
+        }
 
         // Notificatie naar de referrer
         if (RESEND_API_KEY && referrer.email) {

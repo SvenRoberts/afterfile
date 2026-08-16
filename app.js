@@ -1787,6 +1787,23 @@ function renderSubscription() {
       <span style="font-size:13px;color:#9AAAC8;">${billingLabel}</span>
     </div>`;
 
+  const refDiscount = (state.account && state.account.referralDiscountPct) || 0;
+  const baseMonthly = 3.95;
+  const baseYearly  = 39.95;
+  const discountedMonthly = refDiscount > 0 ? (baseMonthly * (1 - refDiscount / 100)).toFixed(2).replace('.', ',') : null;
+  const discountedYearly  = refDiscount > 0 ? (baseYearly  * (1 - refDiscount / 100)).toFixed(2).replace('.', ',') : null;
+
+  const priceDisplay = plan === 'basis'
+    ? `<div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">${esc(planData.price)}</div>
+       <div style="font-size:12px;color:#9AAAC8;">${esc(planData.period)}</div>`
+    : refDiscount > 0
+      ? `<div style="font-size:14px;color:#9AAAC8;text-decoration:line-through;line-height:1;">${billingPeriod === 'month' ? '€3,95' : '€39,95'}</div>
+         <div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">€${billingPeriod === 'month' ? discountedMonthly : discountedYearly}</div>
+         <div style="font-size:12px;color:#9AAAC8;">${billingPeriod === 'month' ? '/ maand' : '/ jaar'}</div>
+         <div style="font-size:11px;font-weight:700;color:#22C55E;margin-top:2px;">${refDiscount}% ref korting</div>`
+      : `<div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">${billingPeriod === 'month' ? '€3,95' : '€39,95'}</div>
+         <div style="font-size:12px;color:#9AAAC8;">${billingPeriod === 'month' ? '/ maand' : '/ jaar'}</div>`;
+
   const planCard = `
     <div style="background:#fff;border:1px solid rgba(47,93,217,.22);border-radius:8px;padding:24px 28px;margin-bottom:20px;max-width:520px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;">
@@ -1796,11 +1813,10 @@ function renderSubscription() {
             <span style="font-size:22px;font-weight:700;color:#0F1222;letter-spacing:-.02em;">${esc(planData.name)}</span>
             ${statusBadge}
           </div>
-          <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${billingPeriod === 'month' ? 'Maandelijks gefactureerd: €3,95/mnd' : 'Jaarlijks gefactureerd: €39,95, bespaar 16%'}</div>
+          <div style="font-size:13px;color:#9AAAC8;margin-top:2px;">${billingPeriod === 'month' ? 'Maandelijks gefactureerd' : 'Jaarlijks gefactureerd , bespaar 16%'}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-size:24px;font-weight:700;color:#2F5DD9;letter-spacing:-.02em;">${plan === 'basis' ? esc(planData.price) : (billingPeriod === 'month' ? '€3,95' : '€39,95')}</div>
-          <div style="font-size:12px;color:#9AAAC8;">${plan === 'basis' ? esc(planData.period) : (billingPeriod === 'month' ? '/ maand' : '/ jaar')}</div>
+          ${priceDisplay}
         </div>
       </div>
       ${metaRows}
