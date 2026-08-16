@@ -96,12 +96,8 @@ Deno.serve(async (req: Request) => {
     if (referredBy) sp.set('metadata[af_referred_by]', referredBy);
     sp.set('subscription_data[metadata][af_plan]', plan);
 
-    // iDEAL → SEPA Direct Debit mandaat: na de eerste iDEAL-betaling maakt Stripe
-    // automatisch een SEPA-mandaat aan zodat vervolgperiodes zonder gebruikersactie
-    // worden geïncasseerd.
     sp.set('payment_method_types[0]', 'card');
     sp.set('payment_method_types[1]', 'ideal');
-    sp.set('payment_method_options[ideal][setup_future_usage]', 'off_session');
 
     const sessRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',

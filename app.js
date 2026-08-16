@@ -585,7 +585,7 @@ let state = Object.assign(defaultState(), loadLocalDemoState());
   if (v) state.view = v;
 })();
 
-let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, signupDraftEmail: '', signupDraftName: '', magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, checkoutSuccess: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false, loginEmailSent: null, loginEmailError: null, loginSubmitting: false, inviteFriendEmail: '', inviteFriendSubmitting: false, inviteFriendSent: false, inviteFriendError: null };
+let ui = { vaultState: 'loading', vaultKey: null, vaultData: null, vaultLockTimer: null, vaultKeyToShow: null, addingAssetType: null, addingCatOpen: null, addingAsset: false, addingContact: false, editingAssetId: null, editingContactId: null, vaultOpenCats: {}, vaultOpenAsset: null, draftAsset: {}, draftContact: {}, openFaqIndex: null, selectedPlanKey: null, billingPeriod: 'year', betalingOpen: false, signupEmailError: null, signupSubmitting: false, signupDraftEmail: '', signupDraftName: '', signupDraftRef: '', magicLinkSentTo: null, openSignupId: null, accountMenuOpen: false, contactInvitePreview: null, deathReportErrors: null, deathReportResult: null, deathReportSubmitting: false, waitlistEmailError: null, waitlistJoined: false, checkoutRedirecting: false, checkoutSuccess: false, waitlistTab: 'waitlist', partnerFormSent: false, partnerFormError: null, cancelConfirming: false, billingPeriodSwitching: false, loginEmailSent: null, loginEmailError: null, loginSubmitting: false, inviteFriendEmail: '', inviteFriendSubmitting: false, inviteFriendSent: false, inviteFriendError: null };
 const COMPLETION_CONFIRM_MS = 3 * 60 * 1000; // de bevestiging is tijdelijk: 3 minuten zichtbaar
 let completionHideTimer = null;
 
@@ -1369,16 +1369,15 @@ function renderSignup() {
                 </div>
                 ${emailError ? `<p class="field-error">${esc(emailError)}</p>` : ''}
               </div>
-              <div class="field" style="margin-top:10px"><label for="su-ref" style="font-size:13px;color:#888;">Referral-code <span style="font-weight:400">(optioneel)</span></label><input id="su-ref" name="ref" type="text" placeholder="Code" autocomplete="off" style="text-transform:uppercase" value="${esc(pendingRef || '')}"></div>
+              <div class="field" style="margin-top:10px"><label for="su-ref" style="font-size:13px;color:#888;">Referral-code <span style="font-weight:400">(optioneel)</span></label><input id="su-ref" name="ref" type="text" placeholder="Code" autocomplete="off" style="text-transform:uppercase" value="${esc(ui.signupDraftRef || pendingRef || '')}"></div>
 
               <div class="section-divider checkout-divider"></div>
 
-              <div class="checkout-step betaling ${betalingOpen ? 'open' : ''}">
-                <button type="button" class="checkout-step-toggle" data-action="toggle-betaling">
+              <div class="checkout-step betaling open">
+                <div class="checkout-step-toggle" style="cursor:default;">
                   <span class="checkout-step-title">2. Betaling <span class="lock-ico">${iconSvg('lock', 15)}</span></span>
                   <span class="payment-badges">${paymentBadgesHtml}</span>
-                  ${iconSvg('chevron-down', 18)}
-                </button>
+                </div>
                 <div class="checkout-betaling-body">
                   <div class="field">
                     <label for="su-name">Je naam</label>
@@ -3608,16 +3607,12 @@ function wireEvents() {
   function saveSignupDraft() {
     const emailEl = document.getElementById('su-email');
     const nameEl  = document.getElementById('su-name');
+    const refEl   = document.getElementById('su-ref');
     if (emailEl) ui.signupDraftEmail = emailEl.value;
     if (nameEl)  ui.signupDraftName  = nameEl.value;
+    if (refEl)   ui.signupDraftRef   = refEl.value;
   }
 
-  const betalingToggle = document.querySelector('[data-action="toggle-betaling"]');
-  if (betalingToggle) betalingToggle.addEventListener('click', () => {
-    saveSignupDraft();
-    ui.betalingOpen = !ui.betalingOpen;
-    render();
-  });
 
   const planSelect = document.getElementById('select-plan');
   if (planSelect) planSelect.addEventListener('change', () => {
